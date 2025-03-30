@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="./assests/favicon.ico" type="image/x-icon" />
+    <link rel="icon" sizes="16x16" href="./assests/favicon-16x16.png" />
+    <link rel="icon" sizes="32x32" href="./assests/favicon-32x32.png" />
+    <link rel="apple-touch-icon" href="./assests/apple-touch-icon.png" />
+    <!-- Optimized Title Tag -->
+    <title>Ultimate QR Code Generator - Create Custom QR Codes for Free</title>
+
+    <!-- Meta Description -->
+    <meta
+      name="description"
+      content="Generate custom QR codes for URLs, text, social media, contacts, WiFi, and more with Ultimate QR Code Generator. Fast, free, and easy to use."
+    />
+
+    <!-- Meta Keywords -->
+    <meta
+      name="keywords"
+      content="QR code generator, custom QR codes, social media QR codes, contact QR codes, WiFi QR codes, free QR code generator, online QR code creator"
+    />
+
+    <!-- Open Graph Meta Tags for Social Media -->
+    <meta
+      property="og:title"
+      content="Ultimate QR Code Generator - Create Custom QR Codes for Free"
+    />
+    <meta
+      property="og:description"
+      content="Generate custom QR codes for URLs, text, social media, contacts, WiFi, and more. Fast, free, and easy to use."
+    />
+    <meta property="og:image" content="URL_TO_AN_IMAGE" />
+    <!-- Replace with actual image URL -->
+    <meta property="og:url" content="https://qrjunction.com" />
+    <!-- Replace with actual website URL -->
+    <meta property="og:type" content="website" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <!-- Header Section -->
+    <header class="header">
+      <div class="logo-container">
+        <img
+          src="./assests/qrjunction-logo1.png"
+          alt="QR Code Generator Logo"
+          class="logo"
+        />
+        <h1 class="platform-title">Ultimate QR Code Generator</h1>
+      </div>
+      <p class="platform-caption">
+        Create custom QR codes for your business, social media, and more in
+        seconds!
+      </p>
+    </header>
+
+    <!-- QR Code Generator Section -->
+    <div class="container">
+      <div class="tabs-container">
+        <div class="tabs">
+          <!-- Web & Text -->
+          <div class="tab active" data-tab="url">
+            <i class="fas fa-link"></i> URL
+          </div>
+          <div class="tab" data-tab="text">
+            <i class="fas fa-font"></i> Text
+          </div>
+
+          <!-- Social Media -->
+          <div class="tab" data-tab="instagram">
+            <i class="fab fa-instagram"></i> Instagram
+          </div>
+          <div class="tab" data-tab="facebook">
+            <i class="fab fa-facebook"></i> Facebook
+          </div>
+          <div class="tab" data-tab="whatsapp">
+            <i class="fab fa-whatsapp"></i> WhatsApp
+          </div>
+          <div class="tab" data-tab="linkedin">
+            <i class="fab fa-linkedin"></i> LinkedIn
+          </div>
+          <div class="tab" data-tab="telegram">
+            <i class="fab fa-telegram"></i> Telegram
+          </div>
+          <div class="tab" data-tab="snapchat">
+            <i class="fab fa-snapchat"></i> Snapchat
+          </div>
+          <div class="tab" data-tab="twitter">
+            <i class="fab fa-twitter"></i> Twitter
+          </div>
+
+          <!-- Contact & Communication -->
+          <div class="tab" data-tab="contact">
+            <i class="fas fa-address-card"></i> Contact
+          </div>
+          <div class="tab" data-tab="phone">
+            <i class="fas fa-phone"></i> Phone
+          </div>
+          <div class="tab" data-tab="sms"><i class="fas fa-sms"></i> SMS</div>
+          <div class="tab" data-tab="email">
+            <i class="fas fa-envelope"></i> Email
+          </div>
+
+          <!-- Others -->
+          <div class="tab" data-tab="wifi">
+            <i class="fas fa-wifi"></i> WiFi
+          </div>
+        </div>
+      </div>
+
+      <!-- QR Code Generator Card -->
+      <div class="qr-card">
+        <!-- URL Tab -->
+        <div class="tab-content active" id="url-tab">
+          <div class="input-group">
+            <label for="url-input">Enter URL:</label>
+            <input
+              type="url"
+              id="url-input"
+              placeholder="https://example.com"
+            />
+          </div>
+        </div>
+
+        <!-- Text Tab -->
+        <div class="tab-content" id="text-tab">
+          <div class="input-group">
+            <label for="text-input">Enter Text:</label>
+            <textarea
+              id="text-input"
+              rows="4"
+              placeholder="Enter your text here"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Instagram Tab -->
+        <div class="tab-content" id="instagram-tab">
+          <div class="input-group">
+            <label for="instagram-input">Instagram Username:</label>
+            <div class="input-with-icon">
+              <i class="fab fa-instagram"></i>
+              <input type="text" id="instagram-input" placeholder="username" />
+            </div>
+            <p class="helper-text">Enter without @ symbol</p>
+          </div>
+        </div>
+
+        <!-- Facebook Tab -->
+        <div class="tab-content" id="facebook-tab">
+          <div class="input-group">
+            <label for="facebook-input">Facebook Username or ID:</label>
+            <div class="input-with-icon">
+              <i class="fab fa-facebook"></i>
+              <input
+                type="text"
+                id="facebook-input"
+                placeholder="username or profile ID"
+              />
+            </div>
+            <p class="helper-text">
+              For profiles, enter username. For pages, enter page name.
+            </p>
+          </div>
+        </div>
+
+        <!-- WhatsApp Tab -->
+        <div class="tab-content" id="whatsapp-tab">
+          <div class="input-group">
+            <label for="whatsapp-number-input">Phone Number:</label>
+            <div class="input-with-icon">
+              <i class="fab fa-whatsapp"></i>
+              <input
+                type="tel"
+                id="whatsapp-number-input"
+                placeholder="+1234567890"
+              />
+            </div>
+            <p class="helper-text">Include country code (e.g., +1 for US)</p>
+          </div>
+          <div class="input-group">
+            <label for="whatsapp-message-input"
+              >Pre-filled Message (Optional):</label
+            >
+            <textarea
+              id="whatsapp-message-input"
+              rows="3"
+              placeholder="Hello, I'm contacting you from your QR code!"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- LinkedIn Tab -->
+        <div class="tab-content" id="linkedin-tab">
+          <div class="input-group">
+            <label for="linkedin-type-input">LinkedIn Profile Type:</label>
+            <select id="linkedin-type-input">
+              <option value="profile">Personal Profile</option>
+              <option value="company">Company Page</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="linkedin-input">LinkedIn Username or Company ID:</label>
+            <div class="input-with-icon">
+              <i class="fab fa-linkedin"></i>
+              <input
+                type="text"
+                id="linkedin-input"
+                placeholder="username or company name"
+              />
+            </div>
+            <p class="helper-text">
+              For personal profiles, enter your username (from
+              linkedin.com/in/username)
+            </p>
+          </div>
+        </div>
+
+        <!-- Telegram Tab -->
+        <div class="tab-content" id="telegram-tab">
+          <div class="input-group">
+            <label for="telegram-type-input">Telegram Type:</label>
+            <select id="telegram-type-input">
+              <option value="user">User</option>
+              <option value="group">Group</option>
+              <option value="channel">Channel</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="telegram-input">Username:</label>
+            <div class="input-with-icon">
+              <i class="fab fa-telegram"></i>
+              <input type="text" id="telegram-input" placeholder="username" />
+            </div>
+            <p class="helper-text">Enter without @ symbol</p>
+          </div>
+        </div>
+
+        <!-- Snapchat Tab -->
+        <div class="tab-content" id="snapchat-tab">
+          <div class="input-group">
+            <label for="snapchat-input">Snapchat Username:</label>
+            <div class="input-with-icon">
+              <i class="fab fa-snapchat"></i>
+              <input type="text" id="snapchat-input" placeholder="username" />
+            </div>
+            <p class="helper-text">Enter without @ symbol</p>
+          </div>
+        </div>
+
+        <!-- Twitter Tab -->
+        <div class="tab-content" id="twitter-tab">
+          <div class="input-group">
+            <label for="twitter-input">Twitter Username:</label>
+            <div class="input-with-icon">
+              <i class="fab fa-twitter"></i>
+              <input type="text" id="twitter-input" placeholder="username" />
+            </div>
+            <p class="helper-text">Enter without @ symbol</p>
+          </div>
+        </div>
+
+        <!-- Contact Tab -->
+        <div class="tab-content" id="contact-tab">
+          <div class="input-group">
+            <label for="name-input">Name:</label>
+            <div class="input-with-icon">
+              <i class="fas fa-user"></i>
+              <input type="text" id="name-input" placeholder="John Doe" />
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="phone-contact-input">Phone:</label>
+            <div class="input-with-icon">
+              <i class="fas fa-phone"></i>
+              <input
+                type="tel"
+                id="phone-contact-input"
+                placeholder="+1234567890"
+              />
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="email-contact-input">Email:</label>
+            <div class="input-with-icon">
+              <i class="fas fa-envelope"></i>
+              <input
+                type="email"
+                id="email-contact-input"
+                placeholder="john@example.com"
+              />
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="address-input">Address:</label>
+            <div class="input-with-icon">
+              <i class="fas fa-map-marker-alt"></i>
+              <textarea
+                id="address-input"
+                rows="2"
+                placeholder="123 Main St, City, Country"
+              ></textarea>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="website-input">Website:</label>
+            <div class="input-with-icon">
+              <i class="fas fa-globe"></i>
+              <input
+                type="url"
+                id="website-input"
+                placeholder="https://example.com"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Phone Tab -->
+        <div class="tab-content" id="phone-tab">
+          <div class="input-group">
+            <label for="phone-input">Phone Number:</label>
+            <div class="input-with-icon">
+              <i class="fas fa-phone"></i>
+              <input type="tel" id="phone-input" placeholder="+1234567890" />
+            </div>
+            <p class="helper-text">Include country code (e.g., +1 for US)</p>
+          </div>
+        </div>
+
+        <!-- SMS Tab -->
+        <div class="tab-content" id="sms-tab">
+          <div class="input-group">
+            <label for="sms-number-input">Phone Number:</label>
+            <div class="input-with-icon">
+              <i class="fas fa-mobile-alt"></i>
+              <input
+                type="tel"
+                id="sms-number-input"
+                placeholder="+1234567890"
+              />
+            </div>
+            <p class="helper-text">Include country code (e.g., +1 for US)</p>
+          </div>
+          <div class="input-group">
+            <label for="sms-message-input">Message:</label>
+            <textarea
+              id="sms-message-input"
+              rows="3"
+              placeholder="Enter your message here"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Email Tab -->
+        <div class="tab-content" id="email-tab">
+          <div class="input-group">
+            <label for="email-address-input">Email Address:</label>
+            <div class="input-with-icon">
+              <i class="fas fa-envelope"></i>
+              <input
+                type="email"
+                id="email-address-input"
+                placeholder="recipient@example.com"
+              />
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="email-subject-input">Subject:</label>
+            <div class="input-with-icon">
+              <i class="fas fa-heading"></i>
+              <input
+                type="text"
+                id="email-subject-input"
+                placeholder="Email Subject"
+              />
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="email-body-input">Message:</label>
+            <textarea
+              id="email-body-input"
+              rows="3"
+              placeholder="Enter your email content here"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- WiFi Tab -->
+        <div class="tab-content" id="wifi-tab">
+          <div class="input-group">
+            <label for="ssid-input">Network Name (SSID):</label>
+            <div class="input-with-icon">
+              <i class="fas fa-wifi"></i>
+              <input
+                type="text"
+                id="ssid-input"
+                placeholder="WiFi Network Name"
+              />
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="wifi-password-input">Password:</label>
+            <div class="input-with-icon">
+              <i class="fas fa-lock"></i>
+              <input
+                type="password"
+                id="wifi-password-input"
+                placeholder="WiFi Password"
+              />
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="encryption-input">Encryption Type:</label>
+            <select id="encryption-input">
+              <option value="WPA">WPA/WPA2</option>
+              <option value="WEP">WEP</option>
+              <option value="nopass">No Encryption</option>
+            </select>
+          </div>
+          <div class="input-group checkbox-group">
+            <label>
+              <input type="checkbox" id="hidden-ssid-input" />
+              Hidden Network
+            </label>
+          </div>
+        </div>
+
+        <div class="option-row">
+          <div class="option-group">
+            <div class="input-group">
+              <label for="qr-size"
+                ><i class="fas fa-expand-arrows-alt"></i> QR Code Size:</label
+              >
+              <select id="qr-size">
+                <option value="128">Small (128x128)</option>
+                <option value="200" selected>Medium (200x200)</option>
+                <option value="300">Large (300x300)</option>
+                <option value="400">Extra Large (400x400)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button id="generate-btn" class="action-btn">
+          <i class="fas fa-magic"></i> Generate QR Code
+        </button>
+
+        <div class="qr-output">
+          <div id="qrcode"></div>
+          <div id="error-message" class="error"></div>
+          <button id="download-btn" class="download-btn" style="display: none">
+            <i class="fas fa-download"></i> Download QR Code
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Platform Explanation Section -->
+    <section class="platform-info">
+      <h2>Why Choose Ultimate QR Code Generator?</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <img
+            src="./assests/versetile1.png"
+            alt="Versatile QR Codes"
+            class="info-icon"
+          />
+          <h3>Versatile QR Codes</h3>
+          <p>
+            Create QR codes for a variety of purposes—whether it's text,
+            contacts, phone numbers, or social media platforms like Instagram,
+            Facebook, Telegram, WhatsApp, SMS, email, WiFi, and more.
+          </p>
+        </div>
+        <div class="info-item">
+          <img
+            src="./assests/flexible1.png"
+            alt="Flexible Customization"
+            class="info-icon"
+          />
+          <h3>Flexible Customization</h3>
+          <p>
+            Tailor your QR code to suit your needs. Choose from multiple sizes
+            to ensure your QR code fits perfectly in any context, from digital
+            sharing to printed media.
+          </p>
+        </div>
+        <div class="info-item">
+          <img
+            src="./assests/reliable1.png"
+            alt="User-Friendly & Reliable"
+            class="info-icon"
+          />
+          <h3>User-Friendly & Reliable</h3>
+          <p>
+            Enjoy a straightforward and secure experience. Our platform is built
+            with simplicity and dependability in mind, so you can generate QR
+            codes with confidence.
+          </p>
+        </div>
+      </div>
+      <p class="seo-text">
+        Ultimate QR Code Generator is your go-to tool for creating professional
+        QR codes quickly and easily. Whether you need codes for social media,
+        contact sharing, or secure WiFi access, our platform offers versatile
+        options and flexible downloads in various sizes to meet your specific
+        requirements.
+      </p>
+    </section>
+
+    <footer>
+      <p>
+        Made with <i class="fas fa-heart"></i> | © 2025 Ultimate QR Code
+        Generator
+      </p>
+    </footer>
+
+    <!-- Schema Markup for SEO -->
+    <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "Ultimate QR Code Generator",
+          "operatingSystem": "Web",
+          "applicationCategory": "UtilityApplication",
+          "offers": {
+            "@type": "Offer",
+            "price": "0"
+          }
+        }
+        </script>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
