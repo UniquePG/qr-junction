@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="../assests/favicon.ico" type="image/x-icon" />
+    <link rel="icon" sizes="16x16" href="../assests/favicon-16x16.png" />
+    <link rel="icon" sizes="32x32" href="../assests/favicon-32x32.png" />
+    <link rel="apple-touch-icon" href="../assests/apple-touch-icon.png" />
+    
+    <!-- SEO Meta Tags -->
+    <title>Contact Us | QR Junction - QR Code Generator</title>
+    <meta
+      name="description"
+      content="Get in touch with QR Junction. Contact us for support, questions, feedback, or business inquiries about our free QR code generator."
+    />
+    <meta
+      name="keywords"
+      content="contact QR Junction, QR code generator support, QR Junction help, customer support"
+    />
+    <link rel="canonical" href="https://www.qrjunction.in/pages/contact.html" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="QR Junction" />
+    <meta property="og:title" content="Contact Us | QR Junction" />
+    <meta property="og:description" content="Get in touch with QR Junction. Contact us for support, questions, or feedback." />
+    <meta property="og:url" content="https://www.qrjunction.in/pages/contact.html" />
+    <meta property="og:image" content="https://www.qrjunction.in/assests/og-image.png" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Contact Us | QR Junction" />
+    <meta name="twitter:description" content="Get in touch with QR Junction. Contact us for support or questions." />
+    <meta name="twitter:image" content="https://www.qrjunction.in/assests/og-image.png" />
+    
+    <link rel="stylesheet" href="../style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    
+    <!-- ContactPage Schema Markup -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ContactPage",
+      "name": "Contact QR Junction",
+      "description": "Get in touch with QR Junction for support, questions, or feedback",
+      "url": "https://www.qrjunction.in/pages/contact.html",
+      "mainEntity": {
+        "@type": "Organization",
+        "name": "QR Junction",
+        "email": "uniquetechexplorer7@gmail.com",
+        "url": "https://www.qrjunction.in/"
+      }
+    }
+    </script>
+  </head>
+  
+  <body>
+    <!-- Header Section -->
+    <header class="header">
+      <div class="logo-container">
+        <a href="../index.html">
+          <img
+            src="../assests/qrjunction-logo1.png"
+            alt="QR Junction Logo"
+            class="logo"
+          />
+        </a>
+        <h1 class="platform-title">QR Junction</h1>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container page-container">
+      <div class="page-header">
+        <h1>Contact Us</h1>
+        <p class="page-subtitle">We'd love to hear from you. Get in touch with us!</p>
+      </div>
+
+      <div class="contact-container">
+        <div class="contact-info-section">
+          <div class="info-card">
+            <div class="info-icon-wrapper">
+              <i class="fas fa-envelope"></i>
+            </div>
+            <h3>Email Us</h3>
+            <p>Send us an email and we'll respond as soon as possible.</p>
+            <a href="mailto:uniquetechexplorer7@gmail.com" class="contact-link">
+              uniquetechexplorer7@gmail.com
+            </a>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon-wrapper">
+              <i class="fas fa-clock"></i>
+            </div>
+            <h3>Response Time</h3>
+            <p>We typically respond within 24-48 hours during business days.</p>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon-wrapper">
+              <i class="fas fa-question-circle"></i>
+            </div>
+            <h3>Before You Contact</h3>
+            <p>Check out our <a href="faq.html">FAQ page</a> - you might find the answer you're looking for!</p>
+          </div>
+        </div>
+
+        <div class="contact-form-section">
+          <h2>Send Us a Message</h2>
+          <form class="contact-form" id="contact-form">
+            <div class="form-group">
+              <label for="name">Your Name <span class="required">*</span></label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="John Doe"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="email">Your Email <span class="required">*</span></label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="john@example.com"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="subject">Subject <span class="required">*</span></label>
+              <select id="subject" name="subject" required>
+                <option value="">Select a subject</option>
+                <option value="support">Technical Support</option>
+                <option value="feature">Feature Request</option>
+                <option value="bug">Report a Bug</option>
+                <option value="business">Business Inquiry</option>
+                <option value="feedback">Feedback</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="message">Message <span class="required">*</span></label>
+              <textarea
+                id="message"
+                name="message"
+                rows="6"
+                placeholder="Please provide details about your inquiry..."
+                required
+              ></textarea>
+            </div>
+
+            <button type="submit" class="action-btn">
+              <i class="fas fa-paper-plane"></i> Send Message
+            </button>
+
+            <div id="form-message" class="form-message"></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="help-section">
+        <h2>How Can We Help?</h2>
+        <div class="help-grid">
+          <div class="help-item">
+            <i class="fas fa-tools"></i>
+            <h3>Technical Support</h3>
+            <p>Having issues with the QR code generator? We're here to help troubleshoot and resolve any technical problems.</p>
+          </div>
+          <div class="help-item">
+            <i class="fas fa-lightbulb"></i>
+            <h3>Feature Requests</h3>
+            <p>Have an idea for a new feature? We'd love to hear your suggestions to make QR Junction even better.</p>
+          </div>
+          <div class="help-item">
+            <i class="fas fa-bug"></i>
+            <h3>Report Bugs</h3>
+            <p>Found a bug? Please let us know so we can fix it and improve the service for everyone.</p>
+          </div>
+          <div class="help-item">
+            <i class="fas fa-handshake"></i>
+            <h3>Business Inquiries</h3>
+            <p>Interested in partnerships, collaborations, or business opportunities? Get in touch with us.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>QR Junction</h3>
+          <p>Free QR code generator for all your needs</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul class="footer-links">
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+            <li><a href="contact.html">Contact Us</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Legal</h4>
+          <ul class="footer-links">
+            <li><a href="privacy-policy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="footer-copyright">
+        Made with <i class="fas fa-heart"></i> | © 2025 QR Junction. All rights reserved.
+      </p>
+    </footer>
+
+    <script>
+      // Contact form handling
+      document.getElementById('contact-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formMessage = document.getElementById('form-message');
+        const formData = new FormData(this);
+        
+        // Get form values
+        const name = formData.get('name');
+        const email = formData.get('email');
+        const subject = formData.get('subject');
+        const message = formData.get('message');
+        
+        // Create mailto link (in a real application, you'd send this to a server)
+        const mailtoLink = `mailto:uniquetechexplorer7@gmail.com?subject=${encodeURIComponent(subject)} - ${encodeURIComponent(name)}&body=${encodeURIComponent('Name: ' + name + '\nEmail: ' + email + '\n\nMessage:\n' + message)}`;
+        
+        // Open email client
+        window.location.href = mailtoLink;
+        
+        // Show success message
+        formMessage.className = 'form-message success';
+        formMessage.innerHTML = '<i class="fas fa-check-circle"></i> Your email client should open. If not, please email us directly at uniquetechexplorer7@gmail.com';
+        
+        // Reset form
+        this.reset();
+      });
+    </script>
+    <script src="../script.js"></script>
+  </body>
+</html>
+

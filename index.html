@@ -24,6 +24,8 @@
 
       <!-- Canonical URL (prevents duplicate content issues) -->
       <link rel="canonical" href="https://www.qrjunction.in/" />
+      <!-- Sitemap -->
+      <link rel="sitemap" type="application/xml" href="https://www.qrjunction.in/sitemap.xml" />
     <!-- Language and Geographic Targeting -->
     <meta name="language" content="English" />
     <meta name="geo.region" content="IN" />
@@ -84,11 +86,6 @@
         "operatingSystem": "All",
         "url": "https://www.qrjunction.in/",
         "description": "Free online QR code generator tool to create custom QR codes for URLs, WiFi, contacts, social media, and more with instant download.",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "INR"
-        },
         "image": "https://www.qrjunction.in/assets/screenshot.png"
       }
       </script>
@@ -179,17 +176,26 @@
     <!-- Header Section -->
     <header class="header">
       <div class="logo-container">
-        <img
-          src="./assests/qrjunction-logo1.png"
-          alt="QR Code Generator Logo"
-          class="logo"
-        />
+        <a href="index.html">
+          <img
+            src="./assests/qrjunction-logo1.png"
+            alt="QR Code Generator Logo"
+            class="logo"
+          />
+        </a>
         <h1 class="platform-title">Ultimate QR Code Generator</h1>
       </div>
       <p class="platform-caption">
         Create custom QR codes for your business, social media, and more in
         seconds!
       </p>
+      <!-- <nav class="main-nav">
+        <a href="index.html" class="nav-link active">Home</a>
+        <a href="pages/faq.html" class="nav-link">FAQ</a>
+        <a href="pages/contact.html" class="nav-link">Contact</a>
+        <a href="pages/privacy-policy.html" class="nav-link">Privacy</a>
+        <a href="pages/terms.html" class="nav-link">Terms</a>
+      </nav> -->
     </header>
 
     <!-- QR Code Generator Section -->
@@ -646,10 +652,121 @@
       </p>
     </section>
 
+    <!-- Use Cases Section -->
+    <section class="use-cases-section">
+      <h2>Popular Use Cases for QR Codes</h2>
+      <div class="use-cases-grid">
+        <div class="use-case-item">
+          <i class="fas fa-store"></i>
+          <h3>Business Cards</h3>
+          <p>Share your contact information instantly with QR code-enabled business cards.</p>
+        </div>
+        <div class="use-case-item">
+          <i class="fas fa-mobile-alt"></i>
+          <h3>Social Media</h3>
+          <p>Connect your social media profiles and grow your online presence with QR codes.</p>
+        </div>
+        <div class="use-case-item">
+          <i class="fas fa-wifi"></i>
+          <h3>WiFi Sharing</h3>
+          <p>Share WiFi credentials easily with guests without revealing passwords.</p>
+        </div>
+        <div class="use-case-item">
+          <i class="fas fa-shopping-cart"></i>
+          <h3>Marketing</h3>
+          <p>Enhance your marketing campaigns with QR codes linking to promotions and products.</p>
+        </div>
+        <div class="use-case-item">
+          <i class="fas fa-calendar-alt"></i>
+          <h3>Events</h3>
+          <p>Share event details, tickets, and registration links with QR codes.</p>
+        </div>
+        <div class="use-case-item">
+          <i class="fas fa-file-alt"></i>
+          <h3>Documentation</h3>
+          <p>Link to manuals, guides, and documentation for easy access.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+      <h2>Key Features</h2>
+      <div class="features-grid">
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-bolt"></i>
+          </div>
+          <h3>Instant Generation</h3>
+          <p>Generate QR codes instantly without any delays or waiting times.</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <h3>100% Private</h3>
+          <p>All processing happens locally in your browser. Your data never leaves your device.</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-infinity"></i>
+          </div>
+          <h3>Unlimited QR Codes</h3>
+          <p>Generate as many QR codes as you need without any restrictions or limits.</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-download"></i>
+          </div>
+          <h3>Easy Download</h3>
+          <p>Download your QR codes in high-quality PNG format instantly.</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-palette"></i>
+          </div>
+          <h3>Multiple Sizes</h3>
+          <p>Choose from various sizes to fit your specific needs and use cases.</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-mobile-alt"></i>
+          </div>
+          <h3>Mobile Friendly</h3>
+          <p>Works perfectly on all devices - desktop, tablet, and mobile phones.</p>
+        </div>
+      </div>
+    </section>
+
     <footer>
-      <p>
-        Made with <i class="fas fa-heart"></i> | © 2025 Ultimate QR Code
-        Generator
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>QR Junction</h3>
+          <p>Free QR code generator for all your needs. Create custom QR codes instantly without registration.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="pages/faq.html">FAQ</a></li>
+            <li><a href="pages/contact.html">Contact Us</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Legal</h4>
+          <ul class="footer-links">
+            <li><a href="pages/privacy-policy.html">Privacy Policy</a></li>
+            <li><a href="pages/terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Connect</h4>
+          <p>Have questions or feedback? We'd love to hear from you!</p>
+          <a href="pages/contact.html" class="footer-cta">Get in Touch</a>
+        </div>
+      </div>
+      <p class="footer-copyright">
+        Made with <i class="fas fa-heart"></i> | © 2025 QR Junction. All rights reserved.
       </p>
     </footer>
 
