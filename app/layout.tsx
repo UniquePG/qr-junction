@@ -1,3 +1,4 @@
+import { ToastProvider } from "@/components/ToastProvider";
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -170,6 +171,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} antialiased`} suppressHydrationWarning>
         {children}
+        <ToastProvider />
         <Analytics />
       </body>
     </html>

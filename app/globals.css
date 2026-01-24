@@ -61,3 +61,64 @@
 .animate-fade-in-up {
   animation: fadeInUp 1s ease-in-out;
 }
+
+/* React Toastify Custom Styles */
+:root {
+  --toastify-color-light: #ffffff;
+  --toastify-color-dark: #212529;
+  --toastify-color-info: #4361ee;
+  --toastify-color-success: #4CAF50;
+  --toastify-color-warning: #ff9100;
+  --toastify-color-error: #f44336;
+  --toastify-color-transparent: rgba(255, 255, 255, 0.7);
+  --toastify-icon-color-info: var(--toastify-color-info);
+  --toastify-icon-color-success: var(--toastify-color-success);
+  --toastify-icon-color-warning: var(--toastify-color-warning);
+  --toastify-icon-color-error: var(--toastify-color-error);
+  --toastify-toast-width: 320px;
+  --toastify-toast-background: #ffffff;
+  --toastify-toast-min-height: 64px;
+  --toastify-toast-max-height: 800px;
+  --toastify-font-family: var(--font-inter), sans-serif;
+  --toastify-z-index: 9999;
+}
+
+.Toastify__toast {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-family: var(--font-inter), sans-serif;
+}
+
+.Toastify__toast--success {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+}
+
+.Toastify__toast--error {
+  background: linear-gradient(135deg, #f44336, #e53935);
+  color: white;
+}
+
+.Toastify__toast--warning {
+  background: linear-gradient(135deg, #ff9100, #ff6f00);
+  color: white;
+}
+
+.Toastify__toast--info {
+  background: linear-gradient(135deg, #4361ee, #3d56d4);
+  color: white;
+}
+
+.Toastify__progress-bar {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.Toastify__close-button {
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 1;
+}
+
+.Toastify__close-button:hover {
+  color: rgba(255, 255, 255, 1);
+  opacity: 1;
+}
