@@ -1,9 +1,12 @@
 import Link from 'next/link';
+import { getAllBlogs } from '@/lib/blogs';
 
 export default function Footer() {
+  const blogs = getAllBlogs().slice(0, 5); // Show latest 5 blogs in footer
+
   return (
     <footer className="mt-12">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 p-8 bg-slate-50 rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8 p-8 bg-slate-50 rounded-lg">
         <div>
           <h3 className="text-primary text-xl font-semibold mb-4">QR Junction</h3>
           <p className="text-gray-600 leading-relaxed mb-2">
@@ -29,6 +32,26 @@ export default function Footer() {
               </Link>
             </li>
           </ul>
+        </div>
+        <div>
+          <h4 className="text-gray-900 text-lg font-semibold mb-4">Blog</h4>
+          {blogs.length > 0 ? (
+            <ul className="list-none p-0">
+              {blogs.map((blog) => (
+                <li key={blog.slug} className="mb-2">
+                  <Link
+                    href={`/blog/${blog.slug}`}
+                    className="text-gray-600 hover:text-primary transition-colors no-underline line-clamp-1"
+                    title={blog.hero.title}
+                  >
+                    {blog.hero.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-600 text-sm">No blog posts yet.</p>
+          )}
         </div>
         <div>
           <h4 className="text-gray-900 text-lg font-semibold mb-4">Legal</h4>

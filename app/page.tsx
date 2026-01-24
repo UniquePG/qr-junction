@@ -1,12 +1,12 @@
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import QRGenerator from '@/components/QRGenerator';
+import BlogSection from '@/components/sections/BlogSection';
 import Features from '@/components/sections/Features';
 import PlatformExplanation from '@/components/sections/PlatformExplanation';
 import UseCases from '@/components/sections/UseCases';
 import { PageViewTracker } from '@/hooks/usePageView';
 // import { Metadata } from 'next';
-import Script from 'next/script';
 
 // export const metadata: Metadata = {
 //   title: 'Free QR Code Generator | Create Custom QR Codes - QR Junction',
@@ -48,6 +48,7 @@ export default function Home() {
         <UseCases />
         <Features />
       </div>
+      <BlogSection />
       <Footer />
     </div>
   );

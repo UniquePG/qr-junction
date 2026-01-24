@@ -18,7 +18,6 @@ export function ToastProvider() {
       theme="light"
       className="toast-container"
       toastClassName="toast"
-      bodyClassName="toast-body"
       progressClassName="toast-progress"
     />
   );
