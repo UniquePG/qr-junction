@@ -81,7 +81,7 @@ export default function Footer() {
           </Link>
         </div>
       </div>
-      <p className="text-center mt-8 text-gray-600 text-sm pt-5 border-t border-slate-200">
+      <p className="text-center mt-8 text-gray-600 text-sm py-4 border-t border-slate-200">
         Made with <span className="text-secondary">❤️</span> | © 2025 QR Junction. All rights reserved.
       </p>
     </footer>

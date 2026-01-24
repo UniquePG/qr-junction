@@ -90,7 +90,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
   const { slug } = await params;
   const blog = getBlog(slug);
 
-  console.log("blogg", blog)
+  // console.log("blogg", blog)
 
   if (!blog) {
     notFound();
@@ -205,7 +205,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-max px-4 py-12">
+        <main className="max-w-max px-4 py-12 pb-2">
           <div className="prose prose-lg prose-slate max-w-none lg:prose-xl">
             {blog.sections.map((section, sectionIdx) => (
               <section
