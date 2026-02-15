@@ -1,6 +1,6 @@
-import { getAllBlogs } from '@/lib/blogs';
-import Link from 'next/link';
-import Image from 'next/image';
+import { getAllBlogs } from "@/lib/blogs";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function BlogSection() {
   const allBlogs = getAllBlogs();
@@ -17,7 +17,8 @@ export default function BlogSection() {
             Latest Blog Posts
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Learn more about QR codes, their uses, and best practices from our expert team.
+            Learn more about QR codes, their uses, and best practices from our
+            expert team.
           </p>
         </div>
 
@@ -43,10 +44,10 @@ export default function BlogSection() {
                 <div className="flex items-center gap-3 text-sm text-gray-500 mb-3">
                   {blog.publishedAt && (
                     <time dateTime={blog.publishedAt}>
-                      {new Date(blog.publishedAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
+                      {new Date(blog.publishedAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
                       })}
                     </time>
                   )}
@@ -76,10 +77,15 @@ export default function BlogSection() {
           <div className="text-center mt-12">
             <Link
               href="/blog"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-600 transition-colors"
-            >
+              className="inline-flex items-center gap-2 px-7 py-3.5 
+              bg-blue-600 text-white 
+              rounded-xl font-semibold 
+              shadow-md hover:shadow-lg 
+              hover:bg-blue-700 
+              transition-all duration-300"
+              >
               View All Blog Posts
-              <i className="fas fa-arrow-right"></i>
+              <i className="fas fa-arrow-right transition-transform duration-300 group-hover:translate-x-1"></i>
             </Link>
           </div>
         )}
@@ -87,4 +93,3 @@ export default function BlogSection() {
     </section>
   );
 }
-
