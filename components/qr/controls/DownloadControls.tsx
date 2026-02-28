@@ -3,6 +3,8 @@
 import type { QRPreviewHandle } from '@/components/qr/QRPreview';
 import type { DownloadFormat, DownloadScale, QRDownloadConfig } from '@/types/qrTypes';
 import type { RefObject } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { Camera, Download, Globe, Image as ImageIcon, Pencil } from 'lucide-react';
 
 interface DownloadControlsProps {
   config: QRDownloadConfig;
@@ -13,11 +15,11 @@ interface DownloadControlsProps {
   onDownload?: () => void | Promise<void>;
 }
 
-const FORMATS: { value: DownloadFormat; label: string; icon: string }[] = [
-  { value: 'png', label: 'PNG', icon: '🖼️' },
-  { value: 'svg', label: 'SVG', icon: '✏️' },
-  { value: 'jpeg', label: 'JPEG', icon: '📸' },
-  { value: 'webp', label: 'WebP', icon: '🌐' },
+const FORMATS: { value: DownloadFormat; label: string; Icon: LucideIcon }[] = [
+  { value: 'png', label: 'PNG', Icon: ImageIcon },
+  { value: 'svg', label: 'SVG', Icon: Pencil },
+  { value: 'jpeg', label: 'JPEG', Icon: Camera },
+  { value: 'webp', label: 'WebP', Icon: Globe },
 ];
 
 const SCALES: { value: DownloadScale; label: string }[] = [
@@ -60,7 +62,7 @@ export default function DownloadControls({
                   : 'border-slate-200 text-gray-600 hover:border-slate-300'
               }`}
             >
-              <span className="text-base mb-0.5">{f.icon}</span>
+              <f.Icon className="w-4 h-4 mb-0.5" />
               {f.label}
             </button>
           ))}
@@ -117,9 +119,7 @@ export default function DownloadControls({
             : 'bg-slate-200 text-slate-400 cursor-not-allowed'
         }`}
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-        </svg>
+        <Download className="w-4 h-4" />
         Download {config.fileName || 'qrcode'}.{config.format}
       </button>
     </div>

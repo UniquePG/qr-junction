@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react';
 
 interface AccordionSectionProps {
   title: string;
-  icon: string;
+  icon: ReactNode;
   children: ReactNode;
   defaultOpen?: boolean;
   badge?: string;
@@ -27,7 +27,7 @@ export default function AccordionSection({
         className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
       >
         <div className="flex items-center gap-2">
-          <span className="text-base">{icon}</span>
+          <span className="inline-flex items-center justify-center">{icon}</span>
           <span className="font-semibold text-gray-800 text-sm">{title}</span>
           {badge && (
             <span className="text-xs bg-primary-100 text-primary-600 px-2 py-0.5 rounded-full font-medium">

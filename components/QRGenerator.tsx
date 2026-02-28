@@ -2,6 +2,36 @@
 
 import dynamic from 'next/dynamic';
 import { useCallback, useRef, useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import {
+  AlertCircle,
+  Contact as ContactIcon,
+  Dot,
+  Download,
+  Facebook,
+  Frame,
+  Ghost,
+  Grid2X2,
+  Image as ImageIcon,
+  Instagram,
+  Link as LinkIcon,
+  Linkedin,
+  Mail,
+  MessageCircle,
+  MessageSquareText,
+  PaintBucket,
+  Palette,
+  Phone,
+  QrCode,
+  Ruler,
+  Send,
+  Square,
+  Target,
+  Type as TypeIcon,
+  Wand2,
+  Wifi,
+  X,
+} from 'lucide-react';
 
 import type { QRConfig } from '@/types/qrTypes';
 import { DEFAULT_QR_CONFIG } from '@/types/qrTypes';
@@ -81,21 +111,21 @@ interface FormData {
 }
 
 // ─── Helpers (unchanged from original) ──────────────────────────────────────
-const TABS: { id: TabType; label: string; icon: string }[] = [
-  { id: 'url', label: 'URL', icon: 'fas fa-link' },
-  { id: 'text', label: 'Text', icon: 'fas fa-font' },
-  { id: 'instagram', label: 'Instagram', icon: 'fab fa-instagram' },
-  { id: 'facebook', label: 'Facebook', icon: 'fab fa-facebook' },
-  { id: 'whatsapp', label: 'WhatsApp', icon: 'fab fa-whatsapp' },
-  { id: 'linkedin', label: 'LinkedIn', icon: 'fab fa-linkedin' },
-  { id: 'telegram', label: 'Telegram', icon: 'fab fa-telegram' },
-  { id: 'snapchat', label: 'Snapchat', icon: 'fab fa-snapchat' },
-  { id: 'twitter', label: 'Twitter', icon: 'fab fa-twitter' },
-  { id: 'contact', label: 'Contact', icon: 'fas fa-address-card' },
-  { id: 'phone', label: 'Phone', icon: 'fas fa-phone' },
-  { id: 'sms', label: 'SMS', icon: 'fas fa-sms' },
-  { id: 'email', label: 'Email', icon: 'fas fa-envelope' },
-  { id: 'wifi', label: 'WiFi', icon: 'fas fa-wifi' },
+const TABS: { id: TabType; label: string; Icon: LucideIcon }[] = [
+  { id: 'url', label: 'URL', Icon: LinkIcon },
+  { id: 'text', label: 'Text', Icon: TypeIcon },
+  { id: 'instagram', label: 'Instagram', Icon: Instagram },
+  { id: 'facebook', label: 'Facebook', Icon: Facebook },
+  { id: 'whatsapp', label: 'WhatsApp', Icon: MessageCircle },
+  { id: 'linkedin', label: 'LinkedIn', Icon: Linkedin },
+  { id: 'telegram', label: 'Telegram', Icon: Send },
+  { id: 'snapchat', label: 'Snapchat', Icon: Ghost },
+  { id: 'twitter', label: 'X', Icon: X },
+  { id: 'contact', label: 'Contact', Icon: ContactIcon },
+  { id: 'phone', label: 'Phone', Icon: Phone },
+  { id: 'sms', label: 'SMS', Icon: MessageSquareText },
+  { id: 'email', label: 'Email', Icon: Mail },
+  { id: 'wifi', label: 'WiFi', Icon: Wifi },
 ];
 
 function formatQRData(tab: TabType, data: FormData): string {
@@ -176,12 +206,6 @@ function validateForm(tab: TabType, formData: FormData): string | null {
   if (tab === 'wifi' && !formData.wifi?.ssid?.trim()) return 'Please enter a network name (SSID)';
   return null;
 }
-
-// ─── Input helpers ────────────────────────────────────────────────────────────
-const INPUT_CLASS =
-  'w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm';
-const ICON_INPUT_CLASS =
-  'w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm transition-colors';
 
 // ─── Tab Form Components ──────────────────────────────────────────────────────
 interface TabFormProps {
@@ -306,7 +330,7 @@ export default function QRGenerator() {
       {/* ── Header bar ───────────────────────────────────────────────── */}
       <div className="gradient-primary px-6 py-4">
         <h2 className="text-white font-bold text-lg flex items-center gap-2">
-          <i className="fas fa-qrcode" /> QR Code Generator
+          <QrCode className="w-5 h-5" /> QR Code Generator
         </h2>
         <p className="text-white/70 text-xs mt-0.5">Generate &amp; fully customize your QR codes</p>
       </div>
@@ -336,7 +360,7 @@ export default function QRGenerator() {
                       : 'bg-slate-100 text-gray-700 hover:bg-slate-200'
                   }`}
                 >
-                  <i className={tab.icon} />
+                  <tab.Icon className="w-4 h-4" />
                   <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               ))}
@@ -355,7 +379,7 @@ export default function QRGenerator() {
           {/* Error */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm font-medium flex items-center gap-2 animate-fade-in">
-              <i className="fas fa-exclamation-circle" /> {error}
+              <AlertCircle className="w-4 h-4" /> {error}
             </div>
           )}
 
@@ -365,16 +389,16 @@ export default function QRGenerator() {
             onClick={handleGenerate}
             className="w-full py-4 gradient-primary text-white rounded-xl font-bold text-base shadow-primary hover:-translate-y-0.5 hover:shadow-primary-hover transition-all cursor-pointer flex items-center justify-center gap-2"
           >
-            <i className="fas fa-magic" /> Generate QR Code
+            <Wand2 className="w-5 h-5" /> Generate QR Code
           </button>
         </div>
 
         {/* ══════════════════════════════════════════════════════════════
             RIGHT COLUMN — Preview + Customization
         ══════════════════════════════════════════════════════════════ */}
-        <div className="w-full flex mt-6">
+        <div className="w-full flex flex-col md:flex-row mt-6">
           {/* ── QR Preview area ─────────────────────────────────────── */}
-          <div className="bg-gradient-to-br from-slate-50 to-slate-100 border-b border-slate-100 min-w-[500px] max-w-[500px] p-6 flex flex-col items-center gap-4">
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 border-b md:border-b-0 md:border-r border-slate-100 md:w-[500px] md:flex-none w-full p-6 flex flex-col items-center gap-4">
             <div className="flex items-center justify-between w-full">
               <h3 className="font-bold text-gray-800 text-xs sm:text-sm uppercase tracking-wide">Live Preview</h3>
               {qrValue && (
@@ -397,7 +421,7 @@ export default function QRGenerator() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center w-full max-w-[280px] aspect-square rounded-2xl border-2 border-dashed border-slate-300 bg-white">
-                <div className="text-4xl sm:text-5xl mb-3 opacity-30">⬛</div>
+                <Square className="w-10 h-10 sm:w-12 sm:h-12 mb-3 opacity-30 text-slate-700" />
                 <p className="text-xs sm:text-sm text-slate-400 font-medium text-center px-4">
                   Fill in the form and click<br />
                   <span className="text-primary font-semibold">Generate QR Code</span>
@@ -412,7 +436,7 @@ export default function QRGenerator() {
                 onClick={handleDownload}
                 className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold text-xs sm:text-sm transition-all shadow-sm hover:-translate-y-0.5"
               >
-                <i className="fas fa-download" /> Quick Download
+                <Download className="w-4 h-4" /> Quick Download
               </button>
             )}
             {/* <AccordionSection title="Download" icon="📦"> */}
@@ -427,35 +451,43 @@ export default function QRGenerator() {
           </div>
 
           {/* ── Customization Accordion Panels ──────────────────────── */}
-          <div className='flex-1 px-3'>
+          <div className="flex-1 px-3 py-6 md:py-0">
             <h3 className='font-bold text-gray-800 text-xs sm:text-sm uppercase tracking-wide mb-3'>Customizations</h3>
             <div className="flex-1 px-3  overflow-y-auto max-h-[600px] sm:max-h-[700px] lg:max-h-[calc(100vh-120px)]">
-              <AccordionSection title="Preset Styles" icon="🎨" defaultOpen={true}>
+              <AccordionSection
+                title="Preset Styles"
+                icon={<Palette className="w-4 h-4 text-slate-700" />}
+                defaultOpen={true}
+              >
                 <PresetStyles onApply={applyPreset} />
               </AccordionSection>
 
-              <AccordionSection title="Body Dots" icon="⬛">
+              <AccordionSection title="Body Dots" icon={<Dot className="w-4 h-4 text-slate-700" />}>
                 <DotsCustomizer
                   dots={qrConfig.dots}
                   onChange={dots => updateConfig({ dots })}
                 />
               </AccordionSection>
 
-              <AccordionSection title="Corner Squares" icon="🔲">
+              <AccordionSection title="Corner Squares" icon={<Grid2X2 className="w-4 h-4 text-slate-700" />}>
                 <CornerSquaresCustomizer
                   cornerSquares={qrConfig.cornerSquares}
                   onChange={cs => updateConfig({ cornerSquares: cs })}
                 />
               </AccordionSection>
 
-              <AccordionSection title="Corner Dots" icon="🔳">
+              <AccordionSection title="Corner Dots" icon={<Dot className="w-4 h-4 text-slate-700" />}>
                 <CornerDotsCustomizer
                   cornerDots={qrConfig.cornerDots}
                   onChange={cd => updateConfig({ cornerDots: cd })}
                 />
               </AccordionSection>
 
-              <AccordionSection title="Logo / Image" icon="🖼️" badge={qrConfig.logo ? 'Active' : undefined}>
+              <AccordionSection
+                title="Logo / Image"
+                icon={<ImageIcon className="w-4 h-4 text-slate-700" />}
+                badge={qrConfig.logo ? 'Active' : undefined}
+              >
                 <LogoCustomizer
                   logo={qrConfig.logo}
                   onChange={logo => updateConfig({ logo })}
@@ -463,28 +495,36 @@ export default function QRGenerator() {
                 />
               </AccordionSection>
 
-              <AccordionSection title="Background" icon="🌈">
+              <AccordionSection title="Background" icon={<PaintBucket className="w-4 h-4 text-slate-700" />}>
                 <BackgroundCustomizer
                   background={qrConfig.background}
                   onChange={bg => updateConfig({ background: bg })}
                 />
               </AccordionSection>
 
-              <AccordionSection title="Frame / Template" icon="🖼" badge={qrConfig.frame.templateId ? 'Active' : undefined}>
+              <AccordionSection
+                title="Frame / Template"
+                icon={<Frame className="w-4 h-4 text-slate-700" />}
+                badge={qrConfig.frame.templateId ? 'Active' : undefined}
+              >
                 <FrameSelector
                   frame={qrConfig.frame}
                   onChange={frame => updateConfig({ frame })}
                 />
               </AccordionSection>
 
-              <AccordionSection title="Size & Margin" icon="📐">
+              <AccordionSection title="Size & Margin" icon={<Ruler className="w-4 h-4 text-slate-700" />}>
                 <SizeControls
                   size={qrConfig.size}
                   onChange={size => updateConfig({ size })}
                 />
               </AccordionSection>
 
-              <AccordionSection title="Error Correction" icon="🎯" badge={eclLockedToH ? 'H — Locked' : undefined}>
+              <AccordionSection
+                title="Error Correction"
+                icon={<Target className="w-4 h-4 text-slate-700" />}
+                badge={eclLockedToH ? 'H — Locked' : undefined}
+              >
                 <ErrorCorrectionControl
                   level={qrConfig.errorCorrectionLevel}
                   onChange={ecl => updateConfig({ errorCorrectionLevel: ecl })}
