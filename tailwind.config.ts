@@ -27,7 +27,7 @@ const config: Config = {
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-        "gradient-primary": "linear-gradient(135deg, #4361ee, #7209b7)",
+        "gradient-primary": "linear-gradient(0deg, #4361ee, #4361ee)",
       },
       boxShadow: {
         "primary": "0 4px 10px rgba(67, 97, 238, 0.3)",

@@ -72,13 +72,34 @@ export default function FrameRenderer({ frameConfig, children }: FrameRendererPr
   );
 
   return (
-    <div style={template.containerStyle as CSSProperties}>
+    <div
+      className="qr-frame-root w-full max-w-[280px] mx-auto"
+      style={{
+        ...(template.containerStyle as CSSProperties),
+        maxWidth: '100%',
+        width: '100%',
+        boxSizing: 'border-box',
+      }}
+    >
       {title && <div style={titleStyle}>{title}</div>}
       {subtitle && <div style={subtitleStyle}>{subtitle}</div>}
 
       {/* QR Code */}
-      <div style={{ ...(template.qrWrapperStyle as CSSProperties), padding: '8px' }}>
-        {children}
+      <div
+        style={{
+          ...(template.qrWrapperStyle as CSSProperties),
+          padding: '8px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '100%',
+          maxWidth: '100%',
+          boxSizing: 'border-box',
+        }}
+      >
+        <div className="qr-frame-qr-slot" style={{ maxWidth: '100%', lineHeight: 0 }}>
+          {children}
+        </div>
       </div>
 
       {cta && <div style={ctaStyle}>{cta}</div>}

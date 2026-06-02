@@ -1,0 +1,231 @@
+// Prisma schema for QR Junction
+// Streamlined for Phase 1 and optimized for local PostgreSQL
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  USER
+}
+
+enum QRType {
+  URL
+  TEXT
+  WHATSAPP
+  EMAIL
+  PHONE
+  WIFI
+  SNAPCHAT
+  INSTAGRAM
+  FACEBOOK
+  LINKEDIN
+  TELEGRAM
+  TWITTER
+  CONTACT
+  SMS
+  APP_DOWNLOAD
+  PDF
+}
+
+enum QRStatus {
+  ACTIVE
+  PAUSED
+  DELETED
+}
+
+enum DeviceType {
+  MOBILE
+  DESKTOP
+  TABLET
+  UNKNOWN
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  WON
+  LOST
+}
+
+enum ConversionEventType {
+  FORM_SUBMIT
+  PURCHASE
+  WHATSAPP_CLICK
+  CALL_CLICK
+  BOOKING
+  REGISTRATION
+  CUSTOM
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  firebaseUid  String     @unique @map("firebase_uid")
+  email        String     @unique
+  name         String?
+  avatarUrl    String?    @map("avatar_url")
+  role         UserRole   @default(USER)
+  passwordHash String?    @map("password_hash")
+  provider     String?
+  providerId   String?    @map("provider_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  qrCodes      QRCode[]
+  campaigns    Campaign[]
+  leads        Lead[]
+
+  @@map("users")
+}
+
+model QRCode {
+  id            Int       @id @default(autoincrement())
+  shortCode     String    @unique @map("short_code")               // URL identifier: /q/{shortCode}
+  name          String
+  type          QRType    @default(URL)
+  status        QRStatus  @default(ACTIVE)
+
+  // Structured destination data depending on QRType
+  destination   Json      // { url?, phone?, message?, email?, ssid?, password?, ... }
+
+  userId        Int       @map("user_id")                          // Links to the creator
+  campaignId    Int?      @map("campaign_id")                         // Optional marketing campaign link
+
+  // Design appearance
+  fgColor       String?   @default("#000000") @map("fg_color")
+  bgColor       String?   @default("#FFFFFF") @map("bg_color")
+  logoUrl       String?   @map("logo_url")
+
+  // Counters (cached for fast reads)
+  totalScans    Int       @default(0) @map("total_scans")
+  uniqueScans   Int       @default(0) @map("unique_scans")
+
+  // Custom UTM fields
+  utmSource     String?   @map("utm_source")
+  utmMedium     String?   @map("utm_medium")
+  utmCampaign   String?   @map("utm_campaign")
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaign      Campaign?  @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  scans         Scan[]
+  leads         Lead[]
+  conversions   Conversion[]
+
+  @@index([shortCode])
+  @@index([userId])
+  @@map("qr_codes")
+}
+
+model Scan {
+  id             Int        @id @default(autoincrement())
+  qrCodeId       Int        @map("qr_code_id")
+
+  // Hash of visitor fingerprint + IP to track unique scans
+  visitorId      String     @map("visitor_id")
+
+  // Device Details
+  deviceType     DeviceType @default(UNKNOWN) @map("device_type")
+  browser        String?
+  os             String?
+  userAgent      String?    @map("user_agent")
+
+  // Geo Details
+  ipAddress      String?    @map("ip_address")
+  country        String?
+  city           String?
+  state          String?
+  latitude       Decimal?   @db.Decimal(9, 6)
+  longitude      Decimal?   @db.Decimal(9, 6)
+
+  // Referrer & Campaign
+  referer        String?
+  utmSource      String?    @map("utm_source")
+  utmMedium      String?    @map("utm_medium")
+  utmCampaign    String?    @map("utm_campaign")
+
+  scannedAt      DateTime   @default(now()) @map("scanned_at")
+
+  qrCode         QRCode     @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+
+  @@index([qrCodeId])
+  @@index([scannedAt])
+  @@index([visitorId])
+  @@map("scans")
+}
+
+model Campaign {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  userId      Int       @map("user_id")
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  qrCodes     QRCode[]
+  leads       Lead[]
+  conversions Conversion[]
+
+  @@index([userId])
+  @@map("campaigns")
+}
+
+model Lead {
+  id            Int        @id @default(autoincrement())
+  name          String
+  email         String
+  phone         String?
+  status        LeadStatus @default(NEW)
+  notes         String?
+
+  // Attribution
+  qrCodeId      Int?       @map("qr_code_id")
+  campaignId    Int?       @map("campaign_id")
+  userId        Int        @map("user_id")
+
+  customFields  Json?      @map("custom_fields") // extra data fields form collects
+
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  qrCode        QRCode?    @relation(fields: [qrCodeId], references: [id], onDelete: SetNull)
+  campaign      Campaign?  @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([email])
+  @@map("leads")
+}
+
+model Conversion {
+  id         Int                 @id @default(autoincrement())
+  qrCodeId   Int                 @map("qr_code_id")
+  campaignId Int?                @map("campaign_id")
+
+  eventType  ConversionEventType @map("event_type")
+  eventName  String?             @map("event_name") // for custom actions
+  value      Decimal?            @db.Decimal(10, 2)
+  currency   String?             @default("INR")
+
+  occurredAt DateTime            @default(now()) @map("occurred_at")
+
+  qrCode     QRCode              @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+  campaign   Campaign?           @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@index([qrCodeId])
+  @@index([occurredAt])
+  @@map("conversions")
+}

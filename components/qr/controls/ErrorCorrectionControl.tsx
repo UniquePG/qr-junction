@@ -1,5 +1,6 @@
 'use client';
 
+import { AlertTriangle } from 'lucide-react';
 import type { ErrorCorrectionLevel } from '@/types/qrTypes';
 
 interface ErrorCorrectionControlProps {
@@ -30,9 +31,9 @@ export default function ErrorCorrectionControl({
   return (
     <div className="space-y-3">
       {lockedToH && (
-        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-          <span>⚠️</span>
-          <p className="text-xs text-amber-700 font-medium">
+        <div className="flex items-center gap-2 bg-amber-950/20 border border-amber-900/40 rounded-lg px-3 py-2">
+          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+          <p className="text-xs text-amber-400 font-medium">
             Auto-set to H because a logo is applied
           </p>
         </div>
@@ -44,8 +45,8 @@ export default function ErrorCorrectionControl({
             key={l.value}
             className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
               effectiveLevel === l.value
-                ? 'border-primary-400 bg-primary-50'
-                : 'border-slate-200 hover:border-slate-300'
+                ? 'border-primary bg-primary/10'
+                : 'border-slate-800 hover:border-slate-600 bg-slate-950/30'
             } ${lockedToH && l.value !== 'H' ? 'opacity-40 pointer-events-none' : ''}`}
           >
             <input
@@ -58,10 +59,10 @@ export default function ErrorCorrectionControl({
               disabled={lockedToH}
             />
             <div className="flex-1">
-              <div className="text-sm font-semibold text-gray-800">{l.label}</div>
-              <div className="text-xs text-gray-500">{l.description}</div>
+              <div className="text-sm font-semibold text-slate-200">{l.label}</div>
+              <div className="text-xs text-slate-500">{l.description}</div>
             </div>
-            <span className="text-xs font-mono bg-slate-100 text-gray-600 px-2 py-0.5 rounded">
+            <span className="text-xs font-mono bg-slate-800 text-slate-400 px-2 py-0.5 rounded">
               {l.recovery}
             </span>
           </label>

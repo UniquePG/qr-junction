@@ -19,7 +19,7 @@
 
 @layer utilities {
   .gradient-primary {
-    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    background: var(--primary-color);
   }
 
 
@@ -60,6 +60,47 @@
 
 .animate-fade-in-up {
   animation: fadeInUp 1s ease-in-out;
+}
+
+/* Dark-themed horizontal scrollbar (QR tab strips, etc.) */
+.scrollbar-dark-h {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(67, 97, 238, 0.45) rgba(15, 23, 42, 0.35);
+}
+
+.scrollbar-dark-h::-webkit-scrollbar {
+  height: 3px;
+}
+
+.scrollbar-dark-h::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.35);
+  border-radius: 9999px;
+  margin: 0 4px;
+}
+
+.scrollbar-dark-h::-webkit-scrollbar-thumb {
+  background: rgba(67, 97, 238, 0.5);
+  border-radius: 9999px;
+}
+
+.scrollbar-dark-h::-webkit-scrollbar-thumb:hover {
+  background: rgba(67, 97, 238, 0.75);
+}
+
+.scrollbar-dark-h::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Hide scrollbar but keep scroll (optional) */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 /* React Toastify Custom Styles */

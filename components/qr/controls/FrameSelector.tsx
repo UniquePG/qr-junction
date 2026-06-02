@@ -2,6 +2,14 @@
 
 import { FRAME_TEMPLATES } from '@/config/frameTemplates';
 import type { QRFrameConfig } from '@/types/qrTypes';
+import {
+  QR_COLOR_SM,
+  QR_INPUT,
+  QR_INPUT_SM,
+  QR_MUTED,
+  QR_OPTION_ACTIVE,
+  QR_OPTION_INACTIVE,
+} from '@/components/qr/controlStyles';
 
 interface FrameSelectorProps {
   frame: QRFrameConfig;
@@ -25,20 +33,16 @@ export default function FrameSelector({ frame, onChange }: FrameSelectorProps) {
 
   return (
     <div className="space-y-4">
-      {/* No frame option */}
       <button
         type="button"
         onClick={() => onChange({ ...frame, templateId: null })}
         className={`w-full py-2 text-sm font-medium rounded-lg border-2 transition-all ${
-          !frame.templateId
-            ? 'border-primary-500 bg-primary-50 text-primary-600'
-            : 'border-slate-200 text-gray-500 hover:border-slate-300'
+          !frame.templateId ? QR_OPTION_ACTIVE : QR_OPTION_INACTIVE
         }`}
       >
         No Frame (Plain QR)
       </button>
 
-      {/* Template grid */}
       <div className="grid grid-cols-2 gap-2">
         {FRAME_TEMPLATES.map(template => (
           <button
@@ -47,21 +51,20 @@ export default function FrameSelector({ frame, onChange }: FrameSelectorProps) {
             onClick={() => selectTemplate(template.id)}
             className={`flex flex-col items-start p-3 rounded-xl border-2 text-left transition-all ${
               frame.templateId === template.id
-                ? 'border-primary-500 bg-primary-50'
-                : 'border-slate-200 hover:border-slate-300 bg-white'
+                ? 'border-primary bg-primary/10'
+                : 'border-slate-800 hover:border-slate-600 bg-slate-950/50'
             }`}
           >
             <span className="text-xl mb-1">{template.emoji}</span>
-            <span className="text-xs font-bold text-gray-800 leading-tight">{template.name}</span>
-            <span className="text-xs text-gray-400 leading-tight mt-0.5">{template.description}</span>
+            <span className="text-xs font-bold text-slate-200 leading-tight">{template.name}</span>
+            <span className={`text-xs ${QR_MUTED} leading-tight mt-0.5`}>{template.description}</span>
           </button>
         ))}
       </div>
 
-      {/* Frame text editors */}
       {selected && (
-        <div className="space-y-3 pt-2 border-t border-slate-100">
-          <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+        <div className="space-y-3 pt-2 border-t border-slate-800/80">
+          <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wide">
             Edit Frame Text
           </h4>
           {[
@@ -70,52 +73,49 @@ export default function FrameSelector({ frame, onChange }: FrameSelectorProps) {
             { key: 'cta', label: 'CTA Button', placeholder: selected.defaultCta },
           ].map(field => (
             <div key={field.key}>
-              <label className="block text-xs text-gray-500 mb-1">{field.label}</label>
+              <label className={`block ${QR_MUTED} mb-1`}>{field.label}</label>
               <input
                 type="text"
                 value={frame[field.key as keyof QRFrameConfig] as string}
-                onChange={e =>
-                  onChange({ ...frame, [field.key]: e.target.value })
-                }
+                onChange={e => onChange({ ...frame, [field.key]: e.target.value })}
                 placeholder={field.placeholder}
-                className="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-400"
+                className={`w-full ${QR_INPUT}`}
               />
             </div>
           ))}
 
-          {/* Colors */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Primary Color</label>
+              <label className={`block ${QR_MUTED} mb-1`}>Primary Color</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
                   value={frame.primaryColor}
                   onChange={e => onChange({ ...frame, primaryColor: e.target.value })}
-                  className="w-9 h-9 rounded-lg border-2 border-slate-200 cursor-pointer p-0.5"
+                  className={QR_COLOR_SM}
                 />
                 <input
                   type="text"
                   value={frame.primaryColor}
                   onChange={e => onChange({ ...frame, primaryColor: e.target.value })}
-                  className="flex-1 px-2 py-2 border-2 border-slate-200 rounded-lg text-xs font-mono focus:outline-none focus:border-primary-400"
+                  className={QR_INPUT_SM}
                 />
               </div>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Text Color</label>
+              <label className={`block ${QR_MUTED} mb-1`}>Text Color</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
                   value={frame.textColor}
                   onChange={e => onChange({ ...frame, textColor: e.target.value })}
-                  className="w-9 h-9 rounded-lg border-2 border-slate-200 cursor-pointer p-0.5"
+                  className={QR_COLOR_SM}
                 />
                 <input
                   type="text"
                   value={frame.textColor}
                   onChange={e => onChange({ ...frame, textColor: e.target.value })}
-                  className="flex-1 px-2 py-2 border-2 border-slate-200 rounded-lg text-xs font-mono focus:outline-none focus:border-primary-400"
+                  className={QR_INPUT_SM}
                 />
               </div>
             </div>

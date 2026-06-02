@@ -54,7 +54,8 @@ export type QRCodeType =
   | 'phone'
   | 'sms'
   | 'email'
-  | 'wifi';
+  | 'wifi'
+  | 'app_download';
 
 /**
  * QR Code Size definitions
