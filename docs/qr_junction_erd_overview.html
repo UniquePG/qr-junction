@@ -1,0 +1,211 @@
+
+<style>
+#erd-wrap { padding: 12px 0; }
+#erd svg { width: 100%; }
+</style>
+<div id="erd-wrap"><div id="erd"></div></div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '12px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+    primaryColor: dark ? '#1a1a18' : '#f1efe8',
+    primaryBorderColor: dark ? '#444441' : '#b4b2a9',
+    primaryTextColor: dark ? '#c2c0b6' : '#2c2c2a',
+    edgeLabelBackground: dark ? '#1a1a18' : '#f1efe8',
+  },
+});
+const diagram = `erDiagram
+  User {
+    string id PK
+    string email
+    string passwordHash
+    string plan
+    string stripeCustomerId
+    datetime createdAt
+  }
+  Organization {
+    string id PK
+    string slug
+    string ownerId FK
+    string plan
+    boolean whitelabelActive
+  }
+  OrgMember {
+    string id PK
+    string orgId FK
+    string userId FK
+    string role
+  }
+  QRCode {
+    string id PK
+    string shortCode
+    string type
+    string status
+    json destination
+    string userId FK
+    string orgId FK
+    string campaignId FK
+    datetime expiresAt
+    int totalScans
+    int uniqueScans
+  }
+  Scan {
+    string id PK
+    string qrCodeId FK
+    string visitorId
+    string deviceType
+    string country
+    string city
+    decimal latitude
+    decimal longitude
+    datetime scannedAt
+  }
+  ScanAggregate {
+    string id PK
+    string qrCodeId FK
+    date date
+    int totalScans
+    int uniqueScans
+  }
+  Campaign {
+    string id PK
+    string name
+    string userId FK
+    string orgId FK
+    string goalType
+    datetime startDate
+  }
+  Conversion {
+    string id PK
+    string qrCodeId FK
+    string campaignId FK
+    string eventType
+    decimal value
+    datetime occurredAt
+  }
+  LandingPage {
+    string id PK
+    string slug
+    json content
+    boolean isPublished
+    string userId FK
+    string orgId FK
+  }
+  Lead {
+    string id PK
+    string email
+    string phone
+    string status
+    string qrCodeId FK
+    string landingPageId FK
+    string orgId FK
+  }
+  ABTest {
+    string id PK
+    string qrCodeId FK
+    string variantAUrl
+    string variantBUrl
+    int variantAWeight
+    string status
+  }
+  CustomDomain {
+    string id PK
+    string domain
+    string orgId FK
+    boolean isVerified
+  }
+  ApiKey {
+    string id PK
+    string keyHash
+    string orgId FK
+    string userId FK
+    string scopes
+  }
+  Webhook {
+    string id PK
+    string orgId FK
+    string url
+    string events
+  }
+  BusinessProfile {
+    string id PK
+    string userId FK
+    string slug
+    string businessName
+  }
+  ActivityLog {
+    string id PK
+    string orgId FK
+    string userId FK
+    string action
+    string resource
+  }
+  AIReport {
+    string id PK
+    string orgId FK
+    string qrCodeId FK
+    string campaignId FK
+    json insights
+  }
+
+  User ||--o{ OrgMember : "belongs to"
+  User ||--o{ QRCode : "owns"
+  User ||--o{ Campaign : "owns"
+  User ||--o{ LandingPage : "owns"
+  User ||--o{ Lead : "owns"
+  User ||--o| BusinessProfile : "has"
+  Organization ||--o{ OrgMember : "has"
+  Organization ||--o{ QRCode : "has"
+  Organization ||--o{ Campaign : "has"
+  Organization ||--o{ LandingPage : "has"
+  Organization ||--o{ Lead : "has"
+  Organization ||--o{ Webhook : "has"
+  Organization ||--o{ ApiKey : "has"
+  Organization ||--o{ CustomDomain : "has"
+  QRCode ||--o{ Scan : "receives"
+  QRCode ||--o{ ScanAggregate : "aggregates"
+  QRCode ||--o{ Conversion : "tracks"
+  QRCode ||--o| ABTest : "has"
+  QRCode }o--|| Campaign : "belongs to"
+  QRCode }o--o| LandingPage : "links to"
+  QRCode }o--o| CustomDomain : "uses"
+  Campaign ||--o{ Conversion : "measures"
+  LandingPage ||--o{ Lead : "captures"
+  AIReport }o--o| QRCode : "about"
+  AIReport }o--o| Campaign : "about"
+`;
+const { svg } = await mermaid.render('erd-svg', diagram);
+document.getElementById('erd').innerHTML = svg;
+document.querySelectorAll('#erd svg.erDiagram .node').forEach(node => {
+  const firstPath = node.querySelector('path[d]');
+  if (!firstPath) return;
+  const d = firstPath.getAttribute('d');
+  const nums = d.match(/-?[\d.]+/g)?.map(Number);
+  if (!nums || nums.length < 8) return;
+  const xs = [nums[0], nums[2], nums[4], nums[6]];
+  const ys = [nums[1], nums[3], nums[5], nums[7]];
+  const x = Math.min(...xs), y = Math.min(...ys);
+  const w = Math.max(...xs) - x, h = Math.max(...ys) - y;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', x); rect.setAttribute('y', y);
+  rect.setAttribute('width', w); rect.setAttribute('height', h);
+  rect.setAttribute('rx', '8');
+  for (const a of ['fill', 'stroke', 'stroke-width', 'class', 'style']) {
+    if (firstPath.hasAttribute(a)) rect.setAttribute(a, firstPath.getAttribute(a));
+  }
+  firstPath.replaceWith(rect);
+});
+document.querySelectorAll('#erd svg.erDiagram .row-rect-odd path, #erd svg.erDiagram .row-rect-even path').forEach(p => {
+  p.setAttribute('stroke', 'none');
+});
+</script>

@@ -2,6 +2,8 @@
 
 import type { QRLogoConfig } from '@/types/qrTypes';
 import { useRef, useState } from 'react';
+import { AlertTriangle, ImagePlus } from 'lucide-react';
+import { QR_HINT, QR_LABEL_INLINE, QR_MUTED } from '@/components/qr/controlStyles';
 
 interface LogoCustomizerProps {
   logo: QRLogoConfig | null;
@@ -36,7 +38,7 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
         hideBackgroundDots: logo?.hideBackgroundDots ?? true,
         crossOrigin: 'anonymous',
       });
-      onEclLocked(true); // Force H
+      onEclLocked(true);
       setIsLoading(false);
     };
     reader.readAsDataURL(file);
@@ -53,15 +55,14 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
 
   return (
     <div className="space-y-4">
-      {/* Upload area */}
       {!previewUrl ? (
         <div
-          className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer hover:border-primary-400 hover:bg-primary-50/30 transition-all"
+          className="border-2 border-dashed border-slate-700 rounded-xl p-6 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all"
           onClick={() => fileInputRef.current?.click()}
         >
-          <div className="text-3xl mb-2">🖼️</div>
-          <p className="text-sm font-medium text-gray-600">Click to upload logo</p>
-          <p className="text-xs text-gray-400 mt-1">PNG, JPG, SVG supported</p>
+          <ImagePlus className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+          <p className="text-sm font-medium text-slate-300">Click to upload logo</p>
+          <p className={`${QR_HINT} mt-1`}>PNG, JPG, SVG supported</p>
           <input
             ref={fileInputRef}
             type="file"
@@ -72,38 +73,35 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
         </div>
       ) : (
         <div className="space-y-3">
-          {/* Preview */}
-          <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div className="flex items-center gap-4 p-3 bg-slate-950/50 rounded-xl border border-slate-800">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={previewUrl}
               alt="Logo preview"
-              className="w-14 h-14 object-contain rounded-lg border border-slate-200 bg-white p-1"
+              className="w-14 h-14 object-contain rounded-lg border border-slate-700 bg-slate-900 p-1"
             />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-700">Logo Applied</p>
-              <p className="text-xs text-amber-600 mt-0.5">
-                ⚠️ Error correction auto-set to H
+              <p className="text-sm font-semibold text-slate-200">Logo Applied</p>
+              <p className="text-xs text-amber-400 mt-0.5 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                Error correction auto-set to H
               </p>
             </div>
             <button
               type="button"
               onClick={handleRemove}
-              className="text-red-500 hover:text-red-600 text-sm font-semibold px-3 py-1 rounded-lg border-2 border-red-200 hover:border-red-400 transition-all"
+              className="text-red-400 hover:text-red-300 text-sm font-semibold px-3 py-1 rounded-lg border border-red-900/50 hover:border-red-700/60 bg-red-950/20 transition-all"
             >
               Remove
             </button>
           </div>
 
-          {isLoading && <p className="text-sm text-center text-gray-500">Processing…</p>}
+          {isLoading && <p className={`text-sm text-center ${QR_MUTED}`}>Processing…</p>}
 
-          {/* Size slider */}
           <div>
             <div className="flex justify-between mb-1">
-              <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                Logo Size
-              </label>
-              <span className="text-xs text-gray-500 font-mono">
+              <label className={QR_LABEL_INLINE}>Logo Size</label>
+              <span className={`${QR_MUTED} font-mono`}>
                 {Math.round((logo?.size ?? 0.2) * 100)}%
               </span>
             </div>
@@ -113,24 +111,19 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
               max={40}
               step={1}
               value={Math.round((logo?.size ?? 0.2) * 100)}
-              onChange={e =>
-                onChange({ ...logo!, size: Number(e.target.value) / 100 })
-              }
+              onChange={e => onChange({ ...logo!, size: Number(e.target.value) / 100 })}
               className="w-full accent-primary"
             />
-            <div className="flex justify-between text-xs text-gray-400 mt-0.5">
+            <div className={`flex justify-between ${QR_HINT} mt-0.5`}>
               <span>10%</span>
               <span className="text-amber-500">max 40%</span>
             </div>
           </div>
 
-          {/* Margin slider */}
           <div>
             <div className="flex justify-between mb-1">
-              <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                Margin
-              </label>
-              <span className="text-xs text-gray-500 font-mono">{logo?.margin ?? 5}px</span>
+              <label className={QR_LABEL_INLINE}>Margin</label>
+              <span className={`${QR_MUTED} font-mono`}>{logo?.margin ?? 5}px</span>
             </div>
             <input
               type="range"
@@ -143,11 +136,10 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
             />
           </div>
 
-          {/* Hide background dots toggle */}
           <label className="flex items-center gap-3 cursor-pointer">
             <div
               className={`relative w-10 h-5 rounded-full transition-colors ${
-                logo?.hideBackgroundDots ? 'bg-primary-500' : 'bg-slate-300'
+                logo?.hideBackgroundDots ? 'bg-primary' : 'bg-slate-700'
               }`}
               onClick={() =>
                 onChange({ ...logo!, hideBackgroundDots: !logo?.hideBackgroundDots })
@@ -159,14 +151,13 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
                 }`}
               />
             </div>
-            <span className="text-sm text-gray-700">Hide dots behind logo</span>
+            <span className="text-sm text-slate-300">Hide dots behind logo</span>
           </label>
 
-          {/* Change file */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="w-full text-sm text-primary-600 border-2 border-primary-200 rounded-lg py-2 hover:bg-primary-50 transition-all"
+            className="w-full text-sm text-primary border border-primary/30 rounded-lg py-2 hover:bg-primary/10 transition-all"
           >
             Change Image
           </button>

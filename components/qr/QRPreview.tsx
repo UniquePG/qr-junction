@@ -15,6 +15,8 @@ let QRCodeStyling: typeof import('qr-code-styling').default | null = null;
 interface QRPreviewProps {
   value: string;
   config: QRConfig;
+  /** Max edge length (px) for on-screen preview; canvas stays full-res for export */
+  previewMaxPx?: number;
 }
 
 export interface QRPreviewHandle {
@@ -79,12 +81,31 @@ function buildOptions(value: string, config: QRConfig) {
 }
 
 const QRPreview = forwardRef<QRPreviewHandle, QRPreviewProps>(
-  ({ value, config }, ref) => {
+  ({ value, config, previewMaxPx = 260 }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const qrInstanceRef = useRef<InstanceType<typeof import('qr-code-styling').default> | null>(null);
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isInitializedRef = useRef(false);
     const initInProgressRef = useRef(false);
+
+    const fitCanvasToContainer = useCallback(() => {
+      const container = containerRef.current;
+      if (!container) return;
+      const canvas = container.querySelector('canvas');
+      const svg = container.querySelector('svg');
+      const target = canvas ?? svg;
+      if (!target) return;
+
+      const maxDim = Math.max(config.size.width, config.size.height);
+      const scale = maxDim > 0 ? Math.min(1, previewMaxPx / maxDim) : 1;
+      const displayW = Math.round(config.size.width * scale);
+      const displayH = Math.round(config.size.height * scale);
+
+      target.style.display = 'block';
+      target.style.width = `${displayW}px`;
+      target.style.height = `${displayH}px`;
+      target.style.maxWidth = '100%';
+    }, [config.size.width, config.size.height, previewMaxPx]);
 
     // Initialize QR instance
     const initQR = useCallback(async (qrValue: string, qrConfig: QRConfig) => {
@@ -129,10 +150,11 @@ const QRPreview = forwardRef<QRPreviewHandle, QRPreviewProps>(
         }
         
         isInitializedRef.current = true;
+        requestAnimationFrame(fitCanvasToContainer);
       }
       
       initInProgressRef.current = false;
-    }, []);
+    }, [fitCanvasToContainer]);
 
     // Single effect to handle both initialization and updates
     useEffect(() => {
@@ -154,6 +176,7 @@ const QRPreview = forwardRef<QRPreviewHandle, QRPreviewProps>(
         debounceTimerRef.current = setTimeout(() => {
           if (qrInstanceRef.current && isInitializedRef.current && containerRef.current && !initInProgressRef.current) {
             qrInstanceRef.current.update(buildOptions(value, config));
+            requestAnimationFrame(fitCanvasToContainer);
           }
         }, 300);
       }
@@ -164,7 +187,7 @@ const QRPreview = forwardRef<QRPreviewHandle, QRPreviewProps>(
           debounceTimerRef.current = null;
         }
       };
-    }, [value, config, initQR]);
+    }, [value, config, initQR, fitCanvasToContainer]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -196,13 +219,16 @@ const QRPreview = forwardRef<QRPreviewHandle, QRPreviewProps>(
     return (
       <div
         ref={containerRef}
+        className="qr-preview-canvas-host"
         style={{
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           borderRadius: `${config.background.borderRadius}px`,
           overflow: 'hidden',
-          lineHeight: 0, 
+          lineHeight: 0,
+          maxWidth: '100%',
+          width: 'fit-content',
         }}
       />
     );

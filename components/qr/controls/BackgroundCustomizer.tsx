@@ -1,6 +1,18 @@
 'use client';
 
 import type { GradientConfig, QRBackgroundConfig } from '@/types/qrTypes';
+import {
+  QR_COLOR,
+  QR_COLOR_SM,
+  QR_GRADIENT_TOGGLE_ACTIVE,
+  QR_GRADIENT_TOGGLE_INACTIVE,
+  QR_HINT,
+  QR_INPUT,
+  QR_INPUT_SM,
+  QR_LABEL_INLINE,
+  QR_MUTED,
+  QR_SELECT,
+} from '@/components/qr/controlStyles';
 
 interface BackgroundCustomizerProps {
   background: QRBackgroundConfig;
@@ -24,11 +36,10 @@ export default function BackgroundCustomizer({ background, onChange }: Backgroun
 
   return (
     <div className="space-y-4">
-      {/* Transparent toggle */}
       <label className="flex items-center gap-3 cursor-pointer">
         <div
           className={`relative w-10 h-5 rounded-full transition-colors ${
-            background.transparent ? 'bg-primary-500' : 'bg-slate-300'
+            background.transparent ? 'bg-primary' : 'bg-slate-700'
           }`}
           onClick={() => onChange({ ...background, transparent: !background.transparent })}
         >
@@ -38,14 +49,13 @@ export default function BackgroundCustomizer({ background, onChange }: Backgroun
             }`}
           />
         </div>
-        <span className="text-sm text-gray-700 font-medium">Transparent background</span>
+        <span className="text-sm text-slate-300 font-medium">Transparent background</span>
       </label>
 
       {!background.transparent && (
         <>
-          {/* Color / Gradient header */}
           <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+            <label className={QR_LABEL_INLINE}>
               {hasGradient ? 'Gradient' : 'Background Color'}
             </label>
             <button
@@ -66,9 +76,7 @@ export default function BackgroundCustomizer({ background, onChange }: Backgroun
                 })
               }
               className={`text-xs px-3 py-1 rounded-full border transition-all ${
-                hasGradient
-                  ? 'bg-primary-500 text-white border-primary-500'
-                  : 'border-slate-300 text-gray-600 hover:border-primary-400'
+                hasGradient ? QR_GRADIENT_TOGGLE_ACTIVE : QR_GRADIENT_TOGGLE_INACTIVE
               }`}
             >
               {hasGradient ? '✓ Gradient' : '+ Gradient'}
@@ -81,13 +89,13 @@ export default function BackgroundCustomizer({ background, onChange }: Backgroun
                 type="color"
                 value={background.color}
                 onChange={e => onChange({ ...background, color: e.target.value })}
-                className="w-10 h-10 rounded-lg border-2 border-slate-200 cursor-pointer p-0.5"
+                className={QR_COLOR}
               />
               <input
                 type="text"
                 value={background.color}
                 onChange={e => onChange({ ...background, color: e.target.value })}
-                className="flex-1 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm font-mono focus:outline-none focus:border-primary-400"
+                className={QR_INPUT}
               />
             </div>
           ) : (
@@ -96,10 +104,10 @@ export default function BackgroundCustomizer({ background, onChange }: Backgroun
                 <select
                   value={background.gradient?.type}
                   onChange={e => updateGradient({ type: e.target.value as 'linear' | 'radial' })}
-                  className="flex-1 px-3 py-2 text-sm border-2 border-slate-200 rounded-lg focus:outline-none focus:border-primary-400"
+                  className={QR_SELECT}
                 >
-                  <option value="linear">Linear</option>
-                  <option value="radial">Radial</option>
+                  <option value="linear" className="bg-slate-950">Linear</option>
+                  <option value="radial" className="bg-slate-950">Radial</option>
                 </select>
                 {background.gradient?.type === 'linear' && (
                   <div className="flex items-center gap-1">
@@ -109,9 +117,9 @@ export default function BackgroundCustomizer({ background, onChange }: Backgroun
                       max={360}
                       value={background.gradient?.rotation ?? 0}
                       onChange={e => updateGradient({ rotation: Number(e.target.value) })}
-                      className="w-16 px-2 py-2 text-sm border-2 border-slate-200 rounded-lg focus:outline-none focus:border-primary-400"
+                      className={`w-16 ${QR_INPUT_SM}`}
                     />
-                    <span className="text-xs text-gray-500">°</span>
+                    <span className={QR_MUTED}>°</span>
                   </div>
                 )}
               </div>
@@ -125,7 +133,7 @@ export default function BackgroundCustomizer({ background, onChange }: Backgroun
                       stops[i] = { ...stops[i], color: e.target.value };
                       updateGradient({ colorStops: stops });
                     }}
-                    className="w-9 h-9 rounded-lg border-2 border-slate-200 cursor-pointer p-0.5"
+                    className={QR_COLOR_SM}
                   />
                   <input
                     type="text"
@@ -135,7 +143,7 @@ export default function BackgroundCustomizer({ background, onChange }: Backgroun
                       stops[i] = { ...stops[i], color: e.target.value };
                       updateGradient({ colorStops: stops });
                     }}
-                    className="flex-1 px-2 py-2 border-2 border-slate-200 rounded-lg text-xs font-mono focus:outline-none focus:border-primary-400"
+                    className={QR_INPUT_SM}
                   />
                 </div>
               ))}
@@ -144,13 +152,10 @@ export default function BackgroundCustomizer({ background, onChange }: Backgroun
         </>
       )}
 
-      {/* Border radius */}
       <div>
         <div className="flex justify-between mb-1">
-          <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-            Corner Radius
-          </label>
-          <span className="text-xs text-gray-500 font-mono">{background.borderRadius}px</span>
+          <label className={QR_LABEL_INLINE}>Corner Radius</label>
+          <span className={`${QR_MUTED} font-mono`}>{background.borderRadius}px</span>
         </div>
         <input
           type="range"
@@ -161,7 +166,7 @@ export default function BackgroundCustomizer({ background, onChange }: Backgroun
           onChange={e => onChange({ ...background, borderRadius: Number(e.target.value) })}
           className="w-full accent-primary"
         />
-        <div className="flex justify-between text-xs text-gray-400 mt-0.5">
+        <div className={`flex justify-between ${QR_HINT} mt-0.5`}>
           <span>Sharp</span>
           <span>Rounded</span>
         </div>

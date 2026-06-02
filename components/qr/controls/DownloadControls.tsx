@@ -47,7 +47,7 @@ export default function DownloadControls({
     <div className="space-y-4 w-full">
       {/* Format */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+        <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">
           Format
         </label>
         <div className="grid grid-cols-4 gap-2">
@@ -58,8 +58,8 @@ export default function DownloadControls({
               onClick={() => onChange({ ...config, format: f.value })}
               className={`flex flex-col items-center py-2 rounded-lg border-2 text-xs font-medium transition-all ${
                 config.format === f.value
-                  ? 'border-primary-500 bg-primary-50 text-primary-600'
-                  : 'border-slate-200 text-gray-600 hover:border-slate-300'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-slate-800 text-slate-400 hover:border-slate-600 hover:text-slate-200'
               }`}
             >
               <f.Icon className="w-4 h-4 mb-0.5" />
@@ -71,7 +71,7 @@ export default function DownloadControls({
 
       {/* Scale */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+        <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">
           Resolution Scale
         </label>
         <div className="flex flex-col gap-2">
@@ -85,7 +85,7 @@ export default function DownloadControls({
                 onChange={() => onChange({ ...config, scale: s.value })}
                 className="accent-primary w-4 h-4"
               />
-              <span className="text-sm text-gray-700">{s.label}</span>
+              <span className="text-sm text-slate-300">{s.label}</span>
             </label>
           ))}
         </div>
@@ -93,7 +93,7 @@ export default function DownloadControls({
 
       {/* File name */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+        <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">
           File Name
         </label>
         <div className="flex items-center gap-2">
@@ -102,9 +102,9 @@ export default function DownloadControls({
             value={config.fileName}
             onChange={e => onChange({ ...config, fileName: e.target.value })}
             placeholder="qrcode"
-            className="flex-1 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-400"
+            className="flex-1 px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
-          <span className="text-sm text-gray-400">.{config.format}</span>
+          <span className="text-sm text-slate-500">.{config.format}</span>
         </div>
       </div>
 
@@ -115,8 +115,8 @@ export default function DownloadControls({
         disabled={!hasQRValue}
         className={`w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all shadow-sm ${
           hasQRValue
-            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:-translate-y-0.5 hover:shadow-md'
-            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+            ? 'bg-emerald-600 hover:bg-emerald-700 text-white hover:-translate-y-0.5 hover:shadow-md'
+            : 'bg-slate-800/60 text-slate-500 cursor-not-allowed border border-slate-800'
         }`}
       >
         <Download className="w-4 h-4" />

@@ -1,6 +1,14 @@
 'use client';
 
 import type { QRSizeConfig } from '@/types/qrTypes';
+import {
+  QR_HINT,
+  QR_LABEL,
+  QR_LABEL_INLINE,
+  QR_MUTED,
+  QR_OPTION_ACTIVE,
+  QR_OPTION_INACTIVE,
+} from '@/components/qr/controlStyles';
 
 interface SizeControlsProps {
   size: QRSizeConfig;
@@ -25,10 +33,8 @@ function SliderRow({
   return (
     <div>
       <div className="flex justify-between mb-1">
-        <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-          {label}
-        </label>
-        <span className="text-xs text-gray-500 font-mono">
+        <label className={QR_LABEL_INLINE}>{label}</label>
+        <span className={`${QR_MUTED} font-mono`}>
           {value}
           {unit}
         </span>
@@ -42,7 +48,7 @@ function SliderRow({
         onChange={e => onChange(Number(e.target.value))}
         className="w-full accent-primary"
       />
-      <div className="flex justify-between text-xs text-gray-400 mt-0.5">
+      <div className={`flex justify-between ${QR_HINT} mt-0.5`}>
         <span>
           {min}
           {unit}
@@ -77,10 +83,10 @@ export default function SizeControls({ size, onChange }: SizeControlsProps) {
       />
       <div>
         <div className="flex justify-between mb-1">
-          <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+          <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
             Margin
           </label>
-          <span className="text-xs text-gray-500 font-mono">{size.margin}px</span>
+          <span className={`${QR_MUTED} font-mono`}>{size.margin}px</span>
         </div>
         <input
           type="range"
@@ -93,11 +99,8 @@ export default function SizeControls({ size, onChange }: SizeControlsProps) {
         />
       </div>
 
-      {/* Quick presets */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-          Quick Sizes
-        </label>
+        <label className={QR_LABEL}>Quick Sizes</label>
         <div className="flex flex-wrap gap-2">
           {[
             { label: 'Small', w: 200, h: 200 },
@@ -111,14 +114,12 @@ export default function SizeControls({ size, onChange }: SizeControlsProps) {
               onClick={() => onChange({ ...size, width: preset.w, height: preset.h })}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg border-2 transition-all ${
                 size.width === preset.w && size.height === preset.h
-                  ? 'border-primary-500 bg-primary-50 text-primary-600'
-                  : 'border-slate-200 text-gray-600 hover:border-slate-300'
+                  ? QR_OPTION_ACTIVE
+                  : QR_OPTION_INACTIVE
               }`}
             >
               {preset.label}
-              <span className="text-gray-400 ml-1">
-                {preset.w}px
-              </span>
+              <span className="text-slate-500 ml-1">{preset.w}px</span>
             </button>
           ))}
         </div>
