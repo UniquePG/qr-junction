@@ -14,9 +14,11 @@ import {
   Plus, 
   Loader2,
   FolderOpen,
-  User as UserIcon
+  User as UserIcon,
+  Layout
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import Image from 'next/image';
 
 export default function DashboardLayout({
   children,
@@ -47,7 +49,7 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />
       </div>
     );
@@ -59,21 +61,30 @@ export default function DashboardLayout({
 
   const navLinks = [
     { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Campaigns', href: '/dashboard/campaigns', icon: FolderOpen },
+    { name: 'Landing Pages', href: '/dashboard/pages', icon: Layout },
     { name: 'My QR Codes', href: '/dashboard/qrs', icon: QrCode },
     { name: 'Collected Leads', href: '/dashboard/leads', icon: Users },
   ];
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-white flex">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-secondary/5 blur-[120px] pointer-events-none" />
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-slate-950/80 border-r border-slate-900 z-30 shrink-0 backdrop-blur-md fixed left-0 top-0 bottom-0 h-screen">
-        <div className="h-16 flex items-center px-6 border-b border-slate-900">
-          <Link href="/dashboard" className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            QR Junction
+      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 z-30 shrink-0 backdrop-blur-md fixed left-0 top-0 bottom-0 h-screen shadow-xs">
+        <div className="h-16 flex items-center px-6 border-b border-slate-200">
+          <Link href="/dashboard" className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-sans tracking-wide">
+            <Image
+            src="/NewLogo/Logo.png"
+            alt="QR Junction"
+            width={160}
+            height={42}
+            className="h-14 w-auto object-contain"
+            priority
+          />
           </Link>
         </div>
 
@@ -89,10 +100,10 @@ export default function DashboardLayout({
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group ${
                   isActive 
                     ? 'bg-primary text-white shadow-primary' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+                    : 'text-slate-650 hover:text-[#001B50] hover:bg-slate-50'
                 }`}
               >
-                <Icon className={`w-5 h-5 transition-transform group-hover:scale-105 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-primary'}`} />
+                <Icon className={`w-5 h-5 transition-transform group-hover:scale-105 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-primary'}`} />
                 <span>{link.name}</span>
               </Link>
             );
@@ -100,27 +111,27 @@ export default function DashboardLayout({
         </nav>
 
         {/* User Info & Sign Out */}
-        <div className="p-4 border-t border-slate-900 bg-slate-950/40">
+        <div className="p-4 border-t border-slate-200 bg-slate-50/50">
           <div className="flex items-center gap-3 mb-4 px-2">
             {user.photoURL ? (
               <img 
                 src={user.photoURL} 
                 alt={user.displayName || 'Avatar'} 
-                className="w-10 h-10 rounded-full border border-slate-800"
+                className="w-10 h-10 rounded-full border border-slate-205"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-primary font-bold">
+              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-primary font-bold">
                 {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-white truncate">{user.displayName || 'User'}</p>
+              <p className="text-sm font-semibold text-[#001B50] truncate">{user.displayName || 'User'}</p>
               <p className="text-xs text-slate-500 truncate">{user.email}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-800 hover:border-red-900/40 hover:bg-red-950/20 text-slate-400 hover:text-red-400 text-sm font-medium transition-all cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-650 hover:text-red-650 text-sm font-medium transition-all cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span>Sign Out</span>
@@ -131,24 +142,34 @@ export default function DashboardLayout({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 relative z-10 md:pl-64">
         {/* Top Header */}
-        <header className="h-16 bg-slate-950/40 border-b border-slate-900/60 flex items-center justify-between px-6 backdrop-blur-sm">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 backdrop-blur-sm shadow-xs">
           <div className="flex items-center gap-4">
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900"
+              className="md:hidden p-1 rounded-lg text-slate-650 hover:text-[#001B50] hover:bg-slate-50"
             >
               <Menu className="w-6 h-6" />
             </button>
-            <h1 className="text-lg font-semibold text-white">
-              {pathname === '/dashboard' ? 'Overview' : pathname.includes('/qrs') ? 'QR Codes' : pathname.includes('/leads') ? 'Collected Leads' : 'Dashboard'}
+            <h1 className="text-lg font-bold text-[#001B50]">
+              {pathname === '/dashboard' 
+                ? 'Overview' 
+                : pathname.includes('/campaigns') 
+                  ? 'Campaigns' 
+                  : pathname.includes('/pages') 
+                    ? 'Landing Pages' 
+                    : pathname.includes('/qrs') 
+                      ? 'QR Codes' 
+                      : pathname.includes('/leads') 
+                        ? 'Collected Leads' 
+                        : 'Dashboard'}
             </h1>
           </div>
 
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard/qrs/new"
-              className="gradient-primary hover:opacity-95 text-white font-medium text-sm py-2 px-4 rounded-xl shadow-primary flex items-center gap-2 cursor-pointer transition-all duration-200"
+              className="gradient-primary hover:opacity-95 text-white font-semibold text-sm py-2 px-4 rounded-xl shadow-primary flex items-center gap-2 cursor-pointer transition-all duration-200 border-none"
             >
               <Plus className="w-4 h-4" />
               <span>Create QR</span>
@@ -172,14 +193,14 @@ export default function DashboardLayout({
           />
 
           {/* Drawer content */}
-          <div className="relative flex flex-col w-72 max-w-xs bg-slate-950 border-r border-slate-900 text-white h-full z-10 p-5 animate-fade-in">
+          <div className="relative flex flex-col w-72 max-w-xs bg-white border-r border-slate-200 text-slate-800 h-full z-10 p-5 animate-fade-in shadow-xl">
             <div className="flex items-center justify-between mb-8">
               <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 QR Junction
               </span>
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900"
+                className="p-1 rounded-lg text-slate-650 hover:text-[#001B50] hover:bg-slate-50"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -197,7 +218,7 @@ export default function DashboardLayout({
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                       isActive 
                         ? 'bg-primary text-white shadow-primary' 
-                        : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+                        : 'text-slate-650 hover:text-[#001B50] hover:bg-slate-50'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -207,21 +228,21 @@ export default function DashboardLayout({
               })}
             </nav>
 
-            <div className="pt-6 border-t border-slate-900 mt-auto">
+            <div className="pt-6 border-t border-slate-200 mt-auto">
               <div className="flex items-center gap-3 mb-4">
                 {user.photoURL ? (
                   <img 
                     src={user.photoURL} 
                     alt={user.displayName || 'Avatar'} 
-                    className="w-10 h-10 rounded-full border border-slate-800"
+                    className="w-10 h-10 rounded-full border border-slate-205"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-primary font-bold">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-250 flex items-center justify-center text-primary font-bold">
                     {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-white truncate">{user.displayName || 'User'}</p>
+                  <p className="text-sm font-semibold text-[#001B50] truncate">{user.displayName || 'User'}</p>
                   <p className="text-xs text-slate-500 truncate">{user.email}</p>
                 </div>
               </div>
@@ -230,7 +251,7 @@ export default function DashboardLayout({
                   setMobileMenuOpen(false);
                   handleLogout();
                 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-800 hover:border-red-900/40 hover:bg-red-950/20 text-slate-400 hover:text-red-400 text-sm font-medium transition-all cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-650 hover:text-red-650 text-sm font-medium transition-all cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign Out</span>

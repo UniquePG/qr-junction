@@ -16,6 +16,14 @@ export async function GET(request: Request) {
         userId,
         status: { not: QRStatus.DELETED },
       },
+      include: {
+        campaign: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -37,7 +45,6 @@ export async function POST(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
     const body = await request.json();
     const { 
       name, 
@@ -48,7 +55,9 @@ export async function POST(request: Request) {
       logoUrl, 
       utmSource, 
       utmMedium, 
-      utmCampaign 
+      utmCampaign,
+      campaignId,
+      landingPageId
     } = body;
 
     // Validation
@@ -69,6 +78,11 @@ export async function POST(request: Request) {
     // Generate short code
     const shortCode = await generateUniqueShortCode();
 
+    // Parse IDs
+    const parsedCampaignId = campaignId ? parseInt(campaignId, 10) : null;
+    const finalLandingPageId = landingPageId || (destination as any)?.landingPageId;
+    const parsedLandingPageId = finalLandingPageId ? parseInt(finalLandingPageId, 10) : null;
+
     // Create the QR Code
     const qrCode = await prisma.qRCode.create({
       data: {
@@ -77,6 +91,8 @@ export async function POST(request: Request) {
         shortCode,
         destination, // Expects JSON object matching destination structure
         userId,
+        campaignId: isNaN(parsedCampaignId as number) ? null : parsedCampaignId,
+        landingPageId: isNaN(parsedLandingPageId as number) ? null : parsedLandingPageId,
         fgColor: fgColor || '#000000',
         bgColor: bgColor || '#FFFFFF',
         logoUrl: logoUrl || null,

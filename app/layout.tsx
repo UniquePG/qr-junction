@@ -2,15 +2,8 @@ import { ToastProvider } from "@/components/ToastProvider";
 import { AuthProvider } from "@/components/AuthContext";
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
-
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
 
 export const metadata: Metadata = {
   title: "Free QR Code Generator | Create Custom QR Codes - QR Junction",
@@ -42,9 +35,9 @@ export const metadata: Metadata = {
     url: "https://www.qrjunction.in/",
     images: [
       {
-        url: "https://www.qrjunction.in/assests/og-image.png",
-        width: 1200,
-        height: 630,
+        url: "https://www.qrjunction.in/NewLogo/logo-192x192.png",
+        width: 192,
+        height: 192,
         alt: "QR Junction - Free QR Code Generator Tool",
       },
     ],
@@ -54,7 +47,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Free QR Code Generator | Create Custom QR Codes - QR Junction",
     description: "Generate free QR codes instantly for URLs, WiFi, contacts, social media & more. Easy-to-use tool with customization options.",
-    images: ["https://www.qrjunction.in/assests/og-image.png"],
+    images: ["https://www.qrjunction.in/NewLogo/logo-192x192.png"],
   },
   alternates: {
     canonical: "https://www.qrjunction.in/",
@@ -73,10 +66,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         {/* Favicon and Icons */}
-        <link rel="icon" href="/assests/favicon.ico" type="image/x-icon" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/assests/favicon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/assests/favicon-32x32.png" />
-        <link rel="apple-touch-icon" href="/assests/apple-touch-icon.png" />
+        <link rel="icon" href="/NewLogo/favicon.ico" type="image/x-icon" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/NewLogo/favicon-16x16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/NewLogo/favicon-32x32.png" />
+        <link rel="apple-touch-icon" href="/NewLogo/apple-touch-icon.png" />
         
         {/* Sitemap */}
         <link rel="sitemap" type="application/xml" href="https://www.qrjunction.in/sitemap.xml" />
@@ -90,6 +83,9 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet" />
         <Script id="structured-data-webapp" type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -99,7 +95,7 @@ export default function RootLayout({
             "operatingSystem": "All",
             "url": "https://www.qrjunction.in/",
             "description": "Free online QR code generator tool to create custom QR codes for URLs, WiFi, contacts, social media, and more with instant download.",
-            "image": "https://www.qrjunction.in/assests/screenshot.png",
+            "image": "https://www.qrjunction.in/NewLogo/logo-192x192.png",
           })}
         </Script>
         <Script id="structured-data-org" type="application/ld+json">
@@ -108,7 +104,7 @@ export default function RootLayout({
             "@type": "Organization",
             "name": "QR Junction",
             "url": "https://www.qrjunction.in/",
-            "logo": "https://www.qrjunction.in/assests/logo.png",
+            "logo": "https://www.qrjunction.in/NewLogo/logo-192x192.png",
             "contactPoint": {
               "@type": "ContactPoint",
               "contactType": "Customer Support",
@@ -161,7 +157,7 @@ export default function RootLayout({
             "operatingSystem": "Web",
             "url": "https://www.qrjunction.in/",
             "description": "Free online QR code generator tool to create custom QR codes for URLs, WiFi, contacts, social media, and more with instant download.",
-            "image": "https://www.qrjunction.in/assests/og-image.png",
+            "image": "https://www.qrjunction.in/NewLogo/logo-192x192.png",
             "offers": {
               "@type": "Offer",
               "price": "0",
@@ -170,7 +166,7 @@ export default function RootLayout({
           })}
         </Script>
       </head>
-      <body className={`${inter.variable} antialiased`} suppressHydrationWarning>
+      <body className="antialiased" suppressHydrationWarning>
         <AuthProvider>
           {children}
         </AuthProvider>

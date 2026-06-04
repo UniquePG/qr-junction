@@ -24,6 +24,8 @@ export default function CreateQrPage() {
   const [activeTab, setActiveTab] = useState<TabType>('url');
   const [formData, setFormData] = useState<FormData>({});
   const [loading, setLoading] = useState(false);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [campaignId, setCampaignId] = useState('');
 
   // Style Customizer State
   const [fgColor, setFgColor] = useState('#000000');
@@ -33,6 +35,30 @@ export default function CreateQrPage() {
   const [utmSource, setUtmSource] = useState('');
   const [utmMedium, setUtmMedium] = useState('');
   const [utmCampaign, setUtmCampaign] = useState('');
+
+  // Fetch campaigns list
+  React.useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        const currentUser = auth.currentUser;
+        if (!currentUser) return;
+        
+        const token = await currentUser.getIdToken();
+        const res = await fetch('/api/campaigns', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCampaigns(data.campaigns || []);
+        }
+      } catch (error) {
+        console.error('Error fetching campaigns for dropdown:', error);
+      }
+    };
+    fetchCampaigns();
+  }, []);
 
   // Form data updater
   const updateFormData = (field: string, value: string | boolean) => {
@@ -52,6 +78,8 @@ export default function CreateQrPage() {
       setFormData(prev => ({ ...prev, wifi: { ...prev.wifi, [field]: value } as FormData['wifi'] }));
     } else if (activeTab === 'app_download') {
       setFormData(prev => ({ ...prev, app_download: { ...prev.app_download, [field]: value } as FormData['app_download'] }));
+    } else if (activeTab === 'landing_page') {
+      setFormData(prev => ({ ...prev, landing_page: { ...prev.landing_page, [field]: value } as FormData['landing_page'] }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
     }
@@ -94,6 +122,8 @@ export default function CreateQrPage() {
           utmSource: utmSource || null,
           utmMedium: utmMedium || null,
           utmCampaign: utmCampaign || null,
+          campaignId: campaignId ? parseInt(campaignId, 10) : null,
+          landingPageId: activeTab === 'landing_page' ? destination.landingPageId : null,
         }),
       });
 
@@ -112,41 +142,76 @@ export default function CreateQrPage() {
     }
   };
 
+  const getCompiledDestUrl = () => {
+    if (activeTab !== 'url' || !formData.url) return '';
+    try {
+      let u = formData.url.trim();
+      if (!/^https?:\/\//i.test(u)) {
+        u = `https://${u}`;
+      }
+      const urlObj = new URL(u);
+      if (utmSource) urlObj.searchParams.set('utm_source', utmSource);
+      if (utmMedium) urlObj.searchParams.set('utm_medium', utmMedium);
+      if (utmCampaign) urlObj.searchParams.set('utm_campaign', utmCampaign);
+      return urlObj.toString();
+    } catch (e) {
+      return formData.url;
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       {/* Back button link */}
       <div className="flex items-center gap-3">
         <Link 
           href="/dashboard/qrs" 
-          className="p-2 bg-slate-950/40 border border-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition-all"
+          className="p-2 bg-slate-55 border border-slate-200 hover:bg-slate-100 text-slate-500 hover:text-[#001B50] rounded-xl transition-all"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h2 className="text-xl font-bold text-white">Create QR Code</h2>
+          <h2 className="text-xl font-bold text-[#001B50]">Create QR Code</h2>
           <p className="text-slate-500 text-xs mt-0.5">Deploy a new dynamic, trackable scan endpoint</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Creation Form Panel */}
-        <form onSubmit={handleCreate} className="lg:col-span-8 bg-slate-900/20 border border-slate-850 p-6 md:p-8 rounded-2xl space-y-6">
-          {/* QR Code Name */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wide">QR Code Name</label>
-            <input
-              type="text"
-              placeholder="e.g. Summer Promo Flyer, WiFi Guest Card"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-slate-950/45 border border-slate-800 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl py-3 px-4 text-sm text-white placeholder-slate-650 outline-none transition-all"
-              required
-            />
+        <form onSubmit={handleCreate} className="lg:col-span-8 bg-white border border-slate-200 p-6 md:p-8 rounded-2xl space-y-6 shadow-sm">
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* QR Code Name */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">QR Code Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Summer Flyer, WiFi Guest Card"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-slate-55 border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl py-3 px-4 text-sm text-slate-800 placeholder-slate-400 outline-none transition-all"
+                required
+              />
+            </div>
+
+            {/* Campaign Selection */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Link to Campaign (Optional)</label>
+              <select
+                value={campaignId}
+                onChange={(e) => setCampaignId(e.target.value)}
+                className="w-full bg-slate-55 border border-slate-200 focus:border-primary rounded-xl py-3 px-4 text-sm text-slate-700 outline-none cursor-pointer transition-all"
+              >
+                <option value="">None (Stand-alone QR)</option>
+                {campaigns.map((camp) => (
+                  <option key={camp.id} value={camp.id}>{camp.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* QR Type Selector */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wide block">Select QR Destination Type</label>
+            <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide block">Select QR Destination Type</label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {TABS.map((t) => {
                 const Icon = t.Icon;
@@ -161,8 +226,8 @@ export default function CreateQrPage() {
                     }}
                     className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all cursor-pointer select-none gap-1.5 ${
                       isSelected 
-                        ? 'bg-primary/15 border-primary text-white font-semibold' 
-                        : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:text-white hover:border-slate-750'
+                        ? 'bg-primary/10 border-primary text-primary font-semibold' 
+                        : 'bg-slate-50 border border-slate-200 text-slate-500 hover:text-[#001B50] hover:bg-slate-100'
                     }`}
                   >
                     <Icon className={`w-4 h-4 ${isSelected ? 'text-primary' : 'text-slate-500'}`} />
@@ -174,7 +239,7 @@ export default function CreateQrPage() {
           </div>
 
           {/* Type-Specific Dynamic Fields */}
-          <div className="bg-slate-950/40 p-6 rounded-xl border border-slate-850/60 space-y-4">
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-200/60 space-y-4">
             <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-2">Destination Configurations</h4>
             <TabFormRenderer
               activeTab={activeTab}
@@ -184,84 +249,91 @@ export default function CreateQrPage() {
           </div>
 
           {/* Design customizers */}
-          <div className="grid grid-cols-2 gap-4 bg-slate-950/20 p-6 rounded-xl border border-slate-850/60">
+          <div className="grid grid-cols-2 gap-4 bg-slate-50/50 p-6 rounded-xl border border-slate-200/60">
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-300 block">Foreground Color</label>
+              <label className="text-xs font-semibold text-slate-655 block">Foreground Color</label>
               <div className="flex gap-2 items-center">
                 <input
                   type="color"
                   value={fgColor}
                   onChange={(e) => setFgColor(e.target.value)}
-                  className="w-8 h-8 rounded border border-slate-800 bg-transparent cursor-pointer overflow-hidden p-0"
+                  className="w-8 h-8 rounded border border-slate-200 bg-transparent cursor-pointer overflow-hidden p-0"
                 />
                 <input
                   type="text"
                   value={fgColor}
                   onChange={(e) => setFgColor(e.target.value)}
-                  className="bg-slate-950 font-mono text-[10px] text-white px-2 py-1.5 rounded border border-slate-800 max-w-[70px] uppercase outline-none focus:border-primary"
+                  className="bg-white font-mono text-[10px] text-slate-750 px-2 py-1.5 rounded border border-slate-200 max-w-[70px] uppercase outline-none focus:border-primary"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-300 block">Background Color</label>
+              <label className="text-xs font-semibold text-slate-655 block">Background Color</label>
               <div className="flex gap-2 items-center">
                 <input
                   type="color"
                   value={bgColor}
                   onChange={(e) => setBgColor(e.target.value)}
-                  className="w-8 h-8 rounded border border-slate-800 bg-transparent cursor-pointer overflow-hidden p-0"
+                  className="w-8 h-8 rounded border border-slate-200 bg-transparent cursor-pointer overflow-hidden p-0"
                 />
                 <input
                   type="text"
                   value={bgColor}
                   onChange={(e) => setBgColor(e.target.value)}
-                  className="bg-slate-950 font-mono text-[10px] text-white px-2 py-1.5 rounded border border-slate-800 max-w-[70px] uppercase outline-none focus:border-primary"
+                  className="bg-white font-mono text-[10px] text-slate-750 px-2 py-1.5 rounded border border-slate-200 max-w-[70px] uppercase outline-none focus:border-primary"
                 />
               </div>
             </div>
           </div>
 
           {/* UTM parameters */}
-          <div className="bg-slate-950/20 p-6 rounded-xl border border-slate-850/60 space-y-4">
+          <div className="bg-slate-50/50 p-6 rounded-xl border border-slate-200/60 space-y-4">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-slate-300 uppercase tracking-wide">UTM Attributes (Optional)</span>
+              <span className="text-xs font-bold text-slate-655 uppercase tracking-wide">UTM Attributes (Optional)</span>
               <span className="cursor-help" title="Used to track campaign referrals in external analytics like Google Analytics.">
-                <HelpCircle className="w-3.5 h-3.5 text-slate-500" />
+                <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-semibold text-slate-400 uppercase">UTM Source</label>
+                <label className="text-[10px] font-semibold text-slate-500 uppercase">UTM Source</label>
                 <input
                   type="text"
                   placeholder="e.g. newsletter, flyer"
                   value={utmSource}
                   onChange={(e) => setUtmSource(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-primary rounded-lg py-2 px-3 text-xs text-white placeholder-slate-600 outline-none transition-all"
+                  className="w-full bg-white border border-slate-200 focus:border-primary rounded-lg py-2 px-3 text-xs text-slate-800 placeholder-slate-450 outline-none transition-all"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-semibold text-slate-400 uppercase">UTM Medium</label>
+                <label className="text-[10px] font-semibold text-slate-500 uppercase">UTM Medium</label>
                 <input
                   type="text"
                   placeholder="e.g. print, qr"
                   value={utmMedium}
                   onChange={(e) => setUtmMedium(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-primary rounded-lg py-2 px-3 text-xs text-white placeholder-slate-600 outline-none transition-all"
+                  className="w-full bg-white border border-slate-200 focus:border-primary rounded-lg py-2 px-3 text-xs text-slate-800 placeholder-slate-450 outline-none transition-all"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-semibold text-slate-400 uppercase">UTM Campaign</label>
+                <label className="text-[10px] font-semibold text-slate-500 uppercase">UTM Campaign</label>
                 <input
                   type="text"
                   placeholder="e.g. summer_2026"
                   value={utmCampaign}
                   onChange={(e) => setUtmCampaign(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-primary rounded-lg py-2 px-3 text-xs text-white placeholder-slate-600 outline-none transition-all"
+                  className="w-full bg-white border border-slate-200 focus:border-primary rounded-lg py-2 px-3 text-xs text-slate-800 placeholder-slate-450 outline-none transition-all"
                 />
               </div>
             </div>
+            
+            {activeTab === 'url' && formData.url && (
+              <div className="text-[10px] text-slate-500 font-mono break-all mt-2 p-3 bg-slate-100 rounded-xl border border-slate-200 leading-normal">
+                <span className="text-primary font-bold block mb-1">Compiled Final Destination URL:</span>
+                <span className="text-slate-600 select-all">{getCompiledDestUrl()}</span>
+              </div>
+            )}
           </div>
 
           {/* Form Actions */}
@@ -269,7 +341,7 @@ export default function CreateQrPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex-grow py-3 px-4 bg-primary hover:bg-primary/95 text-white rounded-xl text-sm font-semibold cursor-pointer active:scale-95 transition-all shadow-primary disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-grow py-3 px-4 bg-primary hover:bg-primary-hover text-white rounded-xl text-sm font-semibold cursor-pointer active:scale-95 transition-all shadow-primary disabled:opacity-50 flex items-center justify-center gap-2 border-none"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -282,7 +354,7 @@ export default function CreateQrPage() {
             </button>
             <Link
               href="/dashboard/qrs"
-              className="flex-grow border border-slate-850 hover:bg-slate-800 text-slate-350 py-3 px-4 rounded-xl text-sm font-semibold text-center transition-all cursor-pointer"
+              className="flex-grow border border-slate-200 hover:bg-slate-100 text-slate-600 py-3 px-4 rounded-xl text-sm font-semibold text-center transition-all cursor-pointer bg-white"
             >
               Cancel
             </Link>
@@ -290,13 +362,13 @@ export default function CreateQrPage() {
         </form>
 
         {/* Live Preview Sidebar (col-span-4) */}
-        <div className="lg:col-span-4 bg-slate-900/40 border border-slate-800 p-6 rounded-2xl space-y-6 lg:sticky lg:top-24">
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+        <div className="lg:col-span-4 bg-white border border-slate-200 shadow-sm p-6 rounded-2xl space-y-6 lg:sticky lg:top-24">
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
             <Eye className="w-4 h-4 text-primary animate-pulse" />
-            <h3 className="text-sm font-semibold text-white">Live Design Preview</h3>
+            <h3 className="text-sm font-semibold text-[#001B50]">Live Design Preview</h3>
           </div>
 
-          <div className="bg-white p-6 rounded-xl flex items-center justify-center border border-slate-800/10 shadow-lg aspect-square max-w-[200px] mx-auto transition-transform hover:scale-102">
+          <div className="bg-white p-6 rounded-xl flex items-center justify-center border border-slate-200 shadow-md aspect-square max-w-[200px] mx-auto transition-transform hover:scale-102">
             <QRCodeSVG
               value="https://qrjunction.in/q/preview"
               size={150}
@@ -307,23 +379,23 @@ export default function CreateQrPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 space-y-2.5 text-xs text-slate-400">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5 text-xs text-slate-500">
               <div>
-                <span className="text-[10px] font-semibold uppercase text-slate-500 block mb-0.5">Campaign Name</span>
-                <span className="text-white font-medium truncate block">{name || 'Unnamed Campaign'}</span>
+                <span className="text-[10px] font-semibold uppercase text-slate-400 block mb-0.5">Campaign Name</span>
+                <span className="text-slate-800 font-semibold truncate block">{name || 'Unnamed Campaign'}</span>
               </div>
-              <div className="grid grid-cols-2 gap-2 border-t border-slate-900 pt-2">
+              <div className="grid grid-cols-2 gap-2 border-t border-slate-200 pt-2">
                 <div>
-                  <span className="text-[10px] font-semibold uppercase text-slate-500 block">Type</span>
+                  <span className="text-[10px] font-semibold uppercase text-slate-400 block">Type</span>
                   <span className="text-primary font-bold uppercase">{activeTab}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-semibold uppercase text-slate-500 block">Status</span>
-                  <span className="text-emerald-400 font-bold">ACTIVE</span>
+                  <span className="text-[10px] font-semibold uppercase text-slate-400 block">Status</span>
+                  <span className="text-emerald-650 font-bold">ACTIVE</span>
                 </div>
               </div>
             </div>
-            <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-850/60 text-[10px] text-slate-500 leading-normal">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-[10px] text-slate-400 leading-normal">
               💡 <strong>Dynamic Redirect</strong>: You can print this QR code immediately. You can change its destination fields later without reprinting or changing the physical QR image.
             </div>
           </div>

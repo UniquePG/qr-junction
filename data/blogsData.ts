@@ -77,7 +77,7 @@ export const blogs: Record<string, BlogPost> = {
         "QR code benefits",
         "create QR code",
       ],
-      ogImage: "/assests/og-image.png",
+      ogImage: "/NewLogo/logo-192x192.png",
     },
 
     author: {

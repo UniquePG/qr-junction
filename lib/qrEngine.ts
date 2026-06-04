@@ -13,7 +13,8 @@ import {
   MessageSquareText, 
   Mail, 
   Wifi,
-  Smartphone
+  Smartphone,
+  Layout
 } from 'lucide-react';
 import { QRType } from '@prisma/client';
 
@@ -32,7 +33,8 @@ export type TabType =
   | 'sms'
   | 'email'
   | 'wifi'
-  | 'app_download';
+  | 'app_download'
+  | 'landing_page';
 
 export interface FormData {
   url?: string;
@@ -56,6 +58,7 @@ export interface FormData {
   email?: { address: string; subject: string; body: string };
   wifi?: { ssid: string; password: string; encryption: string; hidden: boolean };
   app_download?: { iosUrl: string; androidUrl: string; fallbackUrl: string };
+  landing_page?: { landingPageId: string };
 }
 
 export interface TabConfig {
@@ -81,6 +84,7 @@ export const TABS: TabConfig[] = [
   { id: 'email', label: 'Email', Icon: Mail, qrType: QRType.EMAIL },
   { id: 'wifi', label: 'WiFi', Icon: Wifi, qrType: QRType.WIFI },
   { id: 'app_download', label: 'App Store', Icon: Smartphone, qrType: QRType.APP_DOWNLOAD },
+  { id: 'landing_page', label: 'Landing Page', Icon: Layout, qrType: QRType.LANDING_PAGE },
 ];
 
 export function formatQRData(tab: TabType, data: FormData): string {
@@ -144,6 +148,8 @@ export function formatQRData(tab: TabType, data: FormData): string {
       const d = data.app_download || { iosUrl: '', androidUrl: '', fallbackUrl: '' };
       return d.fallbackUrl || '';
     }
+    case 'landing_page':
+      return data.landing_page?.landingPageId ? `landing-page-${data.landing_page.landingPageId}` : '';
     default:
       return '';
   }
@@ -164,6 +170,7 @@ export function validateForm(tab: TabType, formData: FormData): string | null {
   if (tab === 'email' && !formData.email?.address?.trim()) return 'Please enter an email address';
   if (tab === 'wifi' && !formData.wifi?.ssid?.trim()) return 'Please enter a network name (SSID)';
   if (tab === 'app_download' && !formData.app_download?.fallbackUrl?.trim()) return 'Please enter a fallback redirect URL';
+  if (tab === 'landing_page' && !formData.landing_page?.landingPageId) return 'Please select a landing page';
   return null;
 }
 
@@ -223,6 +230,8 @@ export function getDbDestination(tab: TabType, data: FormData): any {
         androidUrl: data.app_download?.androidUrl, 
         fallbackUrl: data.app_download?.fallbackUrl 
       };
+    case 'landing_page':
+      return { landingPageId: data.landing_page?.landingPageId };
     default:
       return {};
   }
@@ -269,6 +278,8 @@ export function getFormDataFromDb(tab: TabType, dest: any): FormData {
       return { wifi: { ssid: dest.ssid || '', password: dest.password || '', encryption: dest.encryption || 'WPA', hidden: !!dest.hidden } };
     case 'app_download':
       return { app_download: { iosUrl: dest.iosUrl || '', androidUrl: dest.androidUrl || '', fallbackUrl: dest.fallbackUrl || '' } };
+    case 'landing_page':
+      return { landing_page: { landingPageId: dest.landingPageId || '' } };
     default:
       return {};
   }

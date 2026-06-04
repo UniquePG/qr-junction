@@ -60,7 +60,7 @@ export default function DotsCustomizer({ dots, onChange }: DotsCustomizerProps) 
                 dots.type === style.value ? QR_OPTION_ACTIVE : QR_OPTION_INACTIVE
               }`}
             >
-              <span className="text-lg leading-none mb-1 text-slate-300">{style.preview}</span>
+              <span className="text-lg leading-none mb-1 text-slate-500">{style.preview}</span>
               {style.label}
             </button>
           ))}
@@ -120,8 +120,8 @@ export default function DotsCustomizer({ dots, onChange }: DotsCustomizerProps) 
                 onChange={e => updateGradient({ type: e.target.value as 'linear' | 'radial' })}
                 className={QR_SELECT}
               >
-                <option value="linear" className="bg-slate-950">Linear</option>
-                <option value="radial" className="bg-slate-950">Radial</option>
+                <option value="linear" className="bg-white text-slate-800">Linear</option>
+                <option value="radial" className="bg-white text-slate-800">Radial</option>
               </select>
               {dots.gradient?.type === 'linear' && (
                 <div className="flex items-center gap-2">

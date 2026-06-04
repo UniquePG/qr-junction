@@ -52,19 +52,19 @@ export default function FrameSelector({ frame, onChange }: FrameSelectorProps) {
             className={`flex flex-col items-start p-3 rounded-xl border-2 text-left transition-all ${
               frame.templateId === template.id
                 ? 'border-primary bg-primary/10'
-                : 'border-slate-800 hover:border-slate-600 bg-slate-950/50'
+                : 'border-slate-200 hover:border-slate-350 bg-slate-50'
             }`}
           >
             <span className="text-xl mb-1">{template.emoji}</span>
-            <span className="text-xs font-bold text-slate-200 leading-tight">{template.name}</span>
+            <span className="text-xs font-bold text-[#001B50] leading-tight">{template.name}</span>
             <span className={`text-xs ${QR_MUTED} leading-tight mt-0.5`}>{template.description}</span>
           </button>
         ))}
       </div>
 
       {selected && (
-        <div className="space-y-3 pt-2 border-t border-slate-800/80">
-          <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wide">
+        <div className="space-y-3 pt-2 border-t border-slate-200/80">
+          <h4 className="text-xs font-bold text-[#001B50] uppercase tracking-wide">
             Edit Frame Text
           </h4>
           {[

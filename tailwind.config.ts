@@ -10,28 +10,35 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#4361ee",
-          50: "#eef2ff",
-          100: "#e0e7ff",
-          500: "#4361ee",
-          600: "#4f46e5",
-          700: "#4338ca",
+          DEFAULT: "#0046a1",
+          hover: "#003680",
+          50: "#f0f7ff",
+          100: "#e0efff",
+          500: "#0046a1",
+          600: "#003680",
+          700: "#002d69",
         },
         secondary: {
-          DEFAULT: "#f72585",
+          DEFAULT: "#001B50",
         },
         accent: {
-          DEFAULT: "#7209b7",
+          DEFAULT: "#0046a1",
         },
       },
       backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-        "gradient-primary": "linear-gradient(0deg, #4361ee, #4361ee)",
+        "gradient-primary": "linear-gradient(135deg, #0046a1, #001B50)",
+        "gradient-indigo-cyan": "linear-gradient(135deg, #0046a1, #001B50)",
       },
       boxShadow: {
-        "primary": "0 4px 10px rgba(67, 97, 238, 0.3)",
-        "primary-hover": "0 6px 15px rgba(67, 97, 238, 0.4)",
+        "primary": "0 4px 14px rgba(0, 70, 161, 0.15)",
+        "primary-hover": "0 6px 20px rgba(0, 70, 161, 0.25)",
+        "cyan-glow": "0 4px 14px rgba(0, 70, 161, 0.15)",
+      },
+      borderRadius: {
+        "sm": "8px",
+        "md": "12px",
+        "lg": "16px",
+        "xl": "20px",
       },
     },
   },

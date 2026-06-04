@@ -83,7 +83,7 @@ export default function SizeControls({ size, onChange }: SizeControlsProps) {
       />
       <div>
         <div className="flex justify-between mb-1">
-          <label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
             Margin
           </label>
           <span className={`${QR_MUTED} font-mono`}>{size.margin}px</span>

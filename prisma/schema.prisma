@@ -33,6 +33,7 @@ enum QRType {
   SMS
   APP_DOWNLOAD
   PDF
+  LANDING_PAGE
 }
 
 enum QRStatus {
@@ -82,6 +83,7 @@ model User {
   qrCodes      QRCode[]
   campaigns    Campaign[]
   leads        Lead[]
+  landingPages LandingPage[]
 
   @@map("users")
 }
@@ -98,6 +100,7 @@ model QRCode {
 
   userId        Int       @map("user_id")                          // Links to the creator
   campaignId    Int?      @map("campaign_id")                         // Optional marketing campaign link
+  landingPageId Int?      @map("landing_page_id")                     // Optional landing page link
 
   // Design appearance
   fgColor       String?   @default("#000000") @map("fg_color")
@@ -118,12 +121,14 @@ model QRCode {
 
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   campaign      Campaign?  @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  landingPage   LandingPage? @relation(fields: [landingPageId], references: [id], onDelete: SetNull)
   scans         Scan[]
   leads         Lead[]
   conversions   Conversion[]
 
   @@index([shortCode])
   @@index([userId])
+  @@index([landingPageId])
   @@map("qr_codes")
 }
 
@@ -228,4 +233,29 @@ model Conversion {
   @@index([qrCodeId])
   @@index([occurredAt])
   @@map("conversions")
+}
+
+model LandingPage {
+  id           Int        @id @default(autoincrement())
+  slug         String     @unique                                  // URL identifier: /p/{slug}
+  title        String
+  theme        String     @default("dark")                         // e.g. dark, light, sunset, ocean, glassmorphism
+  
+  // Custom profile components
+  profileName  String?    @map("profile_name")
+  bio          String?
+  avatarUrl    String?    @map("avatar_url")
+  socialLinks  Json?      @map("social_links")                     // { instagram?, facebook?, linkedin?, twitter?, whatsapp?, phone?, email? }
+  buttons      Json?      @map("buttons")                          // Array of { id, label, url, order }
+  
+  userId       Int        @map("user_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  qrCodes      QRCode[]
+
+  @@index([userId])
+  @@index([slug])
+  @@map("landing_pages")
 }

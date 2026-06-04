@@ -116,8 +116,8 @@ export default function CornerSquaresCustomizer({
               onChange={e => updateGradient({ type: e.target.value as 'linear' | 'radial' })}
               className={`w-full ${QR_SELECT}`}
             >
-              <option value="linear" className="bg-slate-950">Linear</option>
-              <option value="radial" className="bg-slate-950">Radial</option>
+              <option value="linear" className="bg-white text-slate-800">Linear</option>
+              <option value="radial" className="bg-white text-slate-800">Radial</option>
             </select>
             {[0, 1].map(i => (
               <div key={i} className="flex items-center gap-2">

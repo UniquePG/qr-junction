@@ -103,6 +103,19 @@ export async function GET(
 
     if (qrCode.type === 'URL') {
       redirectUrl = dest.url || '/';
+    } else if (qrCode.type === 'LANDING_PAGE') {
+      if (qrCode.landingPageId) {
+        const landingPage = await prisma.landingPage.findUnique({
+          where: { id: qrCode.landingPageId },
+        });
+        if (landingPage) {
+          redirectUrl = `/p/${landingPage.slug}?qrCodeId=${qrCode.id}&utm_source=${utmSource}&utm_medium=${utmMedium}&utm_campaign=${utmCampaign}`;
+        } else {
+          redirectUrl = '/';
+        }
+      } else {
+        redirectUrl = '/';
+      }
     } else if (qrCode.type === 'TEXT') {
       response = new NextResponse(qrTextTemplate(dest.text || ''), {
         headers: { 'Content-Type': 'text/html' },

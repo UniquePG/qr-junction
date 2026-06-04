@@ -32,6 +32,8 @@ interface LeadData {
   } | null;
 }
 
+import ConfirmModal from '@/components/ConfirmModal';
+
 export default function LeadsPage() {
   const { user } = useAuth();
   const [leads, setLeads] = useState<LeadData[]>([]);
@@ -45,6 +47,11 @@ export default function LeadsPage() {
   
   // Copy clipboard states
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Custom Confirm Modal State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletingLeadId, setDeletingLeadId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchLeads = async () => {
     try {
@@ -136,17 +143,21 @@ export default function LeadsPage() {
     }
   };
 
-  const handleDeleteLead = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this lead?')) {
-      return;
-    }
+  const triggerDeleteConfirm = (id: string) => {
+    setDeletingLeadId(id);
+    setDeleteModalOpen(true);
+  };
 
+  const handleDeleteLead = async () => {
+    if (!deletingLeadId) return;
+
+    setDeleting(true);
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
       const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/leads/${id}`, {
+      const res = await fetch(`/api/leads/${deletingLeadId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -155,11 +166,15 @@ export default function LeadsPage() {
 
       if (!res.ok) throw new Error('Failed to delete lead.');
 
-      setLeads(prev => prev.filter(lead => lead.id !== id));
+      setLeads(prev => prev.filter(lead => lead.id !== deletingLeadId));
       toast.success('Lead removed from CRM.');
+      setDeleteModalOpen(false);
     } catch (error) {
       console.error(error);
       toast.error('Failed to delete lead.');
+    } finally {
+      setDeleting(false);
+      setDeletingLeadId(null);
     }
   };
 
@@ -187,39 +202,39 @@ export default function LeadsPage() {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'NEW':
-        return 'bg-blue-950 text-blue-400 border-blue-900/40';
+        return 'bg-blue-50 border-blue-200 text-blue-650';
       case 'CONTACTED':
-        return 'bg-amber-950 text-amber-400 border-amber-900/40';
+        return 'bg-amber-50 border-amber-250 text-amber-650';
       case 'QUALIFIED':
-        return 'bg-purple-950 text-purple-400 border-purple-900/40';
+        return 'bg-purple-50 border-purple-250 text-purple-650';
       case 'WON':
-        return 'bg-emerald-950 text-emerald-400 border-emerald-900/40';
+        return 'bg-emerald-50 border-emerald-250 text-emerald-655';
       case 'LOST':
-        return 'bg-red-950 text-red-400 border-red-900/40';
+        return 'bg-red-50 border-red-250 text-red-650';
       default:
-        return 'bg-slate-950 text-slate-400 border-slate-900';
+        return 'bg-slate-50 border-slate-200 text-slate-600';
     }
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Search & Filter Header layout */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-900/20 p-4 rounded-2xl border border-slate-800/80">
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
         <div className="relative w-full sm:max-w-xs">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1-2 text-slate-500" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
             placeholder="Search leads, email, campaign..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-slate-950/50 border border-slate-800 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all"
+            className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl py-2 pl-10 pr-4 text-sm text-slate-800 placeholder-slate-400 outline-none transition-all"
           />
         </div>
 
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full sm:w-auto bg-slate-950/50 border border-slate-800 rounded-xl py-2 px-4 text-sm text-slate-300 outline-none focus:border-primary cursor-pointer"
+          className="w-full sm:w-auto bg-slate-50 border border-slate-200 rounded-xl py-2 px-4 text-sm text-slate-700 outline-none focus:border-primary cursor-pointer"
         >
           <option value="ALL">All Statuses</option>
           <option value="NEW">New</option>
@@ -231,18 +246,18 @@ export default function LeadsPage() {
       </div>
 
       {/* CRM Table */}
-      <div className="bg-slate-900/10 border border-slate-850 rounded-2xl overflow-hidden shadow-lg">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
         {filteredLeads.length === 0 ? (
-          <div className="text-center py-16 p-8 space-y-2 text-slate-400">
-            <Users className="w-8 h-8 mx-auto text-slate-600 mb-1" />
-            <p className="text-sm font-medium">No leads captured yet.</p>
-            <p className="text-xs text-slate-500">Enable lead collection forms on your WiFi / PDF template redirects.</p>
+          <div className="text-center py-16 p-8 space-y-2 text-slate-500">
+            <Users className="w-8 h-8 mx-auto text-slate-450 mb-1" />
+            <p className="text-sm font-semibold text-[#001B50]">No leads captured yet.</p>
+            <p className="text-xs text-slate-400">Enable lead collection forms on your WiFi / PDF template redirects.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-850 bg-slate-950/40 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider">
                   <th className="py-4 px-6">Lead Details</th>
                   <th className="py-4 px-6">Source QR Campaign</th>
                   <th className="py-4 px-6">Status Stage</th>
@@ -250,37 +265,37 @@ export default function LeadsPage() {
                   <th className="py-4 px-6 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-850/40 text-slate-300">
+              <tbody className="divide-y divide-slate-200/60 text-slate-650">
                 {filteredLeads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-slate-900/10 transition-colors">
+                  <tr key={lead.id} className="hover:bg-slate-50 transition-colors">
                     {/* Details Column */}
                     <td className="py-4 px-6 space-y-1">
-                      <p className="font-semibold text-white text-sm">{lead.name}</p>
+                      <p className="font-semibold text-[#001B50] text-sm">{lead.name}</p>
                       
                       {/* Email info */}
-                      <div className="flex items-center gap-1.5 text-xs text-slate-400 select-all">
-                        <Mail className="w-3.5 h-3.5 text-slate-600" />
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500 select-all">
+                        <Mail className="w-3.5 h-3.5 text-slate-400" />
                         <span>{lead.email}</span>
                         <button
                           onClick={() => handleCopy(`email-${lead.id}`, lead.email)}
-                          className="text-slate-600 hover:text-white p-0.5"
+                          className="text-slate-400 hover:text-[#001B50] p-0.5 cursor-pointer"
                           title="Copy Email"
                         >
-                          {copiedId === `email-${lead.id}` ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          {copiedId === `email-${lead.id}` ? <Check className="w-3 h-3 text-emerald-650" /> : <Copy className="w-3 h-3" />}
                         </button>
                       </div>
 
                       {/* Phone info */}
                       {lead.phone && (
-                        <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                          <PhoneCall className="w-3.5 h-3.5 text-slate-600" />
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                          <PhoneCall className="w-3.5 h-3.5 text-slate-400" />
                           <span>{lead.phone}</span>
                           <button
                             onClick={() => handleCopy(`phone-${lead.id}`, lead.phone || '')}
-                            className="text-slate-600 hover:text-white p-0.5"
+                            className="text-slate-400 hover:text-[#001B50] p-0.5 cursor-pointer"
                             title="Copy Phone"
                           >
-                            {copiedId === `phone-${lead.id}` ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                            {copiedId === `phone-${lead.id}` ? <Check className="w-3 h-3 text-emerald-650" /> : <Copy className="w-3 h-3" />}
                           </button>
                         </div>
                       )}
@@ -290,15 +305,15 @@ export default function LeadsPage() {
                     <td className="py-4 px-6">
                       {lead.qrCode ? (
                         <div className="space-y-1">
-                          <p className="text-xs font-semibold text-slate-200 truncate max-w-[150px]" title={lead.qrCode.name}>
+                          <p className="text-xs font-semibold text-slate-700 truncate max-w-[150px]" title={lead.qrCode.name}>
                             {lead.qrCode.name}
                           </p>
-                          <span className="text-[9px] font-mono text-slate-500">
+                          <span className="text-[9px] font-mono text-slate-400">
                             /q/{lead.qrCode.shortCode}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-xs text-slate-500 italic">Direct Referral</span>
+                        <span className="text-xs text-slate-450 italic">Direct Referral</span>
                       )}
                     </td>
 
@@ -325,13 +340,13 @@ export default function LeadsPage() {
                             type="text"
                             value={tempNotes}
                             onChange={(e) => setTempNotes(e.target.value)}
-                            className="bg-slate-950 border border-primary text-xs rounded p-1.5 text-white outline-none w-full"
+                            className="bg-slate-50 border border-primary text-xs rounded p-1.5 text-slate-800 outline-none w-full"
                             placeholder="Add lead note..."
                             autoFocus
                           />
                           <button
                             onClick={() => handleSaveNotes(lead.id)}
-                            className="p-1.5 bg-primary text-white rounded hover:opacity-90 cursor-pointer"
+                            className="p-1.5 bg-primary hover:bg-primary-hover text-white rounded hover:opacity-90 cursor-pointer border-none flex items-center justify-center"
                           >
                             <Save className="w-3.5 h-3.5" />
                           </button>
@@ -339,7 +354,7 @@ export default function LeadsPage() {
                       ) : (
                         <div 
                           onClick={() => handleStartEditNotes(lead)}
-                          className="text-xs text-slate-400 cursor-pointer hover:text-white italic py-1 border border-transparent hover:border-slate-800 px-2 rounded min-h-[28px] truncate"
+                          className="text-xs text-slate-500 cursor-pointer hover:text-[#001B50] italic py-1 border border-transparent hover:border-slate-200 px-2 rounded min-h-[28px] truncate"
                           title="Click to edit notes"
                         >
                           {lead.notes || 'Click to add notes...'}
@@ -350,8 +365,8 @@ export default function LeadsPage() {
                     {/* Row controls */}
                     <td className="py-4 px-6 text-center">
                       <button
-                        onClick={() => handleDeleteLead(lead.id)}
-                        className="p-2 text-slate-500 hover:text-red-400 bg-slate-950/20 border border-slate-900 rounded-lg hover:border-red-950/50 transition-colors cursor-pointer"
+                        onClick={() => triggerDeleteConfirm(lead.id)}
+                        className="p-2 text-slate-550 hover:text-red-655 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
                         title="Delete Lead"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -364,6 +379,21 @@ export default function LeadsPage() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={deleteModalOpen}
+        title="Delete Lead Entry?"
+        message="Are you sure you want to delete this lead? This will permanently remove their records from your dashboard CRM."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDanger={true}
+        isLoading={deleting}
+        onConfirm={handleDeleteLead}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setDeletingLeadId(null);
+        }}
+      />
     </div>
   );
 }

@@ -39,7 +39,7 @@ export default function BackgroundCustomizer({ background, onChange }: Backgroun
       <label className="flex items-center gap-3 cursor-pointer">
         <div
           className={`relative w-10 h-5 rounded-full transition-colors ${
-            background.transparent ? 'bg-primary' : 'bg-slate-700'
+            background.transparent ? 'bg-primary' : 'bg-slate-300'
           }`}
           onClick={() => onChange({ ...background, transparent: !background.transparent })}
         >
@@ -49,7 +49,7 @@ export default function BackgroundCustomizer({ background, onChange }: Backgroun
             }`}
           />
         </div>
-        <span className="text-sm text-slate-300 font-medium">Transparent background</span>
+        <span className="text-sm text-slate-700 font-medium">Transparent background</span>
       </label>
 
       {!background.transparent && (
@@ -106,8 +106,8 @@ export default function BackgroundCustomizer({ background, onChange }: Backgroun
                   onChange={e => updateGradient({ type: e.target.value as 'linear' | 'radial' })}
                   className={QR_SELECT}
                 >
-                  <option value="linear" className="bg-slate-950">Linear</option>
-                  <option value="radial" className="bg-slate-950">Radial</option>
+                  <option value="linear" className="bg-white text-slate-800">Linear</option>
+                  <option value="radial" className="bg-white text-slate-800">Radial</option>
                 </select>
                 {background.gradient?.type === 'linear' && (
                   <div className="flex items-center gap-1">

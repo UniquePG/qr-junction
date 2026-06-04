@@ -85,7 +85,22 @@ export async function PUT(
       utmSource,
       utmMedium,
       utmCampaign,
+      campaignId,
+      landingPageId,
     } = body;
+
+    // Parse campaign ID if provided
+    const parsedCampaignId = campaignId !== undefined 
+      ? (campaignId ? parseInt(campaignId, 10) : null) 
+      : undefined;
+
+    // Parse landing page ID if provided
+    const finalLandingPageId = landingPageId !== undefined
+      ? landingPageId
+      : (destination?.landingPageId !== undefined ? destination.landingPageId : undefined);
+    const parsedLandingPageId = finalLandingPageId !== undefined
+      ? (finalLandingPageId ? parseInt(finalLandingPageId, 10) : null)
+      : undefined;
 
     // Update fields
     const updated = await prisma.qRCode.update({
@@ -100,6 +115,12 @@ export async function PUT(
         utmSource: utmSource !== undefined ? utmSource : undefined,
         utmMedium: utmMedium !== undefined ? utmMedium : undefined,
         utmCampaign: utmCampaign !== undefined ? utmCampaign : undefined,
+        campaignId: parsedCampaignId !== undefined 
+          ? (parsedCampaignId && isNaN(parsedCampaignId) ? null : parsedCampaignId) 
+          : undefined,
+        landingPageId: parsedLandingPageId !== undefined
+          ? (parsedLandingPageId && isNaN(parsedLandingPageId) ? null : parsedLandingPageId)
+          : undefined,
       },
     });
 

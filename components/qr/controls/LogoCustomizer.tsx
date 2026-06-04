@@ -57,11 +57,11 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
     <div className="space-y-4">
       {!previewUrl ? (
         <div
-          className="border-2 border-dashed border-slate-700 rounded-xl p-6 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all"
+          className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all"
           onClick={() => fileInputRef.current?.click()}
         >
           <ImagePlus className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-          <p className="text-sm font-medium text-slate-300">Click to upload logo</p>
+          <p className="text-sm font-medium text-slate-700">Click to upload logo</p>
           <p className={`${QR_HINT} mt-1`}>PNG, JPG, SVG supported</p>
           <input
             ref={fileInputRef}
@@ -73,16 +73,16 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
         </div>
       ) : (
         <div className="space-y-3">
-          <div className="flex items-center gap-4 p-3 bg-slate-950/50 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={previewUrl}
               alt="Logo preview"
-              className="w-14 h-14 object-contain rounded-lg border border-slate-700 bg-slate-900 p-1"
+              className="w-14 h-14 object-contain rounded-lg border border-slate-250 bg-white p-1"
             />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-slate-200">Logo Applied</p>
-              <p className="text-xs text-amber-400 mt-0.5 flex items-center gap-1">
+              <p className="text-sm font-semibold text-[#001B50]">Logo Applied</p>
+              <p className="text-xs text-amber-600 mt-0.5 flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" />
                 Error correction auto-set to H
               </p>
@@ -90,7 +90,7 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
             <button
               type="button"
               onClick={handleRemove}
-              className="text-red-400 hover:text-red-300 text-sm font-semibold px-3 py-1 rounded-lg border border-red-900/50 hover:border-red-700/60 bg-red-950/20 transition-all"
+              className="text-red-650 hover:text-red-700 text-sm font-semibold px-3 py-1 rounded-lg border border-red-200 hover:border-red-300 bg-red-50 hover:bg-red-100/60 transition-all"
             >
               Remove
             </button>
@@ -139,7 +139,7 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
           <label className="flex items-center gap-3 cursor-pointer">
             <div
               className={`relative w-10 h-5 rounded-full transition-colors ${
-                logo?.hideBackgroundDots ? 'bg-primary' : 'bg-slate-700'
+                logo?.hideBackgroundDots ? 'bg-primary' : 'bg-slate-300'
               }`}
               onClick={() =>
                 onChange({ ...logo!, hideBackgroundDots: !logo?.hideBackgroundDots })
@@ -151,7 +151,7 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
                 }`}
               />
             </div>
-            <span className="text-sm text-slate-300">Hide dots behind logo</span>
+            <span className="text-sm text-slate-650 font-medium">Hide dots behind logo</span>
           </label>
 
           <button
