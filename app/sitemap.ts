@@ -51,5 +51,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9,
   }));
 
-  return [...staticEntries, ...blogEntries];
+  // Add all QR generator landing pages dynamically
+  const { qrLandingContent } = require('@/lib/qrLandingContent');
+  const qrGeneratorTypes = Object.keys(qrLandingContent);
+
+  const qrEntries = qrGeneratorTypes.map((type) => {
+    return {
+      url: `${baseUrl}/${type}-qr-code-generator`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 1.0,
+    };
+  });
+
+  return [...staticEntries, ...blogEntries, ...qrEntries];
 }

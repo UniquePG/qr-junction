@@ -16,6 +16,7 @@ import {
   Wand2,
 } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
 
 import type { QRConfig } from "@/types/qrTypes";
@@ -64,10 +65,12 @@ import SizeControls from "@/components/qr/controls/SizeControls";
 
 interface QRGeneratorProps {
   initialUrl?: string;
+  initialTab?: TabType;
+  lockTab?: boolean;
 }
 
-export default function QRGenerator({ initialUrl }: QRGeneratorProps) {
-  const [activeTab, setActiveTab] = useState<TabType>("url");
+export default function QRGenerator({ initialUrl, initialTab, lockTab }: QRGeneratorProps) {
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab || "url");
   const [formData, setFormData] = useState<FormData>(() => {
     return initialUrl ? { url: initialUrl } : {};
   });
@@ -212,44 +215,66 @@ export default function QRGenerator({ initialUrl }: QRGeneratorProps) {
             </div>
 
             {/* Tab Strip selector */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">
-                Select QR Type
-              </label>
-              <div className="relative -mx-2 px-2">
-                <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white/90 to-transparent z-10 rounded-l-lg" />
-                <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white/90 to-transparent z-10 rounded-r-lg" />
-                <div className="overflow-x-auto scrollbar-none pb-2">
-                  <div className="flex gap-2 min-w-max pr-1">
-                    {TABS.map((tab) => {
-                      const Icon = tab.Icon;
-                      const isSelected = activeTab === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => {
-                            const prev = activeTab;
-                            setActiveTab(tab.id as TabType);
-                            setQrValue("");
-                            setError("");
-                            if (prev !== tab.id) trackTabSwitch(prev, tab.id);
-                          }}
-                          className={`px-3.5 py-2 rounded-xl font-semibold transition-all flex items-center gap-2 whitespace-nowrap text-xs cursor-pointer ${
-                            isSelected
-                              ? "bg-primary text-white shadow-primary shadow-sm border border-transparent"
-                              : "bg-slate-50 border border-slate-200 text-slate-650 hover:text-[#001B50] hover:bg-slate-100"
-                          }`}
-                        >
-                          <Icon className="w-3.5 h-3.5" />
-                          <span>{tab.label}</span>
-                        </button>
-                      );
-                    })}
+            {!lockTab ? (
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">
+                  Select QR Type
+                </label>
+                <div className="relative -mx-2 px-2">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white/90 to-transparent z-10 rounded-l-lg" />
+                  <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white/90 to-transparent z-10 rounded-r-lg" />
+                  <div className="overflow-x-auto scrollbar-none pb-2">
+                    <div className="flex gap-2 min-w-max pr-1">
+                      {TABS.map((tab) => {
+                        const Icon = tab.Icon;
+                        const isSelected = activeTab === tab.id;
+                        return (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => {
+                              const prev = activeTab;
+                              setActiveTab(tab.id as TabType);
+                              setQrValue("");
+                              setError("");
+                              if (prev !== tab.id) trackTabSwitch(prev, tab.id);
+                            }}
+                            className={`px-3.5 py-2 rounded-xl font-semibold transition-all flex items-center gap-2 whitespace-nowrap text-xs cursor-pointer ${
+                              isSelected
+                                ? "bg-primary text-white shadow-primary shadow-sm border border-transparent"
+                                : "bg-slate-50 border border-slate-200 text-slate-650 hover:text-[#001B50] hover:bg-slate-100"
+                            }`}
+                          >
+                            <Icon className="w-3.5 h-3.5" />
+                            <span>{tab.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-3 gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    {(() => {
+                      const ActiveIcon = TABS.find((t) => t.id === activeTab)?.Icon || QrCode;
+                      return <ActiveIcon className="w-4 h-4 text-primary" />;
+                    })()}
+                  </div>
+                  <div>
+                    <span className="text-sm font-bold text-[#001B50] block">
+                      {TABS.find((t) => t.id === activeTab)?.label} QR Code
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-medium">Selected type</span>
+                  </div>
+                </div>
+                <Link href="/qr" className="text-xs font-bold text-primary bg-white border border-slate-200 hover:border-primary hover:text-primary-hover px-3 py-1.5 rounded-lg shadow-sm transition-all whitespace-nowrap text-center">
+                  Change Type
+                </Link>
+              </div>
+            )}
 
             {/* Form input fields */}
             <div className="bg-slate-50/50 rounded-2xl border border-slate-200/80 p-6 min-h-[220px] flex flex-col justify-center">
