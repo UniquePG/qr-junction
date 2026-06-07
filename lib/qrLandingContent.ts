@@ -33,6 +33,21 @@ export interface QRLandingContent {
   useCases: { title: string; desc: string }[];
   benefits: { title: string; desc: string }[];
   faq: { q: string; a: string }[];
+  howToSteps?: { title: string; desc: string }[];
+  comparison?: { 
+    title: string; 
+    theirProduct: string; 
+    ourProduct: string; 
+    points: { feature: string; them: string; us: string }[] 
+  };
+  printGuide?: {
+    title: string;
+    description: string;
+    tips: { title: string; desc: string }[];
+  };
+  ctaExamples?: { title: string; desc: string }[];
+  imagePrompts?: { section: string; prompt: string }[];
+  internalLinks?: { anchor: string; path: string }[];
 }
 
 export const qrLandingContent: Record<string, QRLandingContent> = {
@@ -89,136 +104,302 @@ export const qrLandingContent: Record<string, QRLandingContent> = {
   instagram: {
     type: 'instagram',
     tabType: 'instagram',
-    title: 'Instagram QR Code Generator | Grow Your Followers Instantly',
-    description: 'Create a stunning custom Instagram QR code to instantly connect users directly to your profile. Boost followers, maximize brand engagement, and drive offline traffic straight to your digital grid.',
+    title: 'Free Instagram QR Code Generator | Connect Profile & Reels',
+    description: 'Create a custom Instagram QR code to turn offline audiences into followers. Works perfectly for your Instagram Profile, Posts, Reels, and Story Highlights. No sign-up required.',
     heroHeading: 'Turn Offline Audiences into Instagram Followers',
-    heroSubheading: 'Generate a sleek, beautifully branded QR code that instantly deep-links to your Instagram profile in the native app, completely bypassing the clunky mobile browser experience.',
-    fact: 'Instagram currently boasts over 2 billion active monthly users. Bridging physical touchpoints to your profile via QR codes is statistically the fastest way to grow a localized, highly-engaged organic following.',
+    heroSubheading: 'Generate a sleek, custom-branded QR code that deep-links straight into the Instagram app. Perfect for cafes, salons, creators, and retail stores looking to grow their grid organically.',
+    fact: 'Scanning an Instagram QR code bypasses the clunky mobile browser and opens the native app directly. This simple step increases the chances of a user hitting "Follow" by over 60%.',
     icon: Instagram,
     useCases: [
-      { title: 'Retail Stores & Checkout Counters', desc: 'Place branded QR codes on checkout counters, receipts, or shopping bags to aggressively encourage customers to tag your business in their stories while their purchase is still fresh in their minds.' },
-      { title: 'Networking & Business Cards', desc: 'Give networking contacts a frictionless, modern way to follow your personal brand, photography portfolio, or creative agency without awkwardly spelling out complex usernames.' },
-      { title: 'Restaurant Menus & Table Tents', desc: 'Invite diners to view your mouth-watering grid photos and share their culinary experience on social media by placing codes directly on the tables or physical menus.' }
+      { title: 'Cafe Table Tents & Menus', desc: 'Place a custom QR code on your cafe tables with a CTA like "Scan to follow our Instagram for daily specials". It gives waiting customers something engaging to do and builds your local following.' },
+      { title: 'Salon Mirrors & Counters', desc: 'Let clients scan the mirror sticker while getting a haircut to see your latest transformations, Reels, and bridal makeup portfolios instantly.' },
+      { title: 'Boutique Packaging & Tags', desc: 'Add a small QR code on shopping bags or clothing tags that says "Tag us on Instagram and get featured!" to encourage user-generated content.' }
     ],
     benefits: [
-      { title: 'Native App Deep Linking', desc: 'Our smart Instagram codes open directly inside the native Instagram app rather than a mobile web browser. This ensures users are already logged in and just one tap away from following you.' },
-      { title: 'Frictionless Instant Growth', desc: 'Drastically reduces the friction of spelling out long usernames, handing out business cards, or asking users to manually type into the Instagram search bar.' },
-      { title: 'Complete Brand Aesthetic Control', desc: 'Customize the QR code with your specific brand colors, gradients, and even embed your logo in the center to perfectly match your curated Instagram aesthetic.' }
+      { title: 'Native App Deep Linking', desc: 'Our smart codes open directly inside the native Instagram app rather than a mobile browser. This means users are already logged in and just one tap away from engaging with your content.' },
+      { title: 'Supports Posts, Reels & Highlights', desc: 'Don\'t limit yourself to just profile links. You can generate QR codes that link directly to a viral Reel, a specific product post, or an important Story Highlight.' },
+      { title: 'Complete Brand Aesthetic Control', desc: 'Customize the QR code with your specific brand colors, modern gradients, and embed your own logo in the center to perfectly match your curated aesthetic.' }
+    ],
+    howToSteps: [
+      { title: 'Enter your Instagram Handle', desc: 'Simply type in your exact Instagram username (e.g., @yourbrand), or paste the full URL if you want to link to a specific Reel or Post.' },
+      { title: 'Customize the Design', desc: 'Match your brand\'s vibe. Change the pattern, pick a vibrant color gradient, and upload your brand logo to sit perfectly in the center.' },
+      { title: 'Test the Code', desc: 'Before downloading, take out your smartphone, open the camera app, and scan your computer screen to ensure it opens the Instagram app correctly.' },
+      { title: 'Download and Print', desc: 'Download as a high-quality PNG for digital flyers, or get the crisp SVG format if you plan on printing it on large banners or storefront windows.' }
+    ],
+    comparison: {
+      title: 'Instagram Built-in QR vs QR Junction',
+      theirProduct: 'Instagram App QR',
+      ourProduct: 'QR Junction Custom QR',
+      points: [
+        { feature: 'Destinations', them: 'Only links to your main profile', us: 'Links to Profile, Posts, Reels, or Highlights' },
+        { feature: 'Design Options', them: 'Basic colors and emojis only', us: 'Full brand colors, gradients, and custom shapes' },
+        { feature: 'File Formats', them: 'Low-resolution JPEG screenshot', us: 'High-res PNG, WebP, and scalable vector SVG' },
+        { feature: 'Center Logo', them: 'Forces your profile picture', us: 'Upload any business logo or icon you want' }
+      ]
+    },
+    printGuide: {
+      title: 'Printing Your Instagram QR Code Correctly',
+      description: 'Nothing is worse than printing 1,000 flyers only to realize the QR code doesn\'t scan. Follow these golden rules to ensure your Instagram code scans perfectly every single time.',
+      tips: [
+        { title: 'Minimum Size Requirements', desc: 'For business cards, never print smaller than 2 x 2 cm. For flyers and table tents, aim for 3 to 5 cm. If it\'s going on a poster or storefront, use the 10:1 rule (size should be 1/10th of the scan distance).' },
+        { title: 'Maintain the Quiet Zone', desc: 'Always leave a clear, unprinted white border (called the quiet zone) around the edges of the QR code. If text or graphics touch the code, smartphones won\'t recognize it.' },
+        { title: 'High Contrast is Mandatory', desc: 'Ensure there is a strong contrast between the dark QR dots and the light background. Never use a light yellow QR code on a white background, or a dark blue code on a black background.' },
+        { title: 'Use SVG for Large Prints', desc: 'If you are printing on a large banner, window decal, or hoarding, always download the SVG format. Unlike PNGs, SVGs never pixelate or blur when stretched.' }
+      ]
+    },
+    ctaExamples: [
+      { title: 'Scan to Follow', desc: 'The classic approach. Best paired with an incentive: "Scan to follow our Instagram for daily specials and secret menu items."' },
+      { title: 'Scan to Watch Reel', desc: 'Perfect for product packaging. "Scan to watch how to assemble this product on our latest Instagram Reel."' },
+      { title: 'Tag Us & Get Featured', desc: 'Great for retail mirrors and shopping bags. Encourages customers to take a photo and mention your brand.' }
     ],
     faq: [
-      { q: 'Does this guarantee opening the actual Instagram app?', a: 'Yes! Our generator utilizes smart deep links to ensure that it triggers the device\'s operating system to open the native Instagram app if it is currently installed on the user\'s smartphone.' },
-      { q: 'Can I link to a specific Reel or Post instead of my main profile?', a: 'For linking to specific Reels, IGTV videos, or posts, we highly recommend using the standard "URL" QR code type and simply pasting the direct link to that specific piece of content.' },
-      { q: 'Do I need to paste my full Instagram URL?', a: 'No, our system makes it incredibly simple. Just enter your exact username (e.g., @yourbrand), and our engine handles the complex URL formatting and deep-linking automatically.' }
+      { q: 'How do I create a QR code for my Instagram profile?', a: 'Just type your exact Instagram username into our generator above. Customize the colors, add your logo, and hit download. It\'s completely free.' },
+      { q: 'Can I make a QR code for an Instagram Reel or Post?', a: 'Absolutely! Instead of typing your username, open Instagram, copy the exact link to the Reel or Post, and paste that full URL into our generator.' },
+      { q: 'Is Instagram\'s built-in QR code enough?', a: 'Instagram\'s built-in QR is fine for casual use, but it limits your design to basic emojis and only provides a low-res image. For professional printing, branding, and linking to specific Reels, a custom generator is much better.' },
+      { q: 'What happens if I change my Instagram username?', a: 'If you use a static QR code (which links directly to your username URL), changing your username will break the QR code. You will need to generate and print a new one. To avoid this, use a dynamic URL QR code.' },
+      { q: 'Can I track how many people scan my Instagram QR code?', a: 'Static QR codes cannot be tracked. If you need scan analytics (how many people scanned, from where, and when), you should generate a Dynamic URL QR code and paste your Instagram profile link into it.' },
+      { q: 'Does an Instagram QR code expire?', a: 'Our static Instagram QR codes never expire. They will work permanently as long as your Instagram account remains active and your username stays exactly the same.' }
     ]
   },
   facebook: {
     type: 'facebook',
     tabType: 'facebook',
-    title: 'Facebook QR Code Generator | Connect Instantly With Customers',
-    description: 'Direct customers straight to your Facebook Business Page, Group, or Profile. Generate a highly reliable Facebook QR code to dramatically boost likes, reviews, and community engagement.',
+    title: 'Free Facebook QR Code Generator | Pages & Groups',
+    description: 'Direct customers to your Facebook Page, Group, or Profile instantly. Generate a free custom Facebook QR code to boost likes, check-ins, and local community engagement.',
     heroHeading: 'Boost Your Facebook Page Engagement & Likes',
-    heroSubheading: 'Seamlessly connect your offline, real-world customers to your Facebook business page, private groups, or personal profile with a single, lightning-fast scan.',
-    fact: 'Brick-and-mortar businesses that actively integrate physical QR codes into their social media strategies witness a 35% higher page engagement rate compared to those relying purely on digital ads.',
+    heroSubheading: 'Seamlessly connect your offline, real-world customers to your Facebook business page, private groups, or personal profile with a single scan. Ideal for local businesses, restaurants, and retail stores.',
+    fact: 'Brick-and-mortar businesses that place QR codes on their storefronts see a 35% higher page engagement rate, as customers prefer scanning over searching for a business name on the Facebook app.',
     icon: Facebook,
     useCases: [
       { title: 'Storefront Windows & Signage', desc: 'Encourage passing window shoppers to check out your page for authentic customer reviews, updated holiday hours, and upcoming promotional events even when your store is closed.' },
-      { title: 'Event & Trade Show Booths', desc: 'Gain immediate likes and followers from trade show attendees who visit your booth. This turns a fleeting physical interaction into a long-term digital lead.' },
-      { title: 'Product Inserts & Packaging', desc: 'Ask highly satisfied customers to leave a positive 5-star review on your Facebook page by seamlessly scanning the insert card tucked right inside their unboxing experience.' }
+      { title: 'Restaurant Menus for Check-ins', desc: 'Place a QR code on your tables asking diners to "Check-in on Facebook for a free dessert". This turns every customer into an active promoter of your restaurant.' },
+      { title: 'Product Inserts & Packaging', desc: 'Ask highly satisfied customers to leave a positive 5-star review or join your VIP Facebook Group by scanning the insert card tucked right inside their unboxing experience.' }
     ],
     benefits: [
       { title: 'Seamless Direct Connection', desc: 'Completely bypasses the clunky Facebook search bar, which often leads users to competitor pages or similarly named businesses, landing them directly on your intended page.' },
       { title: 'Increased Authentic Reviews', desc: 'Makes it incredibly simple and frictionless for customers to leave positive feedback on your business page immediately after a great in-store experience.' },
       { title: 'Powerful Community Building', desc: 'Easily invite physical customers to join your private VIP Facebook Groups to build a loyal, dedicated community around your brand or niche.' }
     ],
+    howToSteps: [
+      { title: 'Get your Facebook Link', desc: 'Open Facebook and copy the full URL to your Business Page, Group, or Personal Profile.' },
+      { title: 'Paste and Generate', desc: 'Paste the link into the generator above. Our system will automatically format it to ensure it opens correctly on mobile devices.' },
+      { title: 'Brand Your QR Code', desc: 'Choose Facebook Blue, pick a modern dot pattern, and upload the Facebook logo (or your own) into the center of the code.' },
+      { title: 'Download and Deploy', desc: 'Download your high-resolution QR code and add it to your marketing materials, business cards, or storefront.' }
+    ],
+    comparison: {
+      title: 'Manual Search vs QR Junction',
+      theirProduct: 'Manual Facebook Search',
+      ourProduct: 'QR Junction Code',
+      points: [
+        { feature: 'User Effort', them: 'High (typing and scrolling)', us: 'Zero (instant point and scan)' },
+        { feature: 'Accuracy', them: 'Low (might find competitors)', us: '100% accurate destination' },
+        { feature: 'Speed', them: 'Takes 15-30 seconds', us: 'Takes 2 seconds' },
+        { feature: 'Visual Appeal', them: 'Just plain text', us: 'Branded visual asset' }
+      ]
+    },
+    printGuide: {
+      title: 'Tips for Printing Facebook QR Codes',
+      description: 'Follow these essential tips before you send your Facebook QR code to the printers.',
+      tips: [
+        { title: 'Size Matters', desc: 'Never print the QR code smaller than 2cm by 2cm. For most flyers and table tents, 4cm is the sweet spot.' },
+        { title: 'Use High Contrast', desc: 'A dark blue (Facebook Blue) code on a white background works perfectly. Avoid light colors on light backgrounds.' },
+        { title: 'Include a Call to Action', desc: 'Don\'t just print a lonely QR code. Add text like "Like us on Facebook" or "Join our Community" right above it.' }
+      ]
+    },
+    ctaExamples: [
+      { title: 'Scan to Like Our Page', desc: 'Simple, direct, and effective for building a basic following.' },
+      { title: 'Check-in on Facebook', desc: 'Highly effective for local businesses wanting to increase visibility among their customers\' friends.' },
+      { title: 'Join our VIP Group', desc: 'Perfect for e-commerce brands building a loyal community.' }
+    ],
+
     faq: [
       { q: 'Can I use this to link to a private Facebook Group?', a: 'Yes! You can enter your specific Group ID or the full Group URL to direct users straight there, allowing them to instantly request to join the community.' },
       { q: 'Will this open the mobile browser or the Facebook app?', a: 'Most modern iOS and Android smartphones will recognize the link and prompt the user to open the destination directly within their natively installed Facebook app for the best experience.' },
-      { q: 'Is generating a Facebook QR code free?', a: 'Absolutely. Generating, customizing, and downloading a static Facebook QR code is 100% free with zero hidden costs on our platform.' }
+      { q: 'Is generating a Facebook QR code free?', a: 'Absolutely. Generating, customizing, and downloading a static Facebook QR code is 100% free with zero hidden costs on our platform.' },
+      { q: 'How do I find my Facebook Page URL?', a: 'Go to your Facebook Page on a computer or mobile browser and copy the entire web address from the address bar (e.g., https://www.facebook.com/yourbusinessname).' }
     ]
   },
   whatsapp: {
     type: 'whatsapp',
     tabType: 'whatsapp',
-    title: 'WhatsApp QR Code Generator | Start Chats Instantly',
-    description: 'Generate a smart WhatsApp QR code complete with a pre-filled, custom message. Let your customers start a chat with your business instantly without the hassle of saving your number.',
+    title: 'Free WhatsApp QR Code Generator | Start Chats Instantly',
+    description: 'Create a free WhatsApp QR code with a pre-filled message. Let customers instantly message your business without saving your phone number.',
     heroHeading: 'Start WhatsApp Chats Instantly from Print',
-    heroSubheading: 'Allow customers to message you immediately without the tedious hassle of saving your phone number into their address book first. Maximize your inbound lead generation.',
-    fact: 'WhatsApp boasts a staggering open rate of 98%. Connecting your physical customers directly via a WhatsApp QR code ensures your marketing and support messages actually get seen and read.',
+    heroSubheading: 'Allow customers to message your business immediately without the tedious hassle of saving your phone number into their address book first. Perfect for local businesses, support teams, and real estate.',
+    fact: 'In India, WhatsApp is the primary communication channel for over 500 million users. A WhatsApp QR code removes the friction of adding a contact, increasing inbound inquiries by up to 300%.',
     icon: MessageCircle,
     useCases: [
-      { title: 'Frictionless Customer Support', desc: 'Place these codes on product packaging or instruction manuals so customers can instantly chat with your support team the moment they run into an issue, drastically improving satisfaction.' },
-      { title: 'Real Estate Signage & Flyers', desc: 'Let interested property buyers quickly message a real estate agent to request pricing or schedule a viewing directly from the physical "For Sale" sign on the front lawn.' },
-      { title: 'Restaurant Takeout & Delivery', desc: 'Allow hungry customers to bypass third-party delivery apps and place their takeout orders directly via a WhatsApp chat, saving you massive commission fees.' }
+      { title: 'Local Kirana Stores & Delivery', desc: 'Place a QR code on your flyers so customers can instantly send a pre-filled WhatsApp message like "Hi, I want to place a grocery order" for quick local deliveries.' },
+      { title: 'Real Estate Signage & Brokers', desc: 'Let interested property buyers quickly message a real estate agent to request pricing or schedule a viewing directly from the physical "For Sale" sign on the front lawn.' },
+      { title: 'Restaurant Takeout & Support', desc: 'Allow hungry customers to bypass third-party delivery apps and place their takeout orders directly via a WhatsApp chat, saving you massive commission fees.' }
     ],
     benefits: [
       { title: 'Pre-filled Icebreaker Messages', desc: 'Set up a highly specific default message (e.g., "Hi, I am interested in property 123...") to break the ice and provide instant context for your sales agents when a lead comes in.' },
       { title: 'Bypass Contact Saving', desc: 'Completely eliminates the incredibly tedious process of users needing to manually type and add you to their phone\'s address book before they can send their first message.' },
       { title: 'Dramatically Higher Conversions', desc: 'Direct, instant messaging on an app they already trust significantly reduces lead drop-off rates compared to directing users to clunky, slow-loading mobile web forms.' }
     ],
+    howToSteps: [
+      { title: 'Enter Phone Number', desc: 'Type your full phone number, ensuring you include the correct country code (e.g., 91 for India) without any spaces or the + symbol.' },
+      { title: 'Write a Pre-filled Message', desc: 'Add an optional pre-filled message that will automatically appear in the user\'s chat box when they scan the code.' },
+      { title: 'Design Your QR Code', desc: 'Select the WhatsApp green color, choose a pattern, and place the WhatsApp logo in the center of the code for instant brand recognition.' },
+      { title: 'Test and Download', desc: 'Always test the code with your own smartphone before downloading the high-quality image file for printing.' }
+    ],
+    comparison: {
+      title: 'Manual Contact Saving vs QR Junction',
+      theirProduct: 'Typing Phone Number',
+      ourProduct: 'WhatsApp QR Code',
+      points: [
+        { feature: 'Steps Required', them: 'Copy number > Open Contacts > Save > Open WhatsApp > Search > Message', us: 'Scan > Message' },
+        { feature: 'Customer Drop-off', them: 'Extremely High', us: 'Near Zero' },
+        { feature: 'Context', them: 'Customer has to type everything', us: 'Message is already typed for them' },
+        { feature: 'Privacy', them: 'Must save contact first', us: 'Can message without saving' }
+      ]
+    },
+    printGuide: {
+      title: 'WhatsApp QR Code Printing Guidelines',
+      description: 'Follow these rules to ensure your customers can reach you without frustration.',
+      tips: [
+        { title: 'Clear Call to Action', desc: 'Always write "Scan to WhatsApp us" next to the code. Don\'t assume people know what a generic QR code does.' },
+        { title: 'Test the Country Code', desc: 'A missing country code is the #1 reason WhatsApp QR codes fail. Double-check your number formatting before printing.' },
+        { title: 'Keep it Scannable', desc: 'Ensure the QR code is at least 3x3 cm on business cards and larger on flyers to ensure older smartphone cameras can read it quickly.' }
+      ]
+    },
+    ctaExamples: [
+      { title: 'Scan to Order on WhatsApp', desc: 'Ideal for local food delivery and retail shops.' },
+      { title: 'WhatsApp Support (24/7)', desc: 'Perfect for product packaging and user manuals.' },
+      { title: 'Chat with an Agent', desc: 'Great for real estate signs and car dealerships.' }
+    ],
+
     faq: [
       { q: 'How does the pre-filled custom message work?', a: 'You define a custom message during generation. When the user scans the code, their WhatsApp app opens with your number and that exact text already typed into their chat box, waiting for them to hit send.' },
-      { q: 'Do I really need to include the country code?', a: 'Yes, this is critical. Always include the full international country code (without the + symbol) to ensure the WhatsApp routing link works perfectly for users scanning globally.' },
-      { q: 'Will this work for users on both iOS and Android?', a: 'Yes, WhatsApp deep-linking is universally supported and works flawlessly across all mobile operating systems that have the WhatsApp messenger installed.' }
+      { q: 'Do I really need to include the country code?', a: 'Yes, this is critical. Always include the full international country code (like 91 for India, without the + symbol) to ensure the WhatsApp routing link works perfectly for users scanning globally.' },
+      { q: 'Will this work for users on both iOS and Android?', a: 'Yes, WhatsApp deep-linking is universally supported and works flawlessly across all mobile operating systems that have the WhatsApp messenger installed.' },
+      { q: 'Is it free to generate a WhatsApp QR code?', a: 'Yes, generating a WhatsApp QR code with a pre-filled message is completely free on QR Junction.' }
     ]
   },
   linkedin: {
     type: 'linkedin',
     tabType: 'linkedin',
-    title: 'LinkedIn QR Code Generator | Network Like a Pro',
-    description: 'Generate a professional LinkedIn QR code to seamlessly share your profile or company page. The ultimate networking tool to modernize your business cards, resumes, and conference badges.',
+    title: 'Free LinkedIn QR Code Generator | Profiles & Pages',
+    description: 'Generate a professional LinkedIn QR code to seamlessly share your profile, digital resume, or Company Page. The ultimate networking tool for Indian professionals.',
     heroHeading: 'Modernize Your Professional Networking',
-    heroSubheading: 'Instantly share your comprehensive LinkedIn profile, digital resume, or Company Page with a simple smartphone scan at your next major networking event or conference.',
-    fact: 'Over 80% of B2B leads generated from social media channels originate from LinkedIn. Ensuring your offline contacts can find and connect with you instantly is crucial for career and business growth.',
+    heroSubheading: 'Instantly share your comprehensive LinkedIn profile, digital resume, or Company Page with a simple smartphone scan at your next networking event, job fair, or conference.',
+    fact: 'Over 80% of B2B leads generated from social media channels originate from LinkedIn. Allowing offline contacts to connect with you instantly is crucial for career and business growth.',
     icon: Linkedin,
     useCases: [
       { title: 'Next-Generation Smart Resumes', desc: 'Add a professional QR code to the top of your printed CV so busy recruiters can instantly view your full work history, peer endorsements, and extensive portfolio with one tap.' },
-      { title: 'High-Level Networking Events', desc: 'Replace outdated traditional business cards entirely. Simply have new connections scan your unique code directly from your phone screen to instantly connect on the platform.' },
+      { title: 'High-Level Networking Events', desc: 'Replace outdated traditional business cards entirely. Simply have new connections scan your unique code directly from your phone screen or smart badge to instantly connect.' },
       { title: 'Corporate Pitch Presentations', desc: 'Include a massive QR code on your final "Thank You" slide to allow the entire audience to connect with you effortlessly before they even leave their seats.' }
     ],
     benefits: [
       { title: 'Instant, Error-Free Connections', desc: 'Completely eliminates frustrating name-spelling errors and ensures the person connects with your exact profile, rather than someone else sharing your common name.' },
-      { title: 'Versatile Dual Support', desc: 'Our engine is flexible—generate optimized codes for both individual personal profiles and massive corporate company pages depending on your specific marketing goal.' },
+      { title: 'Versatile Dual Support', desc: 'Our engine is flexible—generate optimized codes for both individual personal profiles and corporate company pages depending on your specific marketing goal.' },
       { title: 'Sustainable & Eco-Friendly', desc: 'Dramatically reduces the need for printing thousands of expensive physical business cards that ultimately end up in the trash, boosting your green credentials.' }
     ],
+    howToSteps: [
+      { title: 'Find Your LinkedIn URL', desc: 'Go to your LinkedIn profile or Company page and copy the public URL from the address bar (e.g., linkedin.com/in/yourname).' },
+      { title: 'Generate Your Code', desc: 'Paste the link into our generator. You can choose to generate a QR code for a Personal Profile or a Company Page.' },
+      { title: 'Add Professional Branding', desc: 'Customize the colors (LinkedIn Blue is always a safe bet) and add a small LinkedIn logo to the center so people know exactly what they are scanning.' },
+      { title: 'Download and Share', desc: 'Download your QR code and add it to your resume, business card, email signature, or presentation slides.' }
+    ],
+    comparison: {
+      title: 'Business Cards vs LinkedIn QR Codes',
+      theirProduct: 'Paper Business Card',
+      ourProduct: 'LinkedIn QR Code',
+      points: [
+        { feature: 'Information Detail', them: 'Limited to name and number', us: 'Full resume and work history' },
+        { feature: 'Follow-up Rate', them: '88% of cards are thrown away', us: 'Instant digital connection' },
+        { feature: 'Cost', them: 'Expensive to print and update', us: '100% Free' },
+        { feature: 'Environmental Impact', them: 'High paper waste', us: 'Zero waste' }
+      ]
+    },
+    printGuide: {
+      title: 'How to Display Your LinkedIn QR Code',
+      description: 'Make sure your professional QR code scans flawlessly at your next big event.',
+      tips: [
+        { title: 'Resume Placement', desc: 'Place it neatly in the top right corner of your resume. Ensure it is at least 2.5 x 2.5 cm so it can be scanned easily by HR software or a mobile phone.' },
+        { title: 'Presentation Slides', desc: 'If placing it on a projector slide, make it large (at least 20% of the slide). Use high contrast so people sitting in the back row can scan it.' },
+        { title: 'Digital Sharing', desc: 'You don\'t always have to print! Save the image to your phone\'s lock screen or a dedicated photo album so you can present it quickly when networking.' }
+      ]
+    },
+    ctaExamples: [
+      { title: 'Scan to Connect', desc: 'Perfect for business cards and name badges.' },
+      { title: 'View Full Resume', desc: 'Excellent for printed portfolios or one-page CVs.' },
+      { title: 'Follow our Company Page', desc: 'Great for B2B brochures and trade show banners.' }
+    ],
+
     faq: [
       { q: 'Can I use this tool to link directly to my Company Page?', a: 'Yes, you can easily toggle the setting between a "Personal Profile" and a "Company Page" when generating the code to ensure the routing is handled correctly.' },
       { q: 'How do I find my exact LinkedIn username or slug?', a: 'Go to your LinkedIn profile and check the URL in your web browser. Your username is the exact text string located immediately after the "in/" or "company/" part of the link.' },
-      { q: 'Will scanning this force the user to log in?', a: 'If they have the LinkedIn app installed on their phone, the OS will deep-link them directly into the app where they are already logged in. Otherwise, it will open the mobile browser.' }
+      { q: 'Will scanning this force the user to log in?', a: 'If they have the LinkedIn app installed on their phone, the OS will deep-link them directly into the app where they are already logged in. Otherwise, it will open the mobile browser.' },
+      { q: 'Is a LinkedIn QR code better than a vCard QR code?', a: 'It depends on your goal. A vCard saves your phone number directly to their contacts. A LinkedIn QR code connects them to your professional network. For pure business networking, LinkedIn is often preferred.' }
     ]
   },
   telegram: {
     type: 'telegram',
     tabType: 'telegram',
-    title: 'Telegram QR Code Generator | Join Channels & Chats Fast',
-    description: 'Create a secure Telegram QR code to instantly add members to your broadcast channel, private group, or start a direct chat. The fastest, most secure way to build your community offline.',
+    title: 'Free Telegram QR Code Generator | Join Channels Fast',
+    description: 'Create a secure Telegram QR code to instantly add members to your broadcast channel, private group, or start a direct chat. The fastest way to build your community offline.',
     heroHeading: 'Explosively Grow Your Telegram Community',
-    heroSubheading: 'Direct high-intent users to your personal secure chat, public community group, or high-volume broadcast channel with a single, frictionless scan.',
-    fact: 'Telegram is recognized as one of the fastest-growing messaging apps globally, boasting over 800 million active users who prioritize privacy, speed, and massive group functionalities.',
+    heroSubheading: 'Direct high-intent users to your personal secure chat, public community group, or high-volume broadcast channel with a single, frictionless scan. Essential for crypto, trading, and tech communities.',
+    fact: 'Telegram is recognized as one of the fastest-growing messaging apps globally, boasting over 800 million active users. Scanning a QR code guarantees users join the correct group instead of a scam copycat.',
     icon: Send,
     useCases: [
-      { title: 'Crypto & Web3 Communities', desc: 'Invite highly-engaged attendees at blockchain conferences and tech events directly to your project\'s official Telegram group to prevent them from falling for phishing scams.' },
-      { title: 'Rapid Customer Support', desc: 'Provide a highly secure, lightning-fast direct messaging channel for complex technical support queries or VIP client onboarding directly from physical marketing.' },
-      { title: 'Mass Content Broadcasting', desc: 'Easily onboard new offline subscribers to your daily news briefings, financial deal alerts, or exclusive content channels by placing codes in high-traffic physical areas.' }
+      { title: 'Crypto & Web3 Communities', desc: 'Invite highly-engaged attendees at blockchain conferences directly to your project\'s official Telegram group, ensuring they don\'t fall for phishing scams via manual search.' },
+      { title: 'Trading & Signal Groups', desc: 'Provide a highly secure, lightning-fast direct entry point for new subscribers joining your daily financial deal alerts or stock market signal channels.' },
+      { title: 'Rapid Customer Support', desc: 'Give VIP clients a direct QR code on their onboarding documents to instantly open a secure, private Telegram chat with your dedicated support team.' }
     ],
     benefits: [
       { title: 'Guaranteed Direct Access', desc: 'Safely bypasses the risky Telegram global search bar, strictly preventing your users from accidentally joining fake impersonator groups or malicious scam channels.' },
       { title: 'Complete Multi-Type Support', desc: 'Our smart routing logic works flawlessly for initiating direct personal messages, joining massive public group chats, and subscribing to one-way broadcast channels.' },
       { title: 'Highly Privacy Focused', desc: 'Allows deep, real-time connections and community building entirely via usernames, completely eliminating the need to share private cellular phone numbers.' }
     ],
+    howToSteps: [
+      { title: 'Copy Your Invite Link', desc: 'Open your Telegram group or channel settings and copy your public link (t.me/yourchannel) or your private invite link.' },
+      { title: 'Paste into Generator', desc: 'Paste the exact link into our generator above. It handles both public and private invite formats flawlessly.' },
+      { title: 'Add Telegram Branding', desc: 'Use the official Telegram light blue color for recognition, and embed the paper plane logo right in the center.' },
+      { title: 'Export High Quality', desc: 'Download your QR code and add it to your marketing materials, youtube videos, or live presentations.' }
+    ],
+    comparison: {
+      title: 'Manual Search vs Telegram QR Code',
+      theirProduct: 'Manual Search',
+      ourProduct: 'QR Junction Code',
+      points: [
+        { feature: 'Scam Risk', them: 'High (users often join fake groups)', us: 'Zero (exact URL routing)' },
+        { feature: 'Speed to Join', them: 'Slow', us: 'Instant' },
+        { feature: 'Friction', them: 'Requires spelling exact username', us: 'Point and scan' },
+        { feature: 'Privacy', them: 'Requires knowing username', us: 'Maintains anonymity before joining' }
+      ]
+    },
+    printGuide: {
+      title: 'Printing Telegram QR Codes for Events',
+      description: 'Make sure your community can scan your code securely at your next live event.',
+      tips: [
+        { title: 'Projection Size', desc: 'If projecting your QR code on a massive screen at a crypto conference, ensure it is high-contrast (dark blue on white) and large enough for the back row to scan.' },
+        { title: 'Business Cards', desc: 'Keep it at least 2.5cm x 2.5cm on business cards. Anything smaller might fail on older Android devices.' },
+        { title: 'Call to Action', desc: 'Always include text like "Scan to Join Official Telegram" to build trust before they scan.' }
+      ]
+    },
+    ctaExamples: [
+      { title: 'Join Official Channel', desc: 'Crucial for crypto and trading groups to prevent scams.' },
+      { title: 'Get Daily Signals', desc: 'Great for financial and betting communities.' },
+      { title: 'Chat with Support', desc: 'Perfect for software and tech product manuals.' }
+    ],
+
     faq: [
-      { q: 'Does this generator work for private, invite-only groups?', a: 'If you have generated a specific invite link for your private group from within Telegram, you can use our standard "URL" QR code type and paste that exact link.' },
+      { q: 'Does this generator work for private, invite-only groups?', a: 'Yes! If you have generated a specific invite link for your private group from within Telegram, you can use our standard "URL" QR code type and paste that exact link.' },
       { q: 'Where do I find my exact Telegram username?', a: 'Open your Telegram app Settings, navigate to "Edit Profile", and you will find your designated username (which usually begins with the @ symbol) located right there.' },
-      { q: 'Do users absolutely need the Telegram app installed?', a: 'Yes. Upon scanning, their device will prompt them to open the chat if they have the app, or redirect them to the App Store to download Telegram if they do not.' }
+      { q: 'Do users absolutely need the Telegram app installed?', a: 'Yes. Upon scanning, their device will prompt them to open the chat if they have the app, or redirect them to the App Store or Play Store to download Telegram if they do not.' }
     ]
   },
   snapchat: {
     type: 'snapchat',
     tabType: 'snapchat',
-    title: 'Snapchat QR Code Generator | Gain Friends Instantly',
-    description: 'Share your Snapchat username via a highly-customizable QR code. This is definitively the fastest, most effective way to gain massive new friends and followers for your daily Snap stories.',
+    title: 'Free Snapchat QR Code Generator | Gain Friends Instantly',
+    description: 'Share your Snapchat username via a highly-customizable QR code. This is definitively the fastest, most effective way to gain new friends and followers for your daily Snap stories.',
     heroHeading: 'Add Friends on Snapchat Instantly via Scan',
-    heroSubheading: 'Make it incredibly easy and highly frictionless for people to add you on Snapchat without the frustration of typing out your exact, complex username.',
-    fact: 'The average active Snapchat user opens the application over 30 times a day. Getting users to add you directly creates an incredibly high-frequency, intimate engagement channel for your brand.',
+    heroSubheading: 'Make it incredibly easy and highly frictionless for people to add you on Snapchat without the frustration of typing out your exact username. Perfect for influencers, events, and Gen Z marketing.',
+    fact: 'The average active Snapchat user opens the application over 30 times a day. Getting users to add you directly creates an incredibly high-frequency engagement channel for your brand.',
     icon: Ghost,
     useCases: [
       { title: 'Cross-Platform Influencer Marketing', desc: 'Prominently display your Snap code at the end of your YouTube videos or as an Instagram post to aggressively cross-pollinate your audience to your more intimate daily stories.' },
@@ -230,6 +411,38 @@ export const qrLandingContent: Record<string, QRLandingContent> = {
       { title: 'Flawless Native App Opening', desc: 'The generated code utilizes deep-linking technology to jump directly into the "Add Friend" confirmation screen natively within the Snapchat application itself.' },
       { title: 'Unmatched Youth Engagement', desc: 'This is universally recognized as the perfect marketing tool for modern brands aggressively targeting the highly lucrative Gen Z and young Millennial demographics.' }
     ],
+    howToSteps: [
+      { title: 'Enter Your Username', desc: 'Type in your exact Snapchat username. You don\'t need to provide the full URL, just the username will work perfectly.' },
+      { title: 'Customize Your Snap Code', desc: 'While Snapchat has its famous yellow codes, you can use our generator to make a custom color code that matches your brand\'s unique aesthetic.' },
+      { title: 'Upload Your Ghost Logo', desc: 'Add the iconic Snapchat ghost logo to the center of your QR code so people know exactly which app it will open.' },
+      { title: 'Download and Share', desc: 'Save the image as a high-res PNG and add it to your YouTube outro, Twitch stream overlay, or printed flyers.' }
+    ],
+    comparison: {
+      title: 'Yellow Snapcode vs Custom QR Code',
+      theirProduct: 'Native Snapcode',
+      ourProduct: 'Custom QR Code',
+      points: [
+        { feature: 'Color Options', them: 'Only yellow', us: 'Any color or gradient' },
+        { feature: 'Scannability', them: 'Needs the Snapchat camera to scan easily', us: 'Scannable by any generic smartphone camera' },
+        { feature: 'Center Graphic', them: 'Requires your bitmoji or profile picture', us: 'Can be any custom logo' },
+        { feature: 'Shape', them: 'Locked to the ghost outline shape', us: 'Clean, modern square or rounded formats' }
+      ]
+    },
+    printGuide: {
+      title: 'Printing Your Snapchat QR Code',
+      description: 'Ensure your new Snapchat followers can actually scan your code by following these quick tips.',
+      tips: [
+        { title: 'Minimum Size', desc: 'Print it at least 2cm by 2cm for close-up scanning. If you are placing it on a banner at an event, make sure it is much larger.' },
+        { title: 'Contrast is Key', desc: 'If you choose to use the classic Snapchat yellow, make sure the background you print it on is dark enough to provide high contrast.' },
+        { title: 'Use SVG for Banners', desc: 'If you are printing a large standee for a college event, download the SVG format so it remains perfectly crisp.' }
+      ]
+    },
+    ctaExamples: [
+      { title: 'Scan to Add on Snap', desc: 'Simple and direct. Great for personal use.' },
+      { title: 'Unlock our AR Filter', desc: 'Excellent for brand activations and marketing events.' },
+      { title: 'See Behind the Scenes', desc: 'Perfect for content creators wanting to drive traffic to their stories.' }
+    ],
+
     faq: [
       { q: 'Is this the exact same thing as a yellow Snapcode?', a: 'No, this generates a standardized, highly customizable QR code that links to your profile. Unlike a Snapcode, it can be scanned by any generic camera app on any phone, not just the Snapchat camera.' },
       { q: 'Do I need to find my full Snapchat profile URL?', a: 'No, our system is built for simplicity. Just your exact Snapchat username is required, and we handle the complex link generation behind the scenes.' },
@@ -239,10 +452,10 @@ export const qrLandingContent: Record<string, QRLandingContent> = {
   twitter: {
     type: 'twitter',
     tabType: 'twitter',
-    title: 'X (Twitter) QR Code Generator | Grow Your Global Audience',
-    description: 'Generate an ultra-fast X (formerly Twitter) QR code to instantly boost your real-time followers and drive high-intent engagement directly from physical locations to your digital feed.',
+    title: 'Free X (Twitter) QR Code Generator | Grow Your Global Audience',
+    description: 'Generate a fast X (formerly Twitter) QR code to instantly boost your followers and drive engagement directly from physical locations to your digital feed.',
     heroHeading: 'Amplify Your Voice on X (formerly Twitter)',
-    heroSubheading: 'Transform fleeting real-world interactions into permanent digital followers. Share your X profile with a simple scan and join the global conversation instantly.',
+    heroSubheading: 'Transform fleeting real-world interactions into permanent digital followers. Share your X profile with a simple scan and join the global conversation instantly. Perfect for authors, speakers, and public figures.',
     fact: 'Data shows that physical marketing materials that bridge the offline gap to X (Twitter) drive exceptionally high-intent followers who are 40% more likely to engage with your future posts.',
     icon: XIcon,
     useCases: [
@@ -255,6 +468,38 @@ export const qrLandingContent: Record<string, QRLandingContent> = {
       { title: 'Premium Brand Visibility', desc: 'A custom branded QR code featuring your brand colors and logo looks significantly more professional on printed media than just writing out your @handle.' },
       { title: 'Real-Time Immediate Engagement', desc: 'Connects your offline, physical users directly to your most up-to-date thoughts, company announcements, and breaking news feeds instantly.' }
     ],
+    howToSteps: [
+      { title: 'Find Your Username', desc: 'Locate your exact X (Twitter) handle (e.g., @yourname).' },
+      { title: 'Enter the Handle', desc: 'Type your handle into our generator above. You can also paste the full URL to a specific Tweet if you want them to see a viral post.' },
+      { title: 'Customize to Your Brand', desc: 'Change the colors to match your brand, and upload the X logo to the center so users know what to expect.' },
+      { title: 'Download the Code', desc: 'Export the final QR code in high-resolution PNG for digital use or SVG for large print materials.' }
+    ],
+    comparison: {
+      title: 'Typing Handle vs Scanning QR Code',
+      theirProduct: 'Typing @Handle',
+      ourProduct: 'Scanning QR',
+      points: [
+        { feature: 'Typo Risk', them: 'High (easy to misspell handles)', us: 'Zero' },
+        { feature: 'Conversion Rate', them: 'Low (users get lazy)', us: 'High (instant gratification)' },
+        { feature: 'Impersonators', them: 'Users might follow fake accounts', us: 'Guarantees the exact account' },
+        { feature: 'Design', them: 'Boring text', us: 'Visual call to action' }
+      ]
+    },
+    printGuide: {
+      title: 'Printing Your X (Twitter) QR Code',
+      description: 'Maximize your follower conversion rate with these simple printing tips.',
+      tips: [
+        { title: 'Screen Projection', desc: 'If showing this on a TV or projector at an event, make it huge. Leave it on screen for at least 30 seconds to give people time to scan.' },
+        { title: 'Contrast for Screens', desc: 'Digital screens can cause glare. A stark black QR code on a pure white background works best for digital projection.' },
+        { title: 'Use SVG format', desc: 'Always use SVG when sending to a professional printer for banners. It will never lose quality.' }
+      ]
+    },
+    ctaExamples: [
+      { title: 'Scan to Follow', desc: 'Simple and universally understood.' },
+      { title: 'Join the Conversation', desc: 'Great for live events and hashtag campaigns.' },
+      { title: 'Get Live Updates', desc: 'Perfect for news organizations and live sports.' }
+    ],
+
     faq: [
       { q: 'Can I use this tool to link to a very specific Tweet?', a: 'For linking to specific, high-performing tweets or threads, we recommend using our standard "URL" generator and simply pasting the direct link to that exact tweet.' },
       { q: 'What exact information do I need to provide?', a: 'We\'ve made it incredibly simple: just type in your exact X/Twitter handle (you can leave out the @ symbol, we will format it perfectly for you).' },
