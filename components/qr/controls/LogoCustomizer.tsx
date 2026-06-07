@@ -2,7 +2,7 @@
 
 import type { QRLogoConfig } from '@/types/qrTypes';
 import { useRef, useState } from 'react';
-import { AlertTriangle, ImagePlus } from 'lucide-react';
+import { AlertTriangle, ImagePlus, Upload } from 'lucide-react';
 import { QR_HINT, QR_LABEL_INLINE, QR_MUTED } from '@/components/qr/controlStyles';
 
 interface LogoCustomizerProps {
@@ -10,6 +10,22 @@ interface LogoCustomizerProps {
   onChange: (logo: QRLogoConfig | null) => void;
   onEclLocked: (locked: boolean) => void;
 }
+
+const PREDEFINED_LOGOS = [
+  { id: 'tiktok', name: 'TikTok', url: 'https://cdn.simpleicons.org/tiktok/000000' },
+  { id: 'youtube', name: 'YouTube', url: 'https://cdn.simpleicons.org/youtube/FF0000' },
+  { id: 'facebook', name: 'Facebook', url: 'https://cdn.simpleicons.org/facebook/1877F2' },
+  { id: 'linkedin', name: 'LinkedIn', url: 'https://api.iconify.design/bi:linkedin.svg?color=%230A66C2' },
+  { id: 'whatsapp', name: 'WhatsApp', url: 'https://cdn.simpleicons.org/whatsapp/25D366' },
+  { id: 'instagram', name: 'Instagram', url: 'https://cdn.simpleicons.org/instagram/E4405F' },
+  { id: 'pinterest', name: 'Pinterest', url: 'https://cdn.simpleicons.org/pinterest/E60023' },
+  { id: 'twitter', name: 'Twitter', url: 'https://api.iconify.design/bi:twitter.svg?color=%231DA1F2' },
+  { id: 'x', name: 'X', url: 'https://cdn.simpleicons.org/x/000000' },
+  { id: 'snapchat', name: 'Snapchat', url: 'https://cdn.simpleicons.org/snapchat/FFFC00' },
+  { id: 'gmail', name: 'Gmail', url: 'https://cdn.simpleicons.org/gmail/EA4335' },
+  { id: 'phone', name: 'Phone', url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234CAF50"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>' },
+  { id: 'wechat', name: 'WeChat', url: 'https://cdn.simpleicons.org/wechat/07C160' },
+];
 
 export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCustomizerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,18 +67,56 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handlePredefinedClick = (url: string) => {
+    setPreviewUrl(url);
+    onChange({
+      src: url,
+      size: logo?.size ?? 0.2,
+      margin: logo?.margin ?? 5,
+      hideBackgroundDots: logo?.hideBackgroundDots ?? true,
+      crossOrigin: 'anonymous',
+    });
+    onEclLocked(true);
+  };
+
   const ACCEPTED = '.png,.jpg,.jpeg,.svg';
 
   return (
     <div className="space-y-4">
       {!previewUrl ? (
-        <div
-          className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <ImagePlus className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-          <p className="text-sm font-medium text-slate-700">Click to upload logo</p>
-          <p className={`${QR_HINT} mt-1`}>PNG, JPG, SVG supported</p>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-3">
+              Select Logo
+            </label>
+            <div className="flex flex-wrap gap-3 items-center">
+              {PREDEFINED_LOGOS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handlePredefinedClick(item.url)}
+                  className="w-[52px] h-[52px] rounded-full border border-slate-200 bg-white shadow-sm flex items-center justify-center hover:border-primary hover:shadow-md transition-all p-2.5 group"
+                  title={item.name}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={item.url}
+                    alt={item.name}
+                    className="w-full h-full object-contain group-hover:scale-110 transition-transform"
+                    crossOrigin="anonymous"
+                  />
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="h-[52px] px-5 rounded-full border border-slate-200 bg-white shadow-sm flex items-center justify-center gap-2 hover:border-primary hover:text-primary transition-all text-slate-600 text-sm font-semibold whitespace-nowrap ml-1"
+              >
+                <Upload className="w-4 h-4" />
+                Upload Logo
+              </button>
+            </div>
+          </div>
           <input
             ref={fileInputRef}
             type="file"

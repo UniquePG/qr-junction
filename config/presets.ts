@@ -10,6 +10,131 @@ export interface PresetStyle {
 
 export const PRESET_STYLES: PresetStyle[] = [
   {
+    id: 'youtube-red',
+    name: 'YouTube',
+    description: 'Classic YouTube red',
+    swatchColors: ['#FF0000', '#282828', '#FFFFFF'],
+    config: {
+      dots: {
+        type: 'rounded',
+        color: '#FF0000',
+      },
+      cornerSquares: {
+        type: 'extra-rounded',
+        color: '#FF0000',
+      },
+      cornerDots: {
+        type: 'dot',
+        color: '#282828',
+      },
+      background: {
+        color: '#ffffff',
+        transparent: false,
+        borderRadius: 12,
+      },
+    },
+  },
+  {
+    id: 'linkedin-blue',
+    name: 'LinkedIn',
+    description: 'Professional LinkedIn blue',
+    swatchColors: ['#0A66C2', '#004182', '#FFFFFF'],
+    config: {
+      dots: {
+        type: 'classy',
+        color: '#0A66C2',
+      },
+      cornerSquares: {
+        type: 'square',
+        color: '#0A66C2',
+      },
+      cornerDots: {
+        type: 'square',
+        color: '#004182',
+      },
+      background: {
+        color: '#ffffff',
+        transparent: false,
+        borderRadius: 8,
+      },
+    },
+  },
+  {
+    id: 'snapchat-yellow',
+    name: 'Snapchat',
+    description: 'Bright Snapchat yellow',
+    swatchColors: ['#FFFC00', '#000000', '#FFFFFF'],
+    config: {
+      dots: {
+        type: 'rounded',
+        color: '#000000',
+      },
+      cornerSquares: {
+        type: 'extra-rounded',
+        color: '#000000',
+      },
+      cornerDots: {
+        type: 'dot',
+        color: '#000000',
+      },
+      background: {
+        color: '#FFFC00',
+        transparent: false,
+        borderRadius: 16,
+      },
+    },
+  },
+  {
+    id: 'x-twitter',
+    name: 'X (Twitter)',
+    description: 'Minimalist X black',
+    swatchColors: ['#000000', '#333333', '#FFFFFF'],
+    config: {
+      dots: {
+        type: 'classy',
+        color: '#000000',
+      },
+      cornerSquares: {
+        type: 'extra-rounded',
+        color: '#000000',
+      },
+      cornerDots: {
+        type: 'dot',
+        color: '#000000',
+      },
+      background: {
+        color: '#ffffff',
+        transparent: false,
+        borderRadius: 12,
+      },
+    },
+  },
+  {
+    id: 'tiktok-style',
+    name: 'TikTok',
+    description: 'Cyberpunk cyan & pink',
+    swatchColors: ['#000000', '#00F2FE', '#FE0979'],
+    config: {
+      dots: {
+        type: 'classy',
+        color: '#000000',
+      },
+      cornerSquares: {
+        type: 'extra-rounded',
+        color: '#00F2FE',
+      },
+      cornerDots: {
+        type: 'dot',
+        color: '#FE0979',
+      },
+      background: {
+        color: '#ffffff',
+        transparent: false,
+        borderRadius: 16,
+      },
+    },
+  },
+  {
     id: 'instagram-gradient',
     name: 'Instagram',
     description: 'Vibrant pink-purple gradient',
