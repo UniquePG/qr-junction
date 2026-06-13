@@ -26,7 +26,7 @@ export interface BlogPost {
     id: string;
     heading?: string;
     content: string[];
-    list?: string[];
+    list?: (string | { text: string; sublist?: string[] })[];
     table?: {
       headers: string[];
       rows: string[][];
@@ -598,5 +598,749 @@ export const blogs: Record<string, BlogPost> = {
       link: process.env.NEXT_PUBLIC_CLIENT_URL || "https://qrjunction.in",
     },
   },
-
+  "static-vs-dynamic-qr-codes-which-one-do-you-actually-need": {
+    slug: "static-vs-dynamic-qr-codes-which-one-do-you-actually-need",
+    seo: {
+      title: "Static vs Dynamic QR Codes: Key Differences & Which One You Need in 2026",
+      description: "Static vs dynamic QR codes — what's the real difference, which one should you use, and when does it actually matter? A plain-English breakdown for businesses and marketers.",
+      keywords: [
+        "static vs dynamic QR code",
+        "dynamic QR code",
+        "static QR code",
+        "QR code for business",
+        "editable QR code",
+        "QR code tracking",
+        "dynamic QR code generator",
+      ],
+      ogImage: "/assests/blogs/static-vs-dynamic-hero.png",
+    },
+    author: {
+      name: "QR Junction Team",
+      bio: "Experts in QR code technology and digital solutions",
+      avatar: "/NewLogo/logo-192x192.png",
+    },
+    publishedAt: "2026-06-09",
+    readTime: 7,
+    hero: {
+      title: "Static vs Dynamic QR Codes: Which One Do You Actually Need?",
+      subtitle: "Most people pick the wrong type and only realize it after printing 500 flyers. Here's how to get it right before that happens.",
+      image: "/assests/blogs/static-vs-dynamic-hero.png",
+      imageAlt: "Static QR code vs Dynamic QR code comparison illustration",
+    },
+    sections: [
+      {
+        id: "intro",
+        content: [
+          "If you've ever created a QR code and then realized you put the wrong link in it — or worse, printed it on physical materials first — you already understand why this topic matters.",
+          "There are two types of QR codes: static and dynamic. They look identical when printed. But under the hood, they work completely differently.",
+          "Choosing the wrong one doesn't just waste your time — it can waste your money, break your marketing campaigns, and leave you with zero data about how people are actually using your QR codes.",
+          "This guide breaks down exactly what makes them different, where each one belongs, and which type you should be using based on your situation.",
+        ],
+      },
+      {
+        id: "what-is-static",
+        heading: "What Is a Static QR Code?",
+        content: [
+          "A static QR code has its destination permanently baked into the code itself. Once you generate it, whatever information is encoded inside it — a URL, a phone number, a WiFi password — is locked in forever.",
+          "There is no way to change it without generating a brand new QR code. If the link changes, the old QR code is dead.",
+          "The upside? Static QR codes are completely free to generate and free to use forever. No subscriptions, no accounts, no backend systems. They just work.",
+          "They're ideal for information that genuinely never changes: a personal WiFi password, a permanent product page, a fixed location address, or a plain text message you want to share once.",
+        ],
+        image: {
+          src: "/assests/blogs/static-qr-code-explainer.png",
+          alt: "Illustration showing a static QR code locked to a printed flyer",
+          caption: "Static QR codes are permanent — change the destination and the code is useless.",
+          width: 1200,
+          height: 700,
+        },
+      },
+      {
+        id: "what-is-dynamic",
+        heading: "What Is a Dynamic QR Code?",
+        content: [
+          "A dynamic QR code works differently. The code itself doesn't store the final destination. Instead, it stores a short redirect URL that points to a server — and that server redirects the user to wherever you want them to go.",
+          "This means you can change the destination anytime, without changing the QR code. The printed code stays the same. The link behind it can be updated as often as you want.",
+          "But that's not even the most valuable part. Dynamic QR codes also give you scan data: how many times it was scanned, when, from which device, and from which location. For any business that actually cares about results, this data is non-negotiable.",
+          "The tradeoff? Dynamic QR codes require a platform to manage them. That's what QRJunction provides — the infrastructure that makes your QR codes live, trackable, and editable.",
+        ],
+      },
+      {
+        id: "comparison-table",
+        heading: "Static vs Dynamic QR Codes: Side-by-Side Comparison",
+        content: [
+          "Here's a direct, side-by-side comparison of static and dynamic QR codes across the features that actually matter for real-world and business use:",
+        ],
+        table: {
+          headers: ["Feature", "Static QR Code", "Dynamic QR Code"],
+          rows: [
+            ["Content editable after creation", "No — permanently fixed", "Yes — update anytime from dashboard"],
+            ["Scan analytics & tracking", "Not available", "Full data: scans, location, device, time"],
+            ["Requires internet to function", "No — works fully offline", "Yes — redirect requires server connection"],
+            ["Cost", "Free forever", "Requires a platform like QRJunction"],
+            ["Best for", "WiFi passwords, fixed links, personal use", "Marketing campaigns, menus, business cards, events"],
+            ["Risk if destination changes", "Code becomes permanently useless", "Zero — just update the redirect"],
+          ],
+        },
+      },
+      {
+        id: "when-to-use-static",
+        heading: "When Should You Use a Static QR Code?",
+        content: [
+          "Static QR codes make sense in specific, narrow situations. Don't overthink it — if the information will never change, static is perfectly fine.",
+        ],
+        list: [
+          "WiFi network passwords for home or office — your SSID and password rarely change",
+          "Personal vCard or contact information shared at a one-time event",
+          "Product packaging where the link is a permanent, evergreen page",
+          "Academic or educational materials that are printed once and archived",
+          "Any context where the internet may not be available at scan time",
+        ],
+      },
+      {
+        id: "when-to-use-dynamic",
+        heading: "When Should You Use a Dynamic QR Code?",
+        content: [
+          "For anything business-related — use dynamic. The ability to edit and the access to analytics are not premium extras. They're the baseline requirements for running any campaign you actually care about.",
+        ],
+        list: [
+          "Restaurant menus that change seasonally or weekly — update the link, not the table card",
+          "Marketing campaigns across print ads, posters, and packaging where you need scan data",
+          "Event tickets and check-ins where the landing page may change before the event",
+          "Business cards where your portfolio, LinkedIn, or website might change over time",
+          "Google Review or social media links — platforms update URLs, and you need to keep up",
+          "Product launches where you want to A/B test different landing pages",
+        ],
+        image: {
+          src: "/assests/blogs/dynamic-qr-analytics-dashboard.png",
+          alt: "QR code analytics dashboard showing scan data, location map, and device breakdown",
+          caption: "Dynamic QR codes give you real scan analytics — static codes give you nothing.",
+          width: 1200,
+          height: 720,
+        },
+      },
+      {
+        id: "common-mistake",
+        heading: "The Most Expensive Mistake People Make",
+        content: [
+          "Using a static QR code on printed materials for a campaign.",
+          "It happens constantly. Someone generates a free static QR code, prints it on 1,000 flyers or 200 business cards, and then the website URL changes, the campaign ends, or they realize they put the wrong link in. The entire print run is now useless.",
+          "A dynamic QR code would have cost a small monthly fee — and saved the entire campaign. The math is not complicated.",
+          "The other mistake: using any QR code on printed materials without first testing whether it scans correctly at the exact printed size. Always test before you print.",
+        ],
+      },
+      {
+        id: "qrjunction-solution",
+        heading: "How QRJunction Handles Both",
+        content: [
+          "QRJunction lets you generate both static and dynamic QR codes — and it's built specifically for businesses and marketers who need more than just a basic code.",
+          "With QRJunction's dynamic QR codes, you get a real-time analytics dashboard, the ability to update your destination URL at any time, and scan tracking broken down by date, device, and location.",
+          "For small businesses managing multiple campaigns, the ability to manage all your QR codes from one place — without reprinting anything — is genuinely valuable. Not as a feature. As a time-saver.",
+        ],
+      },
+      {
+        id: "final-verdict",
+        heading: "The Bottom Line",
+        content: [
+          "Static QR codes are free and permanent. Use them when the information never changes and you don't need data.",
+          "Dynamic QR codes are flexible and trackable. Use them for anything in your business — especially anything printed, anything linked to a campaign, and anything you want to measure.",
+          "When in doubt, go dynamic. The ability to fix mistakes after printing is worth more than the cost of any subscription.",
+        ],
+      },
+    ],
+    cta: {
+      text: "Create Dynamic QR Codes With Analytics",
+      link: process.env.NEXT_PUBLIC_CLIENT_URL || "https://qrjunction.in",
+    },
+  },
+  "how-to-create-an-instagram-qr-code": {
+    slug: "how-to-create-an-instagram-qr-code",
+    seo: {
+      title: "How to Create an Instagram QR Code (Free, in Under 2 Minutes)",
+      description: "Learn how to create an Instagram QR code that takes people directly to your profile. Step-by-step guide for creators, businesses, and marketers using QRJunction.",
+      keywords: [
+        "Instagram QR code",
+        "how to create Instagram QR code",
+        "QR code for Instagram profile",
+        "Instagram profile QR code",
+        "social media QR code",
+        "QR code for business Instagram",
+      ],
+      ogImage: "/assests/blogs/instagram-qr-hero.png",
+    },
+    author: {
+      name: "QR Junction Team",
+      bio: "Experts in QR code technology and digital solutions",
+      avatar: "/NewLogo/logo-192x192.png",
+    },
+    publishedAt: "2026-06-09",
+    readTime: 6,
+    hero: {
+      title: "How to Create an Instagram QR Code (Free, in Under 2 Minutes)",
+      subtitle: "Stop asking people to 'search for you on Instagram.' Give them a QR code that opens your profile in one scan.",
+      image: "/assests/blogs/instagram-qr-hero.png",
+      imageAlt: "Smartphone showing Instagram profile opened by scanning a QR code",
+    },
+    sections: [
+      {
+        id: "intro",
+        content: [
+          "Every time someone asks 'what's your Instagram?' you're losing them. They'll type your name wrong, find the wrong account, or just forget entirely by the time they get home.",
+          "An Instagram QR code eliminates that friction completely. One scan from any phone camera, and they're on your profile — ready to follow.",
+          "This guide shows you how to create one, where to use it, and what most people get wrong when they do.",
+        ],
+      },
+      {
+        id: "why-instagram-qr",
+        heading: "Why an Instagram QR Code Is Worth Having",
+        content: [
+          "Instagram has its own built-in QR code (called a 'Nametag') but it has a major limitation — it only works inside the Instagram app. The person scanning it needs to already have Instagram open. That's an extra step that kills conversions.",
+          "A proper Instagram QR code created with a generator like QRJunction points directly to your profile URL: instagram.com/yourusername. This opens in any camera app, any browser, on any device. No Instagram app required to scan it.",
+          "For physical marketing — business cards, packaging, posters, pop-up booths, restaurant tables — this difference matters enormously.",
+        ],
+      },
+      {
+        id: "step-by-step",
+        heading: "How to Create Your Instagram QR Code (Step-by-Step)",
+        content: [
+          "This takes less than two minutes. You don't need an account to generate a basic code.",
+        ],
+        list: [
+          "Step 1: Go to your Instagram profile and copy the full URL — it will look like instagram.com/yourusername or open the app, go to your profile, tap the three lines, and copy the profile link",
+          "Step 2: Open QRJunction.in and select the URL QR code option",
+          "Step 3: Paste your Instagram profile URL into the input field",
+          "Step 4: Customize the QR code — add your brand colors, a logo, or your Instagram icon in the center",
+          "Step 5: Choose dynamic if you want scan analytics (recommended for businesses)",
+          "Step 6: Download in PNG for digital use or SVG for print — SVG scales without quality loss",
+          "Step 7: Test it with your phone camera before using it anywhere",
+        ],
+        image: {
+          src: "/assests/blogs/instagram-qr-steps.png",
+          alt: "Step by step process of creating an Instagram QR code on QRJunction",
+          caption: "Creating an Instagram QR code on QRJunction takes under 2 minutes.",
+          width: 1200,
+          height: 750,
+        },
+      },
+      {
+        id: "where-to-use",
+        heading: "Where to Actually Use Your Instagram QR Code",
+        content: [
+          "The whole point is to close the gap between someone seeing your brand offline and them following you online. Here are the highest-impact placements:",
+        ],
+        list: [
+          "Business cards — on the back, next to your Instagram handle so it's both scannable and readable",
+          "Product packaging — especially for D2C brands where the buyer has your product in hand",
+          "Restaurant table cards and menus — 'Follow us for daily specials'",
+          "Event booths and pop-ups — give people something to do while they're standing at your table",
+          "Storefront windows and wall displays — passersby can scan without entering",
+          "Thank you cards inside orders — one of the highest-converting touchpoints for e-commerce brands",
+          "Email signatures and newsletters — surprisingly effective for converting readers into followers",
+        ],
+      },
+      {
+        id: "tips-for-better-results",
+        heading: "What Actually Makes an Instagram QR Code Work",
+        content: [
+          "The QR code is just the delivery mechanism. What converts the scan into a follow is the context around it.",
+          "Add a clear call-to-action next to the QR code. 'Scan to follow us' is fine but weak. 'Scan for exclusive offers' or 'Follow us for behind-the-scenes content' gives them a reason. The more specific the reason, the higher the follow rate.",
+          "Make the QR code big enough to scan from a comfortable distance. A 2.5cm QR code works fine on a business card. On a poster seen from 3 feet away, it needs to be at least 5-6cm.",
+          "Use a dynamic QR code so you can track how many people are scanning it from each location. This tells you which placements are actually working — and which ones you should stop using.",
+        ],
+      },
+      {
+        id: "instagram-nametag-vs-qrjunction",
+        heading: "Instagram's Built-In QR vs QRJunction: What's the Difference?",
+        content: [
+          "Instagram's native Nametag is convenient but limited. It can only be scanned from within the Instagram app — which means you're only converting people who already have Instagram open.",
+          "A QR code from QRJunction works with any camera app on any device. It opens the profile URL in a browser or triggers the Instagram app automatically if installed. No extra steps. No app required to scan.",
+          "Additionally, QRJunction's dynamic QR codes give you scan analytics — something Instagram's native tool doesn't offer. You can see total scans, scan locations, device types, and time-based trends. For any business running a real marketing operation, this data is invaluable.",
+        ],
+      },
+      {
+        id: "final-thoughts",
+        heading: "Stop Making People Type Your Handle",
+        content: [
+          "Every time you tell someone your Instagram handle and they have to type it manually, you're losing a percentage of them. Some will misspell it. Some will forget. Some will just not bother.",
+          "An Instagram QR code removes every one of those failure points. One scan. Profile opens. They follow or they don't — but at least they got there.",
+          "Create yours in two minutes. Put it everywhere your brand shows up in the physical world. Track the scans. Double down on what works.",
+        ],
+      },
+    ],
+    cta: {
+      text: "Create Your Instagram QR Code Free",
+      link: process.env.NEXT_PUBLIC_CLIENT_URL || "https://qrjunction.in",
+    },
+  },
+  "how-to-create-a-google-review-qr-code": {
+    slug: "how-to-create-a-google-review-qr-code",
+    seo: {
+      title: "How to Create a Google Review QR Code for Your Business (2026 Guide)",
+      description: "Get more Google reviews by making it easier to leave them. Learn how to create a Google Review QR code in minutes and where to place it for maximum results.",
+      keywords: [
+        "Google review QR code",
+        "how to get more Google reviews",
+        "Google review link QR code",
+        "QR code for Google reviews",
+        "increase Google reviews",
+        "Google business QR code",
+      ],
+      ogImage: "/assests/blogs/google-review-qr-hero.png",
+    },
+    author: {
+      name: "QR Junction Team",
+      bio: "Experts in QR code technology and digital solutions",
+      avatar: "/NewLogo/logo-192x192.png",
+    },
+    publishedAt: "2026-06-09",
+    readTime: 7,
+    hero: {
+      title: "How to Create a Google Review QR Code for Your Business",
+      subtitle: "Most customers who have a great experience don't leave a review — not because they don't want to, but because leaving one takes too many steps. A QR code fixes that.",
+      image: "/assests/blogs/google-review-qr-hero.png",
+      imageAlt: "Google review QR code on a restaurant table card being scanned by a smartphone",
+    },
+    sections: [
+      {
+        id: "intro",
+        content: [
+          "Google reviews are the single most impactful thing for local business visibility. More reviews, better ratings, higher rankings in Google Maps, more customers finding you. The logic is straightforward.",
+          "The problem is the gap between a customer having a good experience and them actually leaving a review. Most people intend to do it. Almost no one follows through — because searching for your business on Google, finding the reviews section, and writing something takes effort.",
+          "A Google Review QR code collapses that entire process into one scan. The customer scans, the review form opens directly, and they type their experience. No searching. No navigating. Just the review box, immediately.",
+          "Here's how to set one up.",
+        ],
+      },
+      {
+        id: "get-review-link",
+        heading: "Step 1: Get Your Google Review Link",
+        content: [
+          "Before creating the QR code, you need the direct link to your Google review form. This is not just your Google Maps URL — it's a specific link that opens the review dialog directly.",
+          "Here's how to get it:",
+        ],
+        list: [
+          "Go to Google Maps and search for your business by name",
+          "Click on your business listing to open it",
+          "Scroll down and click 'Write a review'",
+          "Copy the full URL from your browser address bar — this is your direct review link",
+          "Alternatively, go to your Google Business Profile dashboard at business.google.com, click 'Get more reviews', and copy the link provided there — this is the cleanest version",
+        ],
+      },
+      {
+        id: "create-qr-code",
+        heading: "Step 2: Create the QR Code on QRJunction",
+        content: [
+          "Once you have your Google review link, creating the QR code is the easy part.",
+        ],
+        list: [
+          "Open QRJunction.in and select the URL QR code type",
+          "Paste your Google review direct link into the URL field",
+          "Add a Google 'G' logo or star icon to the center of the QR code — it immediately signals to customers what the code is for",
+          "Use a dynamic QR code so you can track scan volumes and update the link if your Google listing ever changes",
+          "Download in high resolution — SVG for print materials, PNG for digital use",
+          "Test the QR code before printing: scan it and confirm it opens the review form directly",
+        ],
+        image: {
+          src: "/assests/blogs/google-review-qr-creation.png",
+          alt: "QRJunction interface showing Google review QR code being created with star icon overlay",
+          caption: "Paste your Google review link and add a recognizable icon so customers immediately know what to expect.",
+          width: 1200,
+          height: 700,
+        },
+      },
+      {
+        id: "where-to-place",
+        heading: "Where to Place Your Google Review QR Code",
+        content: [
+          "The placement is more important than the QR code itself. You want to catch customers at the exact moment they feel good about their experience — while it's fresh, while they're still with you, or immediately after leaving.",
+        ],
+        list: [
+          "On the bill or receipt — the highest-converting placement for restaurants and retail",
+          "At the checkout counter or payment terminal — right where the transaction closes on a positive note",
+          "On table cards in restaurants and cafes — give customers something to do while waiting",
+          "On the back of your business card — turn every card you hand out into a review request",
+          "In post-purchase packaging and thank you cards — catches customers when the product has just arrived",
+          "On your storefront window or door — visible to people walking out after a good experience",
+          "In follow-up emails after a service — with a 'Tap here to scan' image of the QR code",
+        ],
+      },
+      {
+        id: "what-to-write",
+        heading: "What to Write Next to the QR Code",
+        content: [
+          "The QR code alone won't maximize your review count. The copy next to it matters significantly.",
+          "Weak: 'Leave us a review'",
+          "Better: 'Had a great experience? Scan to share it on Google — it takes 30 seconds and helps us hugely.'",
+          "The key elements: acknowledge the positive experience, set expectations on time (30 seconds feels manageable), and explain why it matters to your business. Customers who feel that their review has a real impact are far more likely to leave one.",
+          "If your business has a strong relationship with its regulars, even more personal language works: 'Your review helps other locals find us. Scan to share yours.'",
+        ],
+      },
+      {
+        id: "track-results",
+        heading: "Track Which Placements Are Actually Working",
+        content: [
+          "If you place your Google Review QR code in five locations — table cards, receipts, business cards, the window, and post-purchase packaging — how do you know which one is driving the most scans?",
+          "With a static QR code, you don't. You have no data.",
+          "With QRJunction's dynamic QR codes, you can create a separate QR code for each location, all pointing to the same Google review link, and track scan counts individually. This tells you exactly which placements justify the real estate and which ones you should retire.",
+          "Over time, this data compounds. You stop guessing which marketing touchpoints work and start knowing.",
+        ],
+        image: {
+          src: "/assests/blogs/google-review-placement-analytics.png",
+          alt: "Analytics chart comparing scan volumes from Google Review QR codes placed at different locations",
+          caption: "Separate dynamic QR codes per placement reveal which locations actually drive reviews.",
+          width: 1200,
+          height: 650,
+        },
+      },
+      {
+        id: "final-thoughts",
+        heading: "Reviews Don't Happen by Accident",
+        content: [
+          "Customers with great experiences have every intention of leaving a review. What stops them is friction — too many steps between the intention and the action.",
+          "A Google Review QR code removes that friction entirely. The review form is one scan away. At the exact moment a customer feels good about your service.",
+          "Set it up once. Put it everywhere. Track the scans. Your Google rating will reflect it.",
+        ],
+      },
+    ],
+    cta: {
+      text: "Create Your Google Review QR Code Free",
+      link: process.env.NEXT_PUBLIC_CLIENT_URL || "https://qrjunction.in",
+    },
+  },
+  "qr-codes-for-business-cards-the-complete-guide": {
+    slug: "qr-codes-for-business-cards-the-complete-guide",
+    seo: {
+      title: "QR Codes for Business Cards: How to Add One & Why It Matters in 2026",
+      description: "Learn how to add a QR code to your business card, what it should link to, and how dynamic QR codes turn a printed card into a trackable digital tool.",
+      keywords: [
+        "QR code for business card",
+        "business card QR code",
+        "digital business card QR code",
+        "add QR code to business card",
+        "smart business card",
+        "QR code vCard",
+      ],
+      ogImage: "/assests/blogs/business-card-qr-hero.png",
+    },
+    author: {
+      name: "QR Junction Team",
+      bio: "Experts in QR code technology and digital solutions",
+      avatar: "/NewLogo/logo-192x192.png",
+    },
+    publishedAt: "2026-06-09",
+    readTime: 7,
+    hero: {
+      title: "QR Codes for Business Cards: The Complete Guide",
+      subtitle: "A business card without a QR code in 2026 is a missed opportunity. Here's how to add one that actually does something useful.",
+      image: "/assests/blogs/business-card-qr-hero.png",
+      imageAlt: "Professional business card with QR code on the back displayed on a dark background",
+    },
+    sections: [
+      {
+        id: "intro",
+        content: [
+          "Business cards still matter. In networking meetings, conferences, sales calls, and chance encounters — handing someone a card is still one of the most personal and memorable ways to make a professional impression.",
+          "But a standard business card has a serious limitation: it's static. The phone number on it either works or it doesn't. The website either exists or it doesn't. If anything changes, the card is obsolete.",
+          "A QR code on your business card turns that static piece of paper into a live, dynamic digital connection. The card stays the same. The destination can evolve.",
+          "This guide covers everything: what to link to, how to add one properly, and why dynamic QR codes are the only sensible choice for professional use.",
+        ],
+      },
+      {
+        id: "what-to-link-to",
+        heading: "What Should Your Business Card QR Code Link To?",
+        content: [
+          "This is where most people get it wrong. They link to their homepage and call it a day. That's a wasted opportunity.",
+          "Think about what someone actually does after they receive your card: they want to know more about you, connect with you, or reach you. Your QR code should make at least one of those actions effortless.",
+          "Here are the strongest options, ranked by impact:",
+        ],
+        list: [
+          {
+            text: "Digital business card (vCard or personal link) — The ultimate option",
+            sublist: [
+              "Gives contacts your full contact details, social links, and portfolio in one screen",
+              "Allows users to instantly save your contact to their phone with a single tap",
+            ],
+          },
+          {
+            text: "LinkedIn profile — Best for professional trust building",
+            sublist: [
+              "Perfect for networking events, B2B meetings, and professional outreach",
+              "Creates an immediate social connection that persists after the meeting",
+            ],
+          },
+          {
+            text: "Personal website or portfolio — Ideal for creatives",
+            sublist: [
+              "Instantly showcases designs, writing, or software engineering portfolios",
+              "Removes the need to describe your work — let it speak for itself",
+            ],
+          },
+          {
+            text: "Booking or calendar link — High conversion for service businesses",
+            sublist: [
+              "Lets potential clients schedule a consultation call or booking directly",
+              "Reduces scheduling friction over email or messaging",
+            ],
+          },
+          {
+            text: "WhatsApp direct message link — Highly personal and direct",
+            sublist: [
+              "Opens a chat window directly with your business number prefilled with a welcome message",
+              "Highly effective in mobile-first markets",
+            ],
+          },
+        ],
+        image: {
+          src: "/assests/blogs/business-card-qr-destinations.png",
+          alt: "Five options for what a business card QR code can link to, shown on smartphone screens",
+          caption: "Your QR code destination should match your goal — not default to your homepage.",
+          width: 1200,
+          height: 680,
+        },
+      },
+      {
+        id: "how-to-add",
+        heading: "How to Add a QR Code to Your Business Card",
+        content: [
+          "The technical process is simple. The design decisions are where it gets interesting.",
+        ],
+        list: [
+          "Step 1: Decide on your destination URL first — don't generate the code until you know exactly where it should send people",
+          "Step 2: Create a dynamic QR code on QRJunction (not static — you will want to change the destination eventually)",
+          "Step 3: Download the QR code in SVG format — this scales to any size without quality loss, which is essential for print",
+          "Step 4: Add the QR code to the back of your business card design — back of card is the standard placement",
+          "Step 5: Include a one-line call-to-action below the code: 'Scan to connect', 'Scan to see my work', or 'Scan to book a call'",
+          "Step 6: Ensure the printed QR code is at least 2cm x 2cm — smaller than this and some cameras will struggle",
+          "Step 7: Test before printing — scan the code from the exact printed size and verify the destination loads correctly",
+        ],
+      },
+      {
+        id: "design-considerations",
+        heading: "Design Tips for Business Card QR Codes",
+        content: [
+          "A QR code that clashes with your card design signals carelessness. A QR code that integrates cleanly signals attention to detail — which is exactly the impression you want to make in a professional context.",
+        ],
+        list: [
+          "Match the QR code colors to your brand palette — QRJunction lets you customize foreground and background colors",
+          "Add your initials, logo, or a relevant icon to the center of the code — it reinforces brand identity without breaking scannability",
+          "Ensure sufficient contrast between the QR code and card background — light codes on white won't scan reliably",
+          "White-on-dark works but test thoroughly — camera apps vary in how they handle inverted QR codes",
+          "Never compress or scale down a QR code in a design tool — always export at print resolution (300 DPI minimum) and place it at 100% size",
+        ],
+      },
+      {
+        id: "why-dynamic",
+        heading: "Why You Should Only Use Dynamic QR Codes on Business Cards",
+        content: [
+          "If you use a static QR code on your business card and you later change jobs, update your portfolio, move to a different website, or rebrand — every card you've printed is now pointing to the wrong place.",
+          "With a dynamic QR code, you update the destination in your QRJunction dashboard. The printed code stays exactly the same. Everyone who scans an old card still gets to the right place.",
+          "Beyond that, dynamic QR codes on business cards tell you something fascinating: who is actually following up after meeting you. High scan rates from a particular networking event means your pitch is working. Low rates suggest either the event wasn't the right audience — or the card isn't compelling enough to act on.",
+          "This is data you simply cannot get from a static QR code. And for anyone serious about their professional network, it's genuinely useful information.",
+        ],
+      },
+      {
+        id: "digital-business-cards",
+        heading: "QR Code + Digital Business Card: The Combination That Works",
+        content: [
+          "The most effective setup for 2026: a physical card with a QR code that opens a digital business card.",
+          "Your physical card gives the human, tactile, memorable first impression. Your digital card — a mobile-optimized page with your photo, links, contact details, and a 'Save to contacts' button — does the actual work of getting saved to their phone.",
+          "This combination means you can have a minimal, elegant physical card (which looks more premium) while still delivering comprehensive information digitally. The QR code is the bridge between the two.",
+          "QRJunction's personal digital card feature is built exactly for this — create a mobile-optimized card page, generate a QR code for it, and update the content anytime.",
+        ],
+        image: {
+          src: "/assests/blogs/physical-plus-digital-card.png",
+          alt: "Physical business card with QR code connecting to a digital business card on smartphone",
+          caption: "Physical card for the impression. Digital card for the connection. QR code as the bridge.",
+          width: 1200,
+          height: 700,
+        },
+      },
+      {
+        id: "final-thoughts",
+        heading: "Your Business Card Should Do More Than Sit in a Drawer",
+        content: [
+          "Most business cards get glanced at once and forgotten. A card with a QR code that leads to something genuinely useful — your work, your calendar, your digital card — gives the recipient a reason to scan it.",
+          "That scan is the follow-up. That scan is the conversion. That scan is what turns a five-second handshake into an actual professional connection.",
+          "Set up your business card QR code once, make it dynamic, and update the destination as your professional life evolves. The card you printed two years ago will still be working for you.",
+        ],
+      },
+    ],
+    cta: {
+      text: "Create Your Business Card QR Code Free",
+      link: process.env.NEXT_PUBLIC_CLIENT_URL || "https://qrjunction.in",
+    },
+  },
+  "qr-codes-for-small-businesses-the-practical-guide": {
+    slug: "qr-codes-for-small-businesses-the-practical-guide",
+    seo: {
+      title: "QR Codes for Small Businesses: 10 Practical Uses That Actually Work in 2026",
+      description: "How small businesses can use QR codes to get more reviews, grow their social following, share menus, collect leads, and track what's working — without a big budget.",
+      keywords: [
+        "QR codes for small business",
+        "how to use QR codes for business",
+        "QR code marketing",
+        "small business QR code ideas",
+        "QR code lead generation",
+      ],
+      ogImage: "/assests/blogs/small-business-qr-hero.png",
+    },
+    author: {
+      name: "QR Junction Team",
+      bio: "Experts in QR code technology and digital solutions",
+      avatar: "/NewLogo/logo-192x192.png",
+    },
+    publishedAt: "2026-06-09",
+    readTime: 8,
+    hero: {
+      title: "QR Codes for Small Businesses: 10 Uses That Actually Work",
+      subtitle: "QR codes aren't just for restaurant menus. For small businesses, they're one of the cheapest and most measurable marketing tools available — if you use them correctly.",
+      image: "/assests/blogs/small-business-qr-hero.png",
+      imageAlt: "Small business street scene showing multiple QR code touchpoints across a cafe, boutique, and salon",
+    },
+    sections: [
+      {
+        id: "intro",
+        content: [
+          "Small businesses don't have big marketing budgets. What they have is physical presence — a shop, a booth, packaging, receipts, business cards, tables, walls. QR codes turn every one of those physical touchpoints into a digital connection.",
+          "The businesses that use them well aren't just adding QR codes to their menu. They're using them to collect Google reviews, grow their Instagram following, offer loyalty discounts, share WiFi passwords, and track which marketing materials are actually driving engagement.",
+          "This guide covers ten specific, practical uses — not theoretical ones. Each use case includes what to link to, where to place the code, and what result to expect.",
+        ],
+      },
+      {
+        id: "use-1-google-reviews",
+        heading: "1. Get More Google Reviews — Automatically",
+        content: [
+          "Google reviews directly impact your local search ranking. More reviews, higher rating, more visibility on Google Maps. The ROI on getting even ten more reviews per month is significant for most local businesses.",
+          "Create a dynamic QR code that links directly to your Google review submission form (not your Maps listing — the direct review form). Place it on your receipt, at the checkout counter, and on table cards.",
+          "Add a line that does the work: 'Enjoyed your visit? Scan to leave us a Google review — it takes 30 seconds and means everything to us.' The specificity about time removes the friction of the unknown.",
+        ],
+      },
+      {
+        id: "use-2-digital-menu",
+        heading: "2. Digital Menus That Never Go Out of Date",
+        content: [
+          "Printed menus are expensive to reprint. Prices change. Items sell out. Seasonal dishes rotate. A QR code linking to a digital menu solves all of this permanently.",
+          "Update your menu digitally anytime. Every QR code on every table automatically shows the latest version — no reprinting, no crossed-out items, no laminated sheets that look three years old.",
+          "For food businesses, this also improves the customer experience: searchable menus, photos of dishes, allergen information, and portion details are all easier to present digitally than on a folded paper menu.",
+        ],
+        image: {
+          src: "/assests/blogs/digital-menu-qr.png",
+          alt: "Restaurant table card with QR code linking to a digital menu shown on a smartphone",
+          caption: "A QR code menu updates instantly — no reprints, no crossed-out prices.",
+          width: 1200,
+          height: 700,
+        },
+      },
+      {
+        id: "use-3-instagram-and-social",
+        heading: "3. Grow Your Social Following from Physical Touchpoints",
+        content: [
+          "Every customer interaction is a chance to convert a one-time buyer into a long-term follower. A QR code on your packaging, receipts, or store display that links to your Instagram or Facebook profile can grow your audience passively — without running ads.",
+          "The key is the call-to-action. 'Follow us on Instagram for weekly offers' or 'Scan to see new arrivals first' gives them a specific reason to follow. Generic 'follow us' doesn't convert as well.",
+          "For businesses with strong visual identities — food, fashion, home décor, beauty — an Instagram following built this way is genuinely valuable. These are warm leads who already like your product.",
+        ],
+      },
+      {
+        id: "use-4-wifi",
+        heading: "4. WiFi Password Sharing Without the Awkward Conversation",
+        content: [
+          "Every café, salon, waiting room, and co-working space gets asked for the WiFi password multiple times a day. A QR code on the table or counter that connects customers to your WiFi automatically eliminates this entirely.",
+          "This is one of the few cases where a static WiFi QR code is appropriate — WiFi passwords rarely change. Create a WiFi QR code once, print it, and it works indefinitely.",
+          "Small detail, but customers notice when a business makes their visit more convenient. It reflects well on the business.",
+        ],
+      },
+      {
+        id: "use-5-offers-and-discounts",
+        heading: "5. Exclusive Offers and Discount Codes",
+        content: [
+          "QR codes are an effective way to deliver exclusive offers to in-store customers — creating a reason to scan that goes beyond convenience.",
+          "A QR code on the counter or checkout area that reveals a discount code, a free gift with next purchase, or early access to a sale gives customers an immediate, tangible reason to interact with your brand digitally.",
+          "With a dynamic QR code, you can rotate the offer behind the same QR code without printing anything new. Change the destination from a 10% off code to a seasonal bundle offer to a loyalty signup page — all without touching the printed code.",
+        ],
+      },
+      {
+        id: "use-6-lead-capture",
+        heading: "6. Collect Leads from Walk-In Customers",
+        content: [
+          "Most small businesses have no system for capturing the contact information of people who walk in, look around, and leave without buying. That's a missed list-building opportunity.",
+          "A QR code linked to a simple sign-up form — 'Join our list for exclusive deals and new arrivals' — placed at the entrance or checkout lets you capture email addresses passively.",
+          "For service businesses like salons, gyms, and clinics, a QR code linked to an appointment booking form converts interested walk-ins into booked appointments immediately rather than losing them to indecision.",
+        ],
+        image: {
+          src: "/assests/blogs/lead-capture-qr.png",
+          alt: "Small boutique counter display with QR code linking to email signup form on smartphone",
+          caption: "Turn walk-in customers into contactable leads with a simple QR code signup.",
+          width: 1200,
+          height: 700,
+        },
+      },
+      {
+        id: "use-7-payment",
+        heading: "7. Instant Payment QR Codes",
+        content: [
+          "For markets, pop-ups, food stalls, and any situation without a card reader — a payment QR code lets customers pay instantly via UPI, PayPal, or any payment platform that supports QR-based transfers.",
+          "This is standard practice for street vendors and market stalls in many markets but still underused in more established small businesses. A laminated payment QR code on the counter removes the 'do you take card?' friction entirely.",
+          "Use a static QR code for this — your payment details don't change, and you don't need tracking data on payment transactions.",
+        ],
+      },
+      {
+        id: "use-8-product-info",
+        heading: "8. Product Information and Instructions",
+        content: [
+          "Physical product packaging has limited space. A QR code on the box or label can link to a full product information page: detailed usage instructions, video tutorials, warranty registration, or FAQs.",
+          "For artisan products, a QR code linking to the story behind the product — the maker, the ingredients, the process — adds genuine perceived value and brand depth that a one-line description on the label can never achieve.",
+          "This is also useful for products that require setup or have a learning curve. Instead of cramming a manual into the box, a QR code links to a video walkthrough.",
+        ],
+      },
+      {
+        id: "use-9-events",
+        heading: "9. Events, Announcements, and Limited-Time Campaigns",
+        content: [
+          "Running a seasonal sale? Hosting a community event? Launching a new product? A QR code on a printed poster or flyer that links to the event details page keeps your offline marketing connected to your latest information.",
+          "This is precisely the use case where static QR codes fail and dynamic QR codes shine. Print the flyer once with the QR code. Update the destination page as details change. When the event is over, redirect the code to your newsletter signup or next event.",
+          "The flyer keeps working even after the event it was printed for has passed.",
+        ],
+      },
+      {
+        id: "use-10-track-marketing",
+        heading: "10. Track Which Marketing Materials Are Actually Working",
+        content: [
+          "This is the use case that separates businesses using QR codes tactically from businesses using them systematically.",
+          "Create a separate dynamic QR code for each marketing channel — one for your window display, one for your table cards, one for your packaging, one for your business cards. All codes link to the same destination. But in your QRJunction dashboard, you can see exactly how many scans came from each source.",
+          "This tells you exactly where your customers are engaging with your brand. Over time, it shows you which physical touchpoints are worth the real estate and investment — and which ones you can stop maintaining.",
+          "For a small business with limited marketing budget, this kind of attribution data is genuinely competitive intelligence.",
+        ],
+        image: {
+          src: "/assests/blogs/multi-placement-qr-tracking.png",
+          alt: "QR code analytics dashboard comparing scan volumes from window, table, packaging, and business card placements",
+          caption: "Separate QR codes per placement reveal which marketing touchpoints are actually driving engagement.",
+          width: 1200,
+          height: 680,
+        },
+      },
+      {
+        id: "getting-started",
+        heading: "Where to Start: The 3-QR-Code Small Business Setup",
+        content: [
+          "If you're new to QR codes for your business, don't try to implement all ten use cases at once. Start with the three highest-impact ones:",
+        ],
+        list: [
+          "Google Reviews QR code on your receipt and checkout counter — this builds your most valuable digital asset (review count and rating) passively",
+          "Social media QR code on your packaging or storefront — converts happy customers into followers",
+          "WiFi QR code if you have a physical location where customers wait — removes a daily friction point",
+        ],
+      },
+      {
+        id: "final-thoughts",
+        heading: "Small Budget, Real Results",
+        content: [
+          "QR codes cost almost nothing to create and deploy. A printer, a lamination sleeve, and a QRJunction account give you a complete physical-to-digital marketing system.",
+          "The businesses that grow their reviews, social following, and email list fastest are not the ones spending the most on ads. They're the ones systematically converting every in-person interaction into a digital connection.",
+          "QR codes are how you do that at scale — without a big team, without a big budget, and without anyone needing to remember to ask.",
+        ],
+      },
+    ],
+    cta: {
+      text: "Create Your Business QR Code Free",
+      link: process.env.NEXT_PUBLIC_CLIENT_URL || "https://qrjunction.in",
+    },
+  },
 };

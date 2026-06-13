@@ -154,6 +154,11 @@ export default function QRGenerator({ initialUrl, initialTab, lockTab }: QRGener
           [field]: value,
         } as FormData["landing_page"],
       }));
+    } else if (activeTab === "review") {
+      setFormData((prev) => ({
+        ...prev,
+        review: { ...prev.review, [field]: value } as FormData["review"],
+      }));
     } else {
       setFormData((prev) => ({ ...prev, [field]: value }));
     }

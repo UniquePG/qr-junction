@@ -75,11 +75,20 @@ export default function BlogsPage() {
       return blog.slug !== featuredBlog.slug;
     }
     if (selectedCategory === "Guides & Tips") {
-      return blog.slug === "what-is-a-qr-code-and-why-everyone-is-using-it" || 
-             blog.slug === "how-qr-codes-actually-work-explained-like-youre-10";
+      return (
+        blog.slug === "what-is-a-qr-code-and-why-everyone-is-using-it" ||
+        blog.slug === "how-qr-codes-actually-work-explained-like-youre-10" ||
+        blog.slug === "static-vs-dynamic-qr-codes-which-one-do-you-actually-need" ||
+        blog.slug === "how-to-create-an-instagram-qr-code"
+      );
     }
     if (selectedCategory === "Business Growth") {
-      return blog.slug === "how-small-businesses-can-use-qr-codes-to-increase-sales";
+      return (
+        blog.slug === "how-small-businesses-can-use-qr-codes-to-increase-sales" ||
+        blog.slug === "how-to-create-a-google-review-qr-code" ||
+        blog.slug === "qr-codes-for-business-cards-the-complete-guide" ||
+        blog.slug === "qr-codes-for-small-businesses-the-practical-guide"
+      );
     }
     if (selectedCategory === "Security & Safety") {
       return blog.slug === "are-qr-codes-safe-common-myths-and-real-facts";

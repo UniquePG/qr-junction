@@ -17,7 +17,8 @@ import {
   Pause, 
   ExternalLink, 
   Loader2,
-  Eye
+  Eye,
+  BarChart
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -348,6 +349,16 @@ export default function QrListPage() {
                 </span>
 
                 <div className="flex items-center gap-1">
+                  {qr.type === 'REVIEW' && (
+                    <Link
+                      href={`/dashboard/qrs/${qr.id}/reviews`}
+                      className="p-1.5 text-slate-500 hover:text-primary transition-colors flex items-center gap-1"
+                      title="View Analytics"
+                    >
+                      <BarChart className="w-3.5 h-3.5" />
+                      <span>Analytics</span>
+                    </Link>
+                  )}
                   <Link
                     href={`/dashboard/qrs/edit/${qr.id}`}
                     className="p-1.5 text-slate-500 hover:text-[#001B50] transition-colors flex items-center gap-1"

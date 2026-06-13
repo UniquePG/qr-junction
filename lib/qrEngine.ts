@@ -14,7 +14,8 @@ import {
   Mail, 
   Wifi,
   Smartphone,
-  Layout
+  Layout,
+  Star
 } from 'lucide-react';
 import { QRType } from '@prisma/client';
 
@@ -34,7 +35,8 @@ export type TabType =
   | 'email'
   | 'wifi'
   | 'app_download'
-  | 'landing_page';
+  | 'landing_page'
+  | 'review';
 
 export interface FormData {
   url?: string;
@@ -59,6 +61,15 @@ export interface FormData {
   wifi?: { ssid: string; password: string; encryption: string; hidden: boolean };
   app_download?: { iosUrl: string; androidUrl: string; fallbackUrl: string };
   landing_page?: { landingPageId: string };
+  review?: { 
+    businessName: string; 
+    logoUrl: string; 
+    publicReviewUrl: string;
+    positiveThreshold?: number | string;
+    welcomeMessage?: string;
+    privateFeedbackMessage?: string;
+    thankYouMessage?: string;
+  };
 }
 
 export interface TabConfig {
@@ -85,6 +96,7 @@ export const TABS: TabConfig[] = [
   { id: 'wifi', label: 'WiFi', Icon: Wifi, qrType: QRType.WIFI },
   { id: 'app_download', label: 'App Store', Icon: Smartphone, qrType: QRType.APP_DOWNLOAD },
   { id: 'landing_page', label: 'Landing Page', Icon: Layout, qrType: QRType.LANDING_PAGE },
+  { id: 'review', label: 'Review', Icon: Star, qrType: QRType.REVIEW },
 ];
 
 export function formatQRData(tab: TabType, data: FormData): string {
@@ -150,6 +162,8 @@ export function formatQRData(tab: TabType, data: FormData): string {
     }
     case 'landing_page':
       return data.landing_page?.landingPageId ? `landing-page-${data.landing_page.landingPageId}` : '';
+    case 'review':
+      return `review-${data.review?.businessName || ''}`;
     default:
       return '';
   }
@@ -171,6 +185,8 @@ export function validateForm(tab: TabType, formData: FormData): string | null {
   if (tab === 'wifi' && !formData.wifi?.ssid?.trim()) return 'Please enter a network name (SSID)';
   if (tab === 'app_download' && !formData.app_download?.fallbackUrl?.trim()) return 'Please enter a fallback redirect URL';
   if (tab === 'landing_page' && !formData.landing_page?.landingPageId) return 'Please select a landing page';
+  if (tab === 'review' && !formData.review?.businessName?.trim()) return 'Please enter a business name';
+  if (tab === 'review' && !formData.review?.publicReviewUrl?.trim()) return 'Please enter a public review URL';
   return null;
 }
 
@@ -232,6 +248,16 @@ export function getDbDestination(tab: TabType, data: FormData): any {
       };
     case 'landing_page':
       return { landingPageId: data.landing_page?.landingPageId };
+    case 'review':
+      return { 
+        businessName: data.review?.businessName,
+        logoUrl: data.review?.logoUrl,
+        publicReviewUrl: data.review?.publicReviewUrl,
+        positiveThreshold: data.review?.positiveThreshold ? Number(data.review.positiveThreshold) : 4,
+        welcomeMessage: data.review?.welcomeMessage || '',
+        privateFeedbackMessage: data.review?.privateFeedbackMessage || '',
+        thankYouMessage: data.review?.thankYouMessage || ''
+      };
     default:
       return {};
   }
@@ -280,6 +306,18 @@ export function getFormDataFromDb(tab: TabType, dest: any): FormData {
       return { app_download: { iosUrl: dest.iosUrl || '', androidUrl: dest.androidUrl || '', fallbackUrl: dest.fallbackUrl || '' } };
     case 'landing_page':
       return { landing_page: { landingPageId: dest.landingPageId || '' } };
+    case 'review':
+      return { 
+        review: { 
+          businessName: dest.businessName || '', 
+          logoUrl: dest.logoUrl || '', 
+          publicReviewUrl: dest.publicReviewUrl || '',
+          positiveThreshold: dest.positiveThreshold ?? 4,
+          welcomeMessage: dest.welcomeMessage || '',
+          privateFeedbackMessage: dest.privateFeedbackMessage || '',
+          thankYouMessage: dest.thankYouMessage || ''
+        } 
+      };
     default:
       return {};
   }

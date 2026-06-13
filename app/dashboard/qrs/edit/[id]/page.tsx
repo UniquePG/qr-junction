@@ -67,6 +67,8 @@ export default function EditQrPage({
       setFormData(prev => ({ ...prev, app_download: { ...prev.app_download, [field]: value } as FormData['app_download'] }));
     } else if (activeTab === 'landing_page') {
       setFormData(prev => ({ ...prev, landing_page: { ...prev.landing_page, [field]: value } as FormData['landing_page'] }));
+    } else if (activeTab === 'review') {
+      setFormData(prev => ({ ...prev, review: { ...prev.review, [field]: value } as FormData['review'] }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
     }

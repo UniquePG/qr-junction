@@ -32,32 +32,45 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
   const [previewUrl, setPreviewUrl] = useState<string>(logo?.src ?? '');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validTypes = ['image/png', 'image/jpeg', 'image/svg+xml'];
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
     if (!validTypes.includes(file.type)) {
       alert('Please upload a PNG, JPG, or SVG file.');
       return;
     }
 
     setIsLoading(true);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      setPreviewUrl(base64);
+    try {
+      const uploadData = new FormData();
+      uploadData.append('file', file);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: uploadData,
+      });
+
+      if (!res.ok) throw new Error('Upload failed');
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Upload failed');
+
+      setPreviewUrl(json.url);
       onChange({
-        src: base64,
+        src: json.url,
         size: logo?.size ?? 0.2,
         margin: logo?.margin ?? 5,
         hideBackgroundDots: logo?.hideBackgroundDots ?? true,
         crossOrigin: 'anonymous',
       });
       onEclLocked(true);
+    } catch (err) {
+      console.error('Logo upload error:', err);
+      alert('Failed to upload logo. Please try again.');
+    } finally {
       setIsLoading(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleRemove = () => {

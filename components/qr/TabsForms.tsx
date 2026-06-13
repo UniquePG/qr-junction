@@ -18,6 +18,11 @@ import {
   User,
   Wifi,
   X,
+  Star,
+  Building2,
+  Upload,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -687,6 +692,216 @@ export function LandingPageTabForm({ formData, updateFormData }: TabFormProps) {
   );
 }
 
+export function ReviewTabForm({ formData, updateFormData }: TabFormProps) {
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (max 1MB)
+    if (file.size > 1024 * 1024) {
+      alert("Please upload a file smaller than 1MB.");
+      return;
+    }
+
+    const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/svg+xml"];
+    if (!validTypes.includes(file.type)) {
+      alert("Please upload a valid PNG, JPG, or SVG image.");
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const uploadData = new globalThis.FormData();
+      uploadData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: uploadData,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Upload failed");
+
+      updateFormData("logoUrl", json.url);
+    } catch (err) {
+      console.error("Logo upload error:", err);
+      alert("Failed to upload logo. Please try again.");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const removeLogo = () => {
+    updateFormData("logoUrl", "");
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Business Logo Upload */}
+      <div className={INPUT_CONTAINER}>
+        <label className={LABEL_CLASS}>Business Logo</label>
+        {formData.review?.logoUrl ? (
+          <div className="flex items-center gap-4 p-3 bg-white border border-slate-200 rounded-xl">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={formData.review.logoUrl}
+              alt="Business Logo"
+              className="w-12 h-12 rounded-full object-cover border border-slate-200 bg-slate-50"
+            />
+            <div className="flex-1">
+              <span className="text-xs font-semibold text-slate-800 block">Logo Uploaded</span>
+              <span className="text-[10px] text-slate-500">Stored in cloud bucket</span>
+            </div>
+            <button
+              type="button"
+              onClick={removeLogo}
+              className="text-xs text-red-650 hover:text-red-700 bg-red-50 hover:bg-red-100/60 px-3 py-1.5 rounded-lg border border-red-200 transition-all font-semibold cursor-pointer"
+            >
+              Remove
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 hover:border-primary/50 text-slate-650 rounded-xl text-xs font-semibold cursor-pointer transition-all shadow-xs w-full justify-center">
+              {uploadingLogo ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  <span>Uploading to Cloud...</span>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 text-slate-550" />
+                  <span>Upload Business Logo (Max 1MB)</span>
+                </>
+              )}
+              <input
+                type="file"
+                accept=".png,.jpg,.jpeg,.svg"
+                onChange={handleLogoUpload}
+                disabled={uploadingLogo}
+                className="hidden"
+              />
+            </label>
+          </div>
+        )}
+      </div>
+
+      {/* Brand Name */}
+      <div className={INPUT_CONTAINER}>
+        <label className={LABEL_CLASS}>Business or Brand Name</label>
+        <div className="relative">
+          <Building2 className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+          <input
+            type="text"
+            value={formData.review?.businessName || ""}
+            onChange={(e) => updateFormData("businessName", e.target.value)}
+            placeholder="e.g. Acme Cafe"
+            className={ICON_INPUT_CLASS}
+            required
+          />
+        </div>
+        <span className={HINT_CLASS}>
+          This name will appear on your Review Landing Page.
+        </span>
+      </div>
+      
+      {/* Public Review URL */}
+      <div className={INPUT_CONTAINER}>
+        <label className={LABEL_CLASS}>Public Review URL</label>
+        <div className="relative">
+          <Star className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+          <input
+            type="url"
+            value={formData.review?.publicReviewUrl || ""}
+            onChange={(e) => updateFormData("publicReviewUrl", e.target.value)}
+            placeholder="https://g.page/r/.../review"
+            className={ICON_INPUT_CLASS}
+            required
+          />
+        </div>
+        <span className={HINT_CLASS}>
+          Users who rate you high will be sent to this link (e.g. Google Maps, Trustpilot).
+        </span>
+      </div>
+
+      {/* Redirect Threshold */}
+      <div className={INPUT_CONTAINER}>
+        <label className={LABEL_CLASS}>Redirect Positive Ratings of</label>
+        <select
+          value={formData.review?.positiveThreshold || 4}
+          onChange={(e) => updateFormData("positiveThreshold", e.target.value)}
+          className={SELECT_CLASS}
+        >
+          <option value={4}>4 Stars and Above (Recommended)</option>
+          <option value={5}>5 Stars Only (Strict Filter)</option>
+        </select>
+        <span className={HINT_CLASS}>
+          Lower ratings will collect private feedback in your dashboard instead.
+        </span>
+      </div>
+
+      {/* Accordion for custom messages */}
+      <div className="pt-2 border-t border-slate-200">
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="flex items-center justify-between w-full py-2 text-xs font-bold text-slate-655 hover:text-[#001B50] transition-colors cursor-pointer select-none"
+        >
+          <span>Advanced Message Customization</span>
+          {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+
+        {showAdvanced && (
+          <div className="space-y-4 mt-3 pt-3 border-t border-slate-200/80 animate-fade-in">
+            {/* Welcome message */}
+            <div className={INPUT_CONTAINER}>
+              <label className={LABEL_CLASS}>Custom Welcome Header</label>
+              <input
+                type="text"
+                value={formData.review?.welcomeMessage || ""}
+                onChange={(e) => updateFormData("welcomeMessage", e.target.value)}
+                placeholder="e.g. How was your experience?"
+                className={INPUT_CLASS}
+              />
+              <span className={HINT_CLASS}>Default: "How was your experience?"</span>
+            </div>
+
+            {/* Private feedback prompt */}
+            <div className={INPUT_CONTAINER}>
+              <label className={LABEL_CLASS}>Low Rating feedback prompt</label>
+              <textarea
+                value={formData.review?.privateFeedbackMessage || ""}
+                onChange={(e) => updateFormData("privateFeedbackMessage", e.target.value)}
+                placeholder="e.g. We are sorry to hear that your experience wasn't perfect. Please let us know how we can improve."
+                rows={2}
+                className={TEXTAREA_CLASS}
+              />
+              <span className={HINT_CLASS}>Shown for low ratings. Default: "We are sorry to hear that your experience wasn't perfect..."</span>
+            </div>
+
+            {/* Thank you message */}
+            <div className={INPUT_CONTAINER}>
+              <label className={LABEL_CLASS}>Submission Thank You Message</label>
+              <textarea
+                value={formData.review?.thankYouMessage || ""}
+                onChange={(e) => updateFormData("thankYouMessage", e.target.value)}
+                placeholder="e.g. Your feedback has been submitted successfully. We appreciate your time and will use this to improve our service."
+                rows={2}
+                className={TEXTAREA_CLASS}
+              />
+              <span className={HINT_CLASS}>Shown after submission. Default: "Your feedback has been submitted successfully..."</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 interface TabFormRendererProps extends TabFormProps {
   activeTab: string;
 }
@@ -759,6 +974,13 @@ export function TabFormRenderer({
     case "landing_page":
       return (
         <LandingPageTabForm
+          formData={formData}
+          updateFormData={updateFormData}
+        />
+      );
+    case "review":
+      return (
+        <ReviewTabForm
           formData={formData}
           updateFormData={updateFormData}
         />

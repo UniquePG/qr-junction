@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,5 +14,15 @@ const firebaseConfig = {
 // Initialize Firebase Client
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
+const storage = getStorage(app);
 
-export { app, auth };
+export async function uploadImageToCloud(file: File, folder: string = 'review-logos'): Promise<string> {
+  const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+  const fileRef = ref(storage, `${folder}/${fileName}`);
+  const snapshot = await uploadBytes(fileRef, file);
+  const downloadUrl = await getDownloadURL(snapshot.ref);
+  return downloadUrl;
+}
+
+export { app, auth, storage };
+

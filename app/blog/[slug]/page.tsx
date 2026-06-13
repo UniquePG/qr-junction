@@ -185,7 +185,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
                   src={blog.hero.image}
                   alt={blog.hero.imageAlt || blog.hero.title}
                   fill
-                  className="object-cover"
+                  className="object-contain"
                   priority
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
                 />
@@ -318,14 +318,61 @@ export default async function BlogPage({ params }: BlogPageProps) {
                 {/* List */}
                 {section.list && (
                   <ul className="my-6 space-y-3 pl-6 list-none">
-                    {section.list.map((item, itemIdx) => (
-                      <li
-                        key={itemIdx}
-                        className="relative text-sm sm:text-base text-slate-700 before:absolute before:-left-6 before:text-primary before:content-['✓'] before:font-bold"
-                      >
-                        {item}
-                      </li>
-                    ))}
+                    {section.list.map((item, itemIdx) => {
+                      const isString = typeof item === "string";
+                      const text = isString ? item : item.text;
+                      const sublist = isString ? undefined : item.sublist;
+
+                      const renderItemText = (str: string) => {
+                        // Check if it has an em-dash " — " to separate heading from text
+                        const emDashIdx = str.indexOf(" — ");
+                        if (emDashIdx !== -1) {
+                          const title = str.substring(0, emDashIdx);
+                          const desc = str.substring(emDashIdx); // contains " — ..."
+                          return (
+                            <>
+                              <strong className="text-[#001B50] font-bold">{title}</strong>
+                              {desc}
+                            </>
+                          );
+                        }
+
+                        // Check if it starts with "Step X:" or similar
+                        if (str.includes(": ") && (str.startsWith("Step ") || str.startsWith("Step:"))) {
+                          const colonIdx = str.indexOf(": ");
+                          const stepPrefix = str.substring(0, colonIdx + 1);
+                          const stepContent = str.substring(colonIdx + 1);
+                          return (
+                            <>
+                              <strong className="text-[#001B50] font-bold">{stepPrefix}</strong>
+                              {stepContent}
+                            </>
+                          );
+                        }
+
+                        return str;
+                      };
+
+                      return (
+                        <li key={itemIdx} className="space-y-2">
+                          <div className="relative text-sm sm:text-base text-slate-700 before:absolute before:-left-6 before:text-primary before:content-['✓'] before:font-bold">
+                            {renderItemText(text)}
+                          </div>
+                          {sublist && sublist.length > 0 && (
+                            <ul className="pl-6 mt-2 space-y-2 list-none">
+                              {sublist.map((subItem, subItemIdx) => (
+                                <li
+                                  key={subItemIdx}
+                                  className="relative text-xs sm:text-sm text-slate-600 before:absolute before:-left-5 before:text-slate-400 before:content-['–'] before:font-bold"
+                                >
+                                  {renderItemText(subItem)}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
 

@@ -174,6 +174,9 @@ export async function GET(
       } else {
         redirectUrl = dest.fallbackUrl || '/';
       }
+    } else if (qrCode.type === 'REVIEW') {
+      // Route to dynamic review landing page
+      redirectUrl = `/q/${shortCode}/review?utm_source=${utmSource}&utm_medium=${utmMedium}&utm_campaign=${utmCampaign}`;
     } else {
       // Fallback
       redirectUrl = dest.url || '/';

@@ -61,6 +61,7 @@ export default function DashboardLayout({
 
   const navLinks = [
     { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'My Profile', href: '/dashboard/profile', icon: UserIcon },
     { name: 'Campaigns', href: '/dashboard/campaigns', icon: FolderOpen },
     { name: 'Landing Pages', href: '/dashboard/pages', icon: Layout },
     { name: 'My QR Codes', href: '/dashboard/qrs', icon: QrCode },
@@ -112,23 +113,23 @@ export default function DashboardLayout({
 
         {/* User Info & Sign Out */}
         <div className="p-4 border-t border-slate-200 bg-slate-50/50">
-          <div className="flex items-center gap-3 mb-4 px-2">
+          <Link href="/dashboard/profile" className="flex items-center gap-3 mb-4 px-2 p-2 rounded-xl hover:bg-white transition-colors cursor-pointer group no-underline">
             {user.photoURL ? (
               <img 
                 src={user.photoURL} 
                 alt={user.displayName || 'Avatar'} 
-                className="w-10 h-10 rounded-full border border-slate-205"
+                className="w-10 h-10 rounded-full border border-slate-200 group-hover:border-primary transition-colors"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-primary font-bold">
+              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-primary font-bold group-hover:border-primary group-hover:bg-primary/5 transition-colors">
                 {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-[#001B50] truncate">{user.displayName || 'User'}</p>
+              <p className="text-sm font-semibold text-[#001B50] truncate group-hover:text-primary transition-colors">{user.displayName || 'User'}</p>
               <p className="text-xs text-slate-500 truncate">{user.email}</p>
             </div>
-          </div>
+          </Link>
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-650 hover:text-red-650 text-sm font-medium transition-all cursor-pointer"
@@ -229,23 +230,27 @@ export default function DashboardLayout({
             </nav>
 
             <div className="pt-6 border-t border-slate-200 mt-auto">
-              <div className="flex items-center gap-3 mb-4">
+              <Link 
+                href="/dashboard/profile" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 mb-4 px-2 p-2 rounded-xl hover:bg-white transition-colors cursor-pointer group no-underline"
+              >
                 {user.photoURL ? (
                   <img 
                     src={user.photoURL} 
                     alt={user.displayName || 'Avatar'} 
-                    className="w-10 h-10 rounded-full border border-slate-205"
+                    className="w-10 h-10 rounded-full border border-slate-200 group-hover:border-primary transition-colors"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-250 flex items-center justify-center text-primary font-bold">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-primary font-bold group-hover:border-primary group-hover:bg-primary/5 transition-colors">
                     {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-[#001B50] truncate">{user.displayName || 'User'}</p>
+                  <p className="text-sm font-semibold text-[#001B50] truncate group-hover:text-primary transition-colors">{user.displayName || 'User'}</p>
                   <p className="text-xs text-slate-500 truncate">{user.email}</p>
                 </div>
-              </div>
+              </Link>
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);

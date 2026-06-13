@@ -34,6 +34,7 @@ enum QRType {
   APP_DOWNLOAD
   PDF
   LANDING_PAGE
+  REVIEW
 }
 
 enum QRStatus {
@@ -67,6 +68,12 @@ enum ConversionEventType {
   CUSTOM
 }
 
+enum ProfileType {
+  INDIVIDUAL
+  BUSINESS
+}
+
+
 model User {
   id           Int        @id @default(autoincrement())
   firebaseUid  String     @unique @map("firebase_uid")
@@ -84,8 +91,31 @@ model User {
   campaigns    Campaign[]
   leads        Lead[]
   landingPages LandingPage[]
+  profile      Profile?
 
   @@map("users")
+}
+
+model Profile {
+  id           Int         @id @default(autoincrement())
+  userId       Int         @unique @map("user_id")
+  type         ProfileType @default(INDIVIDUAL)
+  
+  // Business / Individual details
+  businessName String?     @map("business_name")
+  logoUrl      String?     @map("logo_url")
+  about        String?     @db.Text
+  phone        String?
+  website      String?
+  address      String?
+  industry     String?
+
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
 }
 
 model QRCode {
@@ -125,6 +155,7 @@ model QRCode {
   scans         Scan[]
   leads         Lead[]
   conversions   Conversion[]
+  reviewResponses ReviewResponse[]
 
   @@index([shortCode])
   @@index([userId])
@@ -167,6 +198,26 @@ model Scan {
   @@index([scannedAt])
   @@index([visitorId])
   @@map("scans")
+}
+
+model ReviewResponse {
+  id         Int      @id @default(autoincrement())
+  qrCodeId   Int      @map("qr_code_id")
+  
+  rating     Int      // 1 to 5
+  feedback   String?  @db.Text
+  
+  // Optional lead capture details
+  name       String?
+  phone      String?
+  
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  qrCode     QRCode   @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+
+  @@index([qrCodeId])
+  @@map("review_responses")
 }
 
 model Campaign {
