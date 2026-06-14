@@ -1,6 +1,30 @@
 import { NextResponse } from 'next/server';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
-import * as pdf from 'pdf-parse';
+
+// Polyfills for PDF parsing on server-side environments (Node.js/Vercel)
+if (typeof globalThis.DOMMatrix === 'undefined') {
+  globalThis.DOMMatrix = class DOMMatrix {
+    a = 1; b = 0; c = 0; d = 1; e = 0; f = 0;
+    constructor(init?: string | number[]) {
+      if (Array.isArray(init)) {
+        this.a = init[0]; this.b = init[1]; this.c = init[2];
+        this.d = init[3]; this.e = init[4]; this.f = init[5];
+      }
+    }
+  } as any;
+}
+if (typeof globalThis.ImageData === 'undefined') {
+  globalThis.ImageData = class ImageData {
+    width: number; height: number; data: Uint8ClampedArray;
+    constructor(width: number, height: number) {
+      this.width = width; this.height = height;
+      this.data = new Uint8ClampedArray(width * height * 4);
+    }
+  } as any;
+}
+if (typeof globalThis.Path2D === 'undefined') {
+  globalThis.Path2D = class Path2D { addPath() {} } as any;
+}
 
 // ─── Helper: Fetch image from URL and convert to base64 data URL ─────────────
 async function fetchImageAsBase64(url: string): Promise<{ dataUrl: string; mimeType: string } | null> {
@@ -54,7 +78,9 @@ export async function POST(request: Request) {
         const response = await fetch(fileUrl);
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        const pdfData = await (pdf as any)(buffer);
+        const pdfModule = await import('pdf-parse') as any;
+        const pdfParser = pdfModule.default || pdfModule;
+        const pdfData = await (pdfParser as any)(buffer);
         textContent = pdfData.text;
       } catch (err: any) {
         console.error('Error parsing PDF, falling back to vision/OCR:', err);
