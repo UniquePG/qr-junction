@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
+import { generateUniqueShortCode } from '@/utils/shortCode';
+import { QRType, QRStatus } from '@prisma/client';
 
 // Helper to verify restaurant ownership
 async function getRestaurantByUserId(userId: number) {
@@ -26,7 +28,56 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'asc' },
     });
 
-    return NextResponse.json({ success: true, menus });
+    const qrCodes = await prisma.qRCode.findMany({
+      where: {
+        userId,
+        type: QRType.RESTAURANT_MENU,
+      }
+    });
+
+    const menusWithQr = [];
+    for (const menu of menus) {
+      let qr = qrCodes.find(q => {
+        const dest = q.destination as any;
+        return dest && dest.menuId === menu.id && !dest.tableNumber;
+      });
+
+      if (!qr) {
+        // Lazy create QR Code for the menu
+        const shortCode = await generateUniqueShortCode();
+        qr = await prisma.qRCode.create({
+          data: {
+            name: `${restaurant.name} - ${menu.name} Direct QR`,
+            type: QRType.RESTAURANT_MENU,
+            shortCode,
+            destination: {
+              restaurantId: restaurant.id,
+              menuId: menu.id,
+            },
+            userId,
+            restaurantId: restaurant.id,
+            fgColor: '#000000',
+            bgColor: '#FFFFFF',
+            status: QRStatus.ACTIVE,
+          }
+        });
+      }
+
+      menusWithQr.push({
+        ...menu,
+        qrCode: {
+          id: qr.id,
+          shortCode: qr.shortCode,
+          name: qr.name,
+          fgColor: qr.fgColor,
+          bgColor: qr.bgColor,
+          totalScans: qr.totalScans,
+          uniqueScans: qr.uniqueScans,
+        }
+      });
+    }
+
+    return NextResponse.json({ success: true, menus: menusWithQr });
   } catch (error: any) {
     console.error('Error fetching menus:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -78,7 +129,39 @@ export async function POST(request: Request) {
       });
     });
 
-    return NextResponse.json({ success: true, menu: newMenu });
+    // Create QR Code for the menu
+    const shortCode = await generateUniqueShortCode();
+    const qrCode = await prisma.qRCode.create({
+      data: {
+        name: `${restaurant.name} - ${newMenu.name} Direct QR`,
+        type: QRType.RESTAURANT_MENU,
+        shortCode,
+        destination: {
+          restaurantId: restaurant.id,
+          menuId: newMenu.id,
+        },
+        userId,
+        restaurantId: restaurant.id,
+        fgColor: '#000000',
+        bgColor: '#FFFFFF',
+        status: QRStatus.ACTIVE,
+      }
+    });
+
+    const menuWithQr = {
+      ...newMenu,
+      qrCode: {
+        id: qrCode.id,
+        shortCode: qrCode.shortCode,
+        name: qrCode.name,
+        fgColor: qrCode.fgColor,
+        bgColor: qrCode.bgColor,
+        totalScans: qrCode.totalScans,
+        uniqueScans: qrCode.uniqueScans,
+      }
+    };
+
+    return NextResponse.json({ success: true, menu: menuWithQr });
   } catch (error: any) {
     console.error('Error creating menu:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -136,7 +219,53 @@ export async function PUT(request: Request) {
       });
     });
 
-    return NextResponse.json({ success: true, menu: updatedMenu });
+    if (name) {
+      const qrCodes = await prisma.qRCode.findMany({
+        where: {
+          userId,
+          type: QRType.RESTAURANT_MENU,
+        }
+      });
+      const targetQr = qrCodes.find(q => {
+        const dest = q.destination as any;
+        return dest && dest.menuId === Number(id) && !dest.tableNumber;
+      });
+      if (targetQr) {
+        await prisma.qRCode.update({
+          where: { id: targetQr.id },
+          data: {
+            name: `${restaurant.name} - ${name} Direct QR`
+          }
+        });
+      }
+    }
+
+    // Fetch the updated menu with its QR code to return consistent model
+    const qrCodes = await prisma.qRCode.findMany({
+      where: {
+        userId,
+        type: QRType.RESTAURANT_MENU,
+      }
+    });
+    const qr = qrCodes.find(q => {
+      const dest = q.destination as any;
+      return dest && dest.menuId === updatedMenu.id && !dest.tableNumber;
+    });
+
+    const menuWithQr = {
+      ...updatedMenu,
+      qrCode: qr ? {
+        id: qr.id,
+        shortCode: qr.shortCode,
+        name: qr.name,
+        fgColor: qr.fgColor,
+        bgColor: qr.bgColor,
+        totalScans: qr.totalScans,
+        uniqueScans: qr.uniqueScans,
+      } : null
+    };
+
+    return NextResponse.json({ success: true, menu: menuWithQr });
   } catch (error: any) {
     console.error('Error updating menu:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -204,6 +333,23 @@ export async function DELETE(request: Request) {
         }
       }
     });
+
+    // Delete matching QR Code
+    const qrCodes = await prisma.qRCode.findMany({
+      where: {
+        userId,
+        type: QRType.RESTAURANT_MENU,
+      }
+    });
+    const targetQr = qrCodes.find(q => {
+      const dest = q.destination as any;
+      return dest && dest.menuId === menuIdParsed && !dest.tableNumber;
+    });
+    if (targetQr) {
+      await prisma.qRCode.delete({
+        where: { id: targetQr.id },
+      });
+    }
 
     return NextResponse.json({ success: true, message: 'Menu deleted successfully' });
   } catch (error: any) {

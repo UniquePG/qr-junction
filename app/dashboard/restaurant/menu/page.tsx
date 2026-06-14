@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { auth } from '@/lib/firebase';
+import { QRCodeSVG } from 'qrcode.react';
+import { getQrUrl } from '@/utils/qrUrl';
 import { 
   Plus, 
   Edit, 
@@ -19,7 +21,10 @@ import {
   Eye,
   Settings,
   FolderClosed,
-  Palette
+  Palette,
+  Copy,
+  Download,
+  QrCode
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -58,6 +63,15 @@ interface Menu {
   description: string | null;
   theme: string;
   isDefault: boolean;
+  qrCode?: {
+    id: number;
+    shortCode: string;
+    name: string;
+    fgColor: string;
+    bgColor: string;
+    totalScans: number;
+    uniqueScans: number;
+  } | null;
 }
 
 export default function MenuManagementPage() {
@@ -88,6 +102,43 @@ export default function MenuManagementPage() {
   const [generatingAiImage, setGeneratingAiImage] = useState(false);
   const [savingItem, setSavingItem] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [copiedMenuId, setCopiedMenuId] = useState(false);
+
+  const handleCopyMenuUrl = (shortCode: string) => {
+    const fullUrl = getQrUrl(shortCode);
+    navigator.clipboard.writeText(fullUrl);
+    setCopiedMenuId(true);
+    toast.success('Menu QR scan URL copied!');
+    setTimeout(() => setCopiedMenuId(false), 2000);
+  };
+
+  const downloadMenuQR = (shortCode: string, menuName: string) => {
+    const svg = document.getElementById(`menu-qr-${shortCode}`);
+    if (!svg) return;
+    const svgXml = new XMLSerializer().serializeToString(svg);
+    const svgBase64 = btoa(unescape(encodeURIComponent(svgXml)));
+    
+    const img = new Image();
+    img.src = `data:image/svg+xml;base64,${svgBase64}`;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1000;
+      canvas.height = 1000;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, 1000, 1000);
+        ctx.drawImage(img, 0, 0, 1000, 1000);
+        const pngUrl = canvas.toDataURL('image/png');
+        const downloadLink = document.createElement('a');
+        downloadLink.href = pngUrl;
+        downloadLink.download = `menu-qr-${menuName.toLowerCase().replace(/\s+/g, '-')}.png`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }
+    };
+  };
 
   // Menu settings modal
   const [showMenuModal, setShowMenuModal] = useState(false);
@@ -720,6 +771,64 @@ export default function MenuManagementPage() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Direct Menu QR Code Section */}
+            {currentMenu && currentMenu.qrCode && (
+              <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col items-center text-center">
+                <span className="text-[10px] text-slate-450 uppercase tracking-widest font-bold mb-3 font-sans flex items-center gap-1">
+                  <QrCode className="w-3.5 h-3.5 text-primary" />
+                  Direct Menu QR Code
+                </span>
+                
+                {/* Hidden SVG for download */}
+                <div className="hidden">
+                  <QRCodeSVG
+                    id={`menu-qr-${currentMenu.qrCode.shortCode}`}
+                    value={getQrUrl(currentMenu.qrCode.shortCode)}
+                    size={500}
+                    fgColor="#000000"
+                    bgColor="#FFFFFF"
+                    level="H"
+                  />
+                </div>
+
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-center max-w-[130px] shadow-inner mb-3">
+                  <QRCodeSVG
+                    value={getQrUrl(currentMenu.qrCode.shortCode)}
+                    size={100}
+                    fgColor="#000000"
+                    bgColor="#FFFFFF"
+                    level="H"
+                  />
+                </div>
+
+                <div className="text-xs font-bold text-[#001B50] mb-2 truncate max-w-full px-2">
+                  {currentMenu.name}
+                </div>
+
+                <div className="flex gap-2 w-full mt-2">
+                  <button
+                    onClick={() => handleCopyMenuUrl(currentMenu.qrCode!.shortCode)}
+                    className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[10px] border border-slate-200 transition-all cursor-pointer select-none"
+                  >
+                    {copiedMenuId ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                    Copy URL
+                  </button>
+                  <button
+                    onClick={() => downloadMenuQR(currentMenu.qrCode!.shortCode, currentMenu.name)}
+                    className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-primary hover:bg-[#001b50] text-white font-bold rounded-lg text-[10px] border-none transition-all cursor-pointer select-none"
+                  >
+                    <Download className="w-3 h-3" />
+                    Download
+                  </button>
+                </div>
+
+                <div className="flex justify-between w-full text-[9px] text-slate-400 mt-4 border-t border-slate-100/60 pt-3 px-1">
+                  <span>Scans: <strong>{currentMenu.qrCode.totalScans}</strong></span>
+                  <span>Unique: <strong>{currentMenu.qrCode.uniqueScans}</strong></span>
+                </div>
               </div>
             )}
           </div>
