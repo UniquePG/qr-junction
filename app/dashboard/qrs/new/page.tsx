@@ -215,7 +215,7 @@ export default function CreateQrPage() {
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide block">Select QR Destination Type</label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {TABS.map((t) => {
+              {TABS.filter(t => t.id !== 'landing_page' && t.id !== 'review').map((t) => {
                 const Icon = t.Icon;
                 const isSelected = activeTab === t.id;
                 return (

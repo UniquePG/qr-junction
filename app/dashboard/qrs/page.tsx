@@ -50,6 +50,7 @@ export default function QrListPage() {
   // Search & Filter state
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
+  const [categoryTab, setCategoryTab] = useState<'ALL' | 'STANDARD' | 'LANDING' | 'REVIEW'>('ALL');
   
   // Clipboard copied hint
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -196,8 +197,18 @@ export default function QrListPage() {
   const filteredQrs = qrs.filter(qr => {
     const matchesSearch = qr.name.toLowerCase().includes(search.toLowerCase()) || 
                           qr.shortCode.toLowerCase().includes(search.toLowerCase());
+    
+    let matchesCategory = true;
+    if (categoryTab === 'STANDARD') {
+      matchesCategory = qr.type !== 'LANDING_PAGE' && qr.type !== 'REVIEW';
+    } else if (categoryTab === 'LANDING') {
+      matchesCategory = qr.type === 'LANDING_PAGE';
+    } else if (categoryTab === 'REVIEW') {
+      matchesCategory = qr.type === 'REVIEW';
+    }
+
     const matchesType = typeFilter === 'ALL' || qr.type === typeFilter;
-    return matchesSearch && matchesType;
+    return matchesSearch && matchesCategory && matchesType;
   });
 
   if (loading) {
@@ -242,6 +253,28 @@ export default function QrListPage() {
             <option value="WIFI">Wi-Fi Network</option>
           </select>
         </div>
+      </div>
+
+      {/* Category Tabs */}
+      <div className="flex gap-2 border-b border-slate-200 pb-px overflow-x-auto scrollbar-none">
+        {[
+          { id: 'ALL', label: 'All QR Codes' },
+          { id: 'STANDARD', label: 'Standard QRs' },
+          { id: 'LANDING', label: 'Landing Page QRs' },
+          { id: 'REVIEW', label: 'Review QRs' }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setCategoryTab(tab.id as any)}
+            className={`px-4 py-2.5 text-xs font-bold border-b-2 whitespace-nowrap transition-all outline-none cursor-pointer ${
+              categoryTab === tab.id
+                ? 'border-primary text-primary'
+                : 'border-transparent text-slate-500 hover:text-[#001B50] hover:border-slate-200'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Main Grid / Cards */}

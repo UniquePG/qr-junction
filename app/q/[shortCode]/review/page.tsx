@@ -21,6 +21,7 @@ export default function ReviewLandingPage() {
   
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedReviewId, setSubmittedReviewId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchQR = async () => {
@@ -29,6 +30,12 @@ export default function ReviewLandingPage() {
         if (!res.ok) throw new Error('Not found');
         const data = await res.json();
         setQrCode(data.qrCode);
+
+        // Check local storage to see if user has already reviewed this QR code
+        const alreadyReviewed = localStorage.getItem(`reviewed_${data.qrCode.id}`) === 'true';
+        if (alreadyReviewed) {
+          setSubmitted(true);
+        }
       } catch (error) {
         console.error(error);
         toast.error('Unable to load review page.');
@@ -72,27 +79,73 @@ export default function ReviewLandingPage() {
   const privateFeedbackMessage = dest.privateFeedbackMessage || "We are sorry to hear that your experience wasn't perfect. Please let us know how we can improve.";
   const thankYouMessage = dest.thankYouMessage || 'Your feedback has been submitted successfully. We appreciate your time and will use this to improve our service.';
   
-  const handleRatingClick = (rate: number) => {
-    if (submitted) return;
+  const handleRatingClick = async (rate: number) => {
+    if (submitted || submitting) return;
     setRating(rate);
+
+    if (rate >= positiveThreshold) {
+      setSubmitting(true);
+      try {
+        const payload: any = {
+          qrCodeId: qrCode.id,
+          rating: rate,
+          feedback: '',
+          name: '',
+          phone: '',
+        };
+        if (submittedReviewId) {
+          payload.id = submittedReviewId;
+        }
+
+        const res = await fetch('/api/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) throw new Error('Submission failed');
+        const json = await res.json();
+        if (json.reviewResponse?.id) {
+          setSubmittedReviewId(json.reviewResponse.id);
+        }
+      } catch (error) {
+        console.error('Failed to submit positive rating:', error);
+      } finally {
+        setSubmitting(false);
+      }
+    }
+  };
+
+  const handlePublicReviewClick = () => {
+    if (qrCode) {
+      localStorage.setItem(`reviewed_${qrCode.id}`, 'true');
+    }
+    setSubmitted(true);
   };
 
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
+      const payload: any = {
+        qrCodeId: qrCode.id,
+        rating,
+        feedback,
+        name,
+        phone
+      };
+      if (submittedReviewId) {
+        payload.id = submittedReviewId;
+      }
+
       const res = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          qrCodeId: qrCode.id,
-          rating,
-          feedback,
-          name,
-          phone
-        }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Submission failed');
+      
+      localStorage.setItem(`reviewed_${qrCode.id}`, 'true');
       setSubmitted(true);
     } catch (error) {
       toast.error('Failed to submit feedback. Please try again.');
@@ -158,10 +211,11 @@ export default function ReviewLandingPage() {
                   <button
                     key={star}
                     type="button"
+                    disabled={submitting}
                     onClick={() => handleRatingClick(star)}
                     onMouseEnter={() => setHoverRating(star)}
                     onMouseLeave={() => setHoverRating(0)}
-                    className="p-1 transition-all duration-200 transform hover:scale-125 hover:-translate-y-1 active:scale-95 focus:outline-none"
+                    className="p-1 transition-all duration-200 transform hover:scale-125 hover:-translate-y-1 active:scale-95 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Star 
                       className={`w-10 h-10 ${
@@ -181,7 +235,8 @@ export default function ReviewLandingPage() {
             <div className="p-8 text-center space-y-6 animate-fade-in relative">
               <button 
                 onClick={() => setRating(0)}
-                className="absolute top-4 left-4 p-2 bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition-all border-none cursor-pointer"
+                disabled={submitting}
+                className="absolute top-4 left-4 p-2 bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition-all border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Change Rating"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -199,8 +254,8 @@ export default function ReviewLandingPage() {
                   href={publicReviewUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 py-4 px-6 text-white font-bold rounded-2xl shadow-xl hover:shadow-[0_8px_25px_rgba(255,255,255,0.1)] transition-all transform active:scale-98"
-                  style={{ backgroundColor: primaryColor }}
+                  onClick={handlePublicReviewClick}
+                  className="w-full flex items-center justify-center gap-2 py-4 px-6 text-white font-bold rounded-2xl shadow-xl hover:shadow-[0_8px_25px_rgba(255,255,255,0.1)] transition-all transform active:scale-98 bg-[#001B50]"
                 >
                   <span>Leave a Public Review</span>
                   <ArrowRight className="w-5 h-5 shrink-0" />
@@ -214,7 +269,8 @@ export default function ReviewLandingPage() {
             <div className="p-8 animate-fade-in relative">
               <button 
                 onClick={() => setRating(0)}
-                className="absolute top-4 left-4 p-2 bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition-all border-none cursor-pointer"
+                disabled={submitting}
+                className="absolute top-4 left-4 p-2 bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition-all border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Change Rating"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -259,8 +315,7 @@ export default function ReviewLandingPage() {
                   <button 
                     type="submit"
                     disabled={submitting || !feedback.trim()}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 px-6 text-white font-bold rounded-xl shadow-lg transition-all active:scale-98 disabled:opacity-50 cursor-pointer border-none "
-                    style={{ backgroundColor: primaryColor }}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 px-6 text-white font-bold rounded-xl shadow-lg transition-all active:scale-98 disabled:opacity-50 cursor-pointer border-none bg-[#001B50]"
                   >
                     {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                     <span>Submit Private Feedback</span>

@@ -32,6 +32,7 @@ interface LandingPageData {
 }
 
 import ConfirmModal from '@/components/ConfirmModal';
+import LandingPageQRModal from '@/components/LandingPageQRModal';
 
 export default function LandingPagesDirectory() {
   const { user } = useAuth();
@@ -39,6 +40,10 @@ export default function LandingPagesDirectory() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<number | null>(null);
+
+  // Landing Page QR Modal state
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [selectedPageForQR, setSelectedPageForQR] = useState<LandingPageData | null>(null);
 
   // Custom Confirm Modal State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -78,6 +83,11 @@ export default function LandingPagesDirectory() {
     setCopiedId(page.id);
     toast.success('Public page link copied to clipboard!');
     setTimeout(() => setCopiedId(null), 1500);
+  };
+
+  const handleOpenQRModal = (page: LandingPageData) => {
+    setSelectedPageForQR(page);
+    setQrModalOpen(true);
   };
 
   const triggerDeleteConfirm = (id: number) => {
@@ -234,6 +244,13 @@ export default function LandingPagesDirectory() {
                   >
                     {copiedId === page.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
+                  <button
+                    onClick={() => handleOpenQRModal(page)}
+                    className="p-1.5 text-slate-500 hover:text-primary transition-colors bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100"
+                    title="Get QR Code"
+                  >
+                    <QrCode className="w-3.5 h-3.5 text-primary" />
+                  </button>
                   <a
                     href={`/p/${page.slug}`}
                     target="_blank"
@@ -279,6 +296,18 @@ export default function LandingPagesDirectory() {
           setDeletingPageId(null);
         }}
       />
+
+      {selectedPageForQR && (
+        <LandingPageQRModal
+          isOpen={qrModalOpen}
+          onClose={() => {
+            setQrModalOpen(false);
+            setSelectedPageForQR(null);
+            fetchPages();
+          }}
+          page={selectedPageForQR}
+        />
+      )}
     </div>
   );
 }

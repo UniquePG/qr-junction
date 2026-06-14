@@ -15,7 +15,8 @@ import {
   Loader2,
   FolderOpen,
   User as UserIcon,
-  Layout
+  Layout,
+  Star
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Image from 'next/image';
@@ -64,6 +65,7 @@ export default function DashboardLayout({
     { name: 'My Profile', href: '/dashboard/profile', icon: UserIcon },
     { name: 'Campaigns', href: '/dashboard/campaigns', icon: FolderOpen },
     { name: 'Landing Pages', href: '/dashboard/pages', icon: Layout },
+    { name: 'Review QR Suite', href: '/dashboard/reviews', icon: Star },
     { name: 'My QR Codes', href: '/dashboard/qrs', icon: QrCode },
     { name: 'Collected Leads', href: '/dashboard/leads', icon: Users },
   ];
@@ -159,11 +161,13 @@ export default function DashboardLayout({
                   ? 'Campaigns' 
                   : pathname.includes('/pages') 
                     ? 'Landing Pages' 
-                    : pathname.includes('/qrs') 
-                      ? 'QR Codes' 
-                      : pathname.includes('/leads') 
-                        ? 'Collected Leads' 
-                        : 'Dashboard'}
+                    : pathname.includes('/reviews') 
+                      ? 'Review QR Suite' 
+                      : pathname.includes('/qrs') 
+                        ? 'QR Codes' 
+                        : pathname.includes('/leads') 
+                          ? 'Collected Leads' 
+                          : 'Dashboard'}
             </h1>
           </div>
 

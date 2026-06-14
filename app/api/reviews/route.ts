@@ -4,7 +4,21 @@ import { prisma } from '@/lib/prisma';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { qrCodeId, rating, feedback, name, phone } = body;
+    const { id, qrCodeId, rating, feedback, name, phone } = body;
+
+    if (id) {
+      // Update existing review
+      const reviewResponse = await prisma.reviewResponse.update({
+        where: { id: Number(id) },
+        data: {
+          rating,
+          feedback,
+          name,
+          phone,
+        },
+      });
+      return NextResponse.json({ success: true, reviewResponse });
+    }
 
     if (!qrCodeId || typeof rating !== 'number' || rating < 1 || rating > 5) {
       return NextResponse.json(
