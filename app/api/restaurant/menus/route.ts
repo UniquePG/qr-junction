@@ -71,6 +71,8 @@ export async function GET(request: Request) {
           name: qr.name,
           fgColor: qr.fgColor,
           bgColor: qr.bgColor,
+          logoUrl: qr.logoUrl,
+          customDesign: qr.customDesign,
           totalScans: qr.totalScans,
           uniqueScans: qr.uniqueScans,
         }
@@ -156,6 +158,8 @@ export async function POST(request: Request) {
         name: qrCode.name,
         fgColor: qrCode.fgColor,
         bgColor: qrCode.bgColor,
+        logoUrl: qrCode.logoUrl,
+        customDesign: qrCode.customDesign,
         totalScans: qrCode.totalScans,
         uniqueScans: qrCode.uniqueScans,
       }
@@ -260,6 +264,8 @@ export async function PUT(request: Request) {
         name: qr.name,
         fgColor: qr.fgColor,
         bgColor: qr.bgColor,
+        logoUrl: qr.logoUrl,
+        customDesign: qr.customDesign,
         totalScans: qr.totalScans,
         uniqueScans: qr.uniqueScans,
       } : null

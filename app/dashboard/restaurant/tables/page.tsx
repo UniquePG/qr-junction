@@ -18,10 +18,13 @@ import {
   FolderClosed,
   Edit,
   Users,
-  X
+  X,
+  Palette
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { getQrUrl } from '@/utils/qrUrl';
+import CustomizableQRCode from '@/components/CustomizableQRCode';
+import QRDesignModal from '@/components/QRDesignModal';
 
 interface Menu {
   id: number;
@@ -35,6 +38,8 @@ interface QRCodeData {
   name: string;
   fgColor: string;
   bgColor: string;
+  logoUrl?: string | null;
+  customDesign?: any | null;
   totalScans: number;
   uniqueScans: number;
 }
@@ -53,6 +58,7 @@ export default function TablesManagementPage() {
   const { user } = useAuth();
   const [tables, setTables] = useState<TableData[]>([]);
   const [menus, setMenus] = useState<Menu[]>([]);
+  const [selectedDesignQr, setSelectedDesignQr] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   
   // Create table form state
@@ -236,32 +242,47 @@ export default function TablesManagementPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const downloadQR = (shortCode: string, tableName: string) => {
-    const svg = document.getElementById(`table-qr-${shortCode}`);
+  const downloadQR = (qr: QRCodeData, tableName: string) => {
+    const svg = document.getElementById(`table-qr-${qr.shortCode}`);
     if (!svg) return;
-    const svgXml = new XMLSerializer().serializeToString(svg);
-    const svgBase64 = btoa(unescape(encodeURIComponent(svgXml)));
-    
-    const img = new Image();
-    img.src = `data:image/svg+xml;base64,${svgBase64}`;
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1000;
-      canvas.height = 1000;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, 1000, 1000);
-        ctx.drawImage(img, 0, 0, 1000, 1000);
-        const pngUrl = canvas.toDataURL('image/png');
-        const downloadLink = document.createElement('a');
-        downloadLink.href = pngUrl;
-        downloadLink.download = `qr-${tableName.toLowerCase().replace(/\s+/g, '-')}.png`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-      }
-    };
+    const design = (qr.customDesign as any) || {};
+    const hasFrame = design.frameId && design.frameId !== 'no_frame';
+
+    try {
+      const svgXml = new XMLSerializer().serializeToString(svg);
+      const svgBase64 = btoa(unescape(encodeURIComponent(svgXml)));
+      
+      const img = new Image();
+      img.src = `data:image/svg+xml;base64,${svgBase64}`;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        if (hasFrame) {
+          canvas.width = 1050; // Aspect ratio 350:420 -> width 1050, height 1260
+          canvas.height = 1260;
+        } else {
+          canvas.width = 1000;
+          canvas.height = 1000;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.fillStyle = qr.bgColor || '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const pngUrl = canvas.toDataURL('image/png');
+          const downloadLink = document.createElement('a');
+          downloadLink.href = pngUrl;
+          downloadLink.download = `qr-${tableName.toLowerCase().replace(/\s+/g, '-')}.png`;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          toast.success('QR Code downloaded!');
+        }
+      };
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to download QR code');
+    }
   };
 
   if (loading) {
@@ -307,13 +328,18 @@ export default function TablesManagementPage() {
                 <div className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent tracking-wider">
                   SCAN MENU
                 </div>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                  <QRCodeSVG
+                <div className="bg-white p-2 rounded-xl border border-slate-200 max-w-[200px] max-h-[240px] flex items-center justify-center overflow-hidden">
+                  <CustomizableQRCode
                     value={getQrUrl(table.qrCode.shortCode)}
+                    fgColor={table.qrCode.fgColor || '#000000'}
+                    bgColor={table.qrCode.bgColor || '#FFFFFF'}
+                    logoUrl={table.qrCode.logoUrl}
+                    logoPreset={table.qrCode.customDesign?.logoPreset || 'none'}
+                    frameId={table.qrCode.customDesign?.frameId || 'no_frame'}
+                    frameText={table.qrCode.customDesign?.frameText || ''}
+                    frameColor={table.qrCode.customDesign?.frameColor || '#001b50'}
+                    frameTextColor={table.qrCode.customDesign?.frameTextColor || '#ffffff'}
                     size={180}
-                    fgColor="#000000"
-                    bgColor="#FFFFFF"
-                    level="H"
                   />
                 </div>
                 <div className="space-y-1">
@@ -449,13 +475,18 @@ export default function TablesManagementPage() {
                   >
                     {/* Hidden SVG element for download */}
                     <div className="hidden">
-                      <QRCodeSVG
+                      <CustomizableQRCode
                         id={`table-qr-${table.qrCode.shortCode}`}
                         value={getQrUrl(table.qrCode.shortCode)}
+                        fgColor={table.qrCode.fgColor || '#000000'}
+                        bgColor={table.qrCode.bgColor || '#FFFFFF'}
+                        logoUrl={table.qrCode.logoUrl}
+                        logoPreset={table.qrCode.customDesign?.logoPreset || 'none'}
+                        frameId={table.qrCode.customDesign?.frameId || 'no_frame'}
+                        frameText={table.qrCode.customDesign?.frameText || ''}
+                        frameColor={table.qrCode.customDesign?.frameColor || '#001b50'}
+                        frameTextColor={table.qrCode.customDesign?.frameTextColor || '#ffffff'}
                         size={500}
-                        fgColor="#000000"
-                        bgColor="#FFFFFF"
-                        level="H"
                       />
                     </div>
 
@@ -491,14 +522,21 @@ export default function TablesManagementPage() {
                       </div>
 
                       {/* Display QR code */}
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-center max-w-[150px] mx-auto my-4 shadow-inner">
-                        <QRCodeSVG
-                          value={getQrUrl(table.qrCode.shortCode)}
-                          size={110}
-                          fgColor="#000000"
-                          bgColor="#FFFFFF"
-                          level="H"
-                        />
+                      <div className="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-center max-w-[150px] max-h-[180px] mx-auto my-4 shadow-inner overflow-hidden">
+                        <div className="w-full h-full flex items-center justify-center">
+                          <CustomizableQRCode
+                            value={getQrUrl(table.qrCode.shortCode)}
+                            fgColor={table.qrCode.fgColor || '#000000'}
+                            bgColor={table.qrCode.bgColor || '#FFFFFF'}
+                            logoUrl={table.qrCode.logoUrl}
+                            logoPreset={table.qrCode.customDesign?.logoPreset || 'none'}
+                            frameId={table.qrCode.customDesign?.frameId || 'no_frame'}
+                            frameText={table.qrCode.customDesign?.frameText || ''}
+                            frameColor={table.qrCode.customDesign?.frameColor || '#001b50'}
+                            frameTextColor={table.qrCode.customDesign?.frameTextColor || '#ffffff'}
+                            size={110}
+                          />
+                        </div>
                       </div>
 
                       {/* Menu Link dropdown selector */}
@@ -553,14 +591,23 @@ export default function TablesManagementPage() {
                       </div>
                     </div>
 
-                    {/* Download Button */}
-                    <button
-                      onClick={() => downloadQR(table.qrCode!.shortCode, `${table.tableNumber}`)}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 mt-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors cursor-pointer border border-slate-200"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      Download QR Code
-                    </button>
+                    {/* Download & Customize Buttons */}
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        onClick={() => setSelectedDesignQr(table.qrCode)}
+                        className="flex-1 flex items-center justify-center gap-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors cursor-pointer border border-slate-200"
+                      >
+                        <Palette className="w-3.5 h-3.5 text-slate-500" />
+                        Customize
+                      </button>
+                      <button
+                        onClick={() => downloadQR(table.qrCode!, `${table.tableNumber}`)}
+                        className="flex-1 flex items-center justify-center gap-1 py-2 bg-primary hover:bg-[#001b50] text-white font-bold rounded-xl text-xs transition-colors cursor-pointer border-none shadow-sm"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Download
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -632,7 +679,7 @@ export default function TablesManagementPage() {
               <button
                 onClick={() => setEditingTable(null)}
                 disabled={savingEdit}
-                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-650 cursor-pointer disabled:opacity-50"
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-655 cursor-pointer disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -647,6 +694,31 @@ export default function TablesManagementPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Custom Design Modal */}
+      {selectedDesignQr && (
+        <QRDesignModal
+          isOpen={!!selectedDesignQr}
+          onClose={() => setSelectedDesignQr(null)}
+          qrCode={selectedDesignQr}
+          onSave={(updatedQr) => {
+            setTables((prev) =>
+              prev.map((t) => {
+                if (t.qrCode && t.qrCode.id === updatedQr.id) {
+                  return {
+                    ...t,
+                    qrCode: {
+                      ...t.qrCode,
+                      ...updatedQr,
+                    },
+                  };
+                }
+                return t;
+              })
+            );
+          }}
+        />
       )}
     </div>
   );

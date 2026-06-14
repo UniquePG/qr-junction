@@ -27,6 +27,8 @@ import {
   QrCode
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import CustomizableQRCode from '@/components/CustomizableQRCode';
+import QRDesignModal from '@/components/QRDesignModal';
 
 interface MenuItem {
   id: number;
@@ -69,6 +71,8 @@ interface Menu {
     name: string;
     fgColor: string;
     bgColor: string;
+    logoUrl?: string | null;
+    customDesign?: any | null;
     totalScans: number;
     uniqueScans: number;
   } | null;
@@ -82,6 +86,7 @@ export default function MenuManagementPage() {
   // Data lists
   const [menus, setMenus] = useState<Menu[]>([]);
   const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null);
+  const [selectedDesignQr, setSelectedDesignQr] = useState<any | null>(null);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
 
@@ -112,32 +117,47 @@ export default function MenuManagementPage() {
     setTimeout(() => setCopiedMenuId(false), 2000);
   };
 
-  const downloadMenuQR = (shortCode: string, menuName: string) => {
-    const svg = document.getElementById(`menu-qr-${shortCode}`);
+  const downloadMenuQR = (qr: any, menuName: string) => {
+    const svg = document.getElementById(`menu-qr-${qr.shortCode}`);
     if (!svg) return;
-    const svgXml = new XMLSerializer().serializeToString(svg);
-    const svgBase64 = btoa(unescape(encodeURIComponent(svgXml)));
-    
-    const img = new Image();
-    img.src = `data:image/svg+xml;base64,${svgBase64}`;
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1000;
-      canvas.height = 1000;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, 1000, 1000);
-        ctx.drawImage(img, 0, 0, 1000, 1000);
-        const pngUrl = canvas.toDataURL('image/png');
-        const downloadLink = document.createElement('a');
-        downloadLink.href = pngUrl;
-        downloadLink.download = `menu-qr-${menuName.toLowerCase().replace(/\s+/g, '-')}.png`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-      }
-    };
+    const design = qr.customDesign || {};
+    const hasFrame = design.frameId && design.frameId !== 'no_frame';
+
+    try {
+      const svgXml = new XMLSerializer().serializeToString(svg);
+      const svgBase64 = btoa(unescape(encodeURIComponent(svgXml)));
+      
+      const img = new Image();
+      img.src = `data:image/svg+xml;base64,${svgBase64}`;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        if (hasFrame) {
+          canvas.width = 1050; // Aspect ratio 350:420 -> width 1050, height 1260
+          canvas.height = 1260;
+        } else {
+          canvas.width = 1000;
+          canvas.height = 1000;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.fillStyle = qr.bgColor || '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const pngUrl = canvas.toDataURL('image/png');
+          const downloadLink = document.createElement('a');
+          downloadLink.href = pngUrl;
+          downloadLink.download = `menu-qr-${menuName.toLowerCase().replace(/\s+/g, '-')}.png`;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          toast.success('QR Code downloaded!');
+        }
+      };
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to download QR code');
+    }
   };
 
   // Menu settings modal
@@ -781,48 +801,68 @@ export default function MenuManagementPage() {
                   <QrCode className="w-3.5 h-3.5 text-primary" />
                   Direct Menu QR Code
                 </span>
-                
-                {/* Hidden SVG for download */}
+                              {/* Hidden SVG for download */}
                 <div className="hidden">
-                  <QRCodeSVG
+                  <CustomizableQRCode
                     id={`menu-qr-${currentMenu.qrCode.shortCode}`}
                     value={getQrUrl(currentMenu.qrCode.shortCode)}
+                    fgColor={currentMenu.qrCode.fgColor || '#000000'}
+                    bgColor={currentMenu.qrCode.bgColor || '#FFFFFF'}
+                    logoUrl={currentMenu.qrCode.logoUrl}
+                    logoPreset={currentMenu.qrCode.customDesign?.logoPreset || 'none'}
+                    frameId={currentMenu.qrCode.customDesign?.frameId || 'no_frame'}
+                    frameText={currentMenu.qrCode.customDesign?.frameText || ''}
+                    frameColor={currentMenu.qrCode.customDesign?.frameColor || '#001b50'}
+                    frameTextColor={currentMenu.qrCode.customDesign?.frameTextColor || '#ffffff'}
                     size={500}
-                    fgColor="#000000"
-                    bgColor="#FFFFFF"
-                    level="H"
                   />
                 </div>
 
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-center max-w-[130px] shadow-inner mb-3">
-                  <QRCodeSVG
-                    value={getQrUrl(currentMenu.qrCode.shortCode)}
-                    size={100}
-                    fgColor="#000000"
-                    bgColor="#FFFFFF"
-                    level="H"
-                  />
+                <div className="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-center max-w-[130px] max-h-[160px] shadow-inner mb-3 overflow-hidden">
+                  <div className="w-full h-full flex items-center justify-center">
+                    <CustomizableQRCode
+                      value={getQrUrl(currentMenu.qrCode.shortCode)}
+                      fgColor={currentMenu.qrCode.fgColor || '#000000'}
+                      bgColor={currentMenu.qrCode.bgColor || '#FFFFFF'}
+                      logoUrl={currentMenu.qrCode.logoUrl}
+                      logoPreset={currentMenu.qrCode.customDesign?.logoPreset || 'none'}
+                      frameId={currentMenu.qrCode.customDesign?.frameId || 'no_frame'}
+                      frameText={currentMenu.qrCode.customDesign?.frameText || ''}
+                      frameColor={currentMenu.qrCode.customDesign?.frameColor || '#001b50'}
+                      frameTextColor={currentMenu.qrCode.customDesign?.frameTextColor || '#ffffff'}
+                      size={100}
+                    />
+                  </div>
                 </div>
 
                 <div className="text-xs font-bold text-[#001B50] mb-2 truncate max-w-full px-2">
                   {currentMenu.name}
                 </div>
 
-                <div className="flex gap-2 w-full mt-2">
+                <div className="flex flex-col gap-2 w-full mt-2">
                   <button
-                    onClick={() => handleCopyMenuUrl(currentMenu.qrCode!.shortCode)}
-                    className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[10px] border border-slate-200 transition-all cursor-pointer select-none"
+                    onClick={() => setSelectedDesignQr(currentMenu.qrCode)}
+                    className="w-full flex items-center justify-center gap-1.5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs border-none transition-all cursor-pointer select-none"
                   >
-                    {copiedMenuId ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                    Copy URL
+                    <Palette className="w-3.5 h-3.5" />
+                    Customize Design
                   </button>
-                  <button
-                    onClick={() => downloadMenuQR(currentMenu.qrCode!.shortCode, currentMenu.name)}
-                    className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-primary hover:bg-[#001b50] text-white font-bold rounded-lg text-[10px] border-none transition-all cursor-pointer select-none"
-                  >
-                    <Download className="w-3 h-3" />
-                    Download
-                  </button>
+                  <div className="flex gap-2 w-full">
+                    <button
+                      onClick={() => handleCopyMenuUrl(currentMenu.qrCode!.shortCode)}
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[10px] border border-slate-200 transition-all cursor-pointer select-none"
+                    >
+                      {copiedMenuId ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      Copy URL
+                    </button>
+                    <button
+                      onClick={() => downloadMenuQR(currentMenu.qrCode!, currentMenu.name)}
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-primary hover:bg-[#001b50] text-white font-bold rounded-lg text-[10px] border-none transition-all cursor-pointer select-none"
+                    >
+                      <Download className="w-3 h-3" />
+                      Download
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex justify-between w-full text-[9px] text-slate-400 mt-4 border-t border-slate-100/60 pt-3 px-1">
@@ -1388,6 +1428,30 @@ export default function MenuManagementPage() {
             </div>
           </div>
         </div>
+      )}
+      {/* Universal QR Customization Modal */}
+      {selectedDesignQr && (
+        <QRDesignModal
+          isOpen={!!selectedDesignQr}
+          onClose={() => setSelectedDesignQr(null)}
+          qrCode={selectedDesignQr}
+          onSave={(updatedQr) => {
+            setMenus((prev) =>
+              prev.map((m) => {
+                if (m.qrCode && m.qrCode.id === updatedQr.id) {
+                  return {
+                    ...m,
+                    qrCode: {
+                      ...m.qrCode,
+                      ...updatedQr,
+                    },
+                  };
+                }
+                return m;
+              })
+            );
+          }}
+        />
       )}
     </div>
   );

@@ -57,7 +57,8 @@ export async function POST(request: Request) {
       utmMedium, 
       utmCampaign,
       campaignId,
-      landingPageId
+      landingPageId,
+      customDesign
     } = body;
 
     // Validation
@@ -96,6 +97,7 @@ export async function POST(request: Request) {
         fgColor: fgColor || '#000000',
         bgColor: bgColor || '#FFFFFF',
         logoUrl: logoUrl || null,
+        customDesign: customDesign || null,
         utmSource: utmSource || null,
         utmMedium: utmMedium || null,
         utmCampaign: utmCampaign || null,

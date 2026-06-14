@@ -22,11 +22,14 @@ import {
   Copy,
   BarChart3,
   MessageSquareWarning,
-  StarOff
+  StarOff,
+  Palette
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ConfirmModal';
 import { getQrUrl } from '@/utils/qrUrl';
+import CustomizableQRCode from '@/components/CustomizableQRCode';
+import QRDesignModal from '@/components/QRDesignModal';
 
 interface ReviewCampaign {
   id: string;
@@ -44,6 +47,8 @@ interface ReviewCampaign {
   };
   fgColor: string;
   bgColor: string;
+  logoUrl?: string | null;
+  customDesign?: any | null;
   totalScans: number;
   uniqueScans: number;
   createdAt: string;
@@ -75,6 +80,7 @@ export default function ReviewSuiteDirectory() {
 
   // QR Viewer Modal state
   const [selectedQR, setSelectedQR] = useState<ReviewCampaign | null>(null);
+  const [selectedDesignQr, setSelectedDesignQr] = useState<any | null>(null);
 
   // Confirm delete campaign state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -179,32 +185,47 @@ export default function ReviewSuiteDirectory() {
     }
   };
 
-  const downloadQR = (shortCode: string, fgColor: string, bgColor: string) => {
-    const svg = document.getElementById(`qr-svg-review-${shortCode}`);
+  const downloadQR = (qr: any, filename: string) => {
+    const svg = document.getElementById(`qr-svg-review-${qr.shortCode}`);
     if (!svg) return;
-    const svgXml = new XMLSerializer().serializeToString(svg);
-    const svgBase64 = btoa(unescape(encodeURIComponent(svgXml)));
-    
-    const img = new Image();
-    img.src = `data:image/svg+xml;base64,${svgBase64}`;
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1000;
-      canvas.height = 1000;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, 1000, 1000);
-        ctx.drawImage(img, 0, 0, 1000, 1000);
-        const pngUrl = canvas.toDataURL('image/png');
-        const downloadLink = document.createElement('a');
-        downloadLink.href = pngUrl;
-        downloadLink.download = `review-qr-${shortCode}.png`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-      }
-    };
+    const design = qr.customDesign || {};
+    const hasFrame = design.frameId && design.frameId !== 'no_frame';
+
+    try {
+      const svgXml = new XMLSerializer().serializeToString(svg);
+      const svgBase64 = btoa(unescape(encodeURIComponent(svgXml)));
+      
+      const img = new Image();
+      img.src = `data:image/svg+xml;base64,${svgBase64}`;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        if (hasFrame) {
+          canvas.width = 1050; // Aspect ratio 350:420 -> width 1050, height 1260
+          canvas.height = 1260;
+        } else {
+          canvas.width = 1000;
+          canvas.height = 1000;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.fillStyle = qr.bgColor || '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const pngUrl = canvas.toDataURL('image/png');
+          const downloadLink = document.createElement('a');
+          downloadLink.href = pngUrl;
+          downloadLink.download = `${filename}.png`;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          toast.success('QR Code downloaded!');
+        }
+      };
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to download QR code');
+    }
   };
 
   if (loading) {
@@ -296,13 +317,18 @@ export default function ReviewSuiteDirectory() {
               >
                 {/* QR Code hidden element */}
                 <div className="hidden">
-                  <QRCodeSVG
+                  <CustomizableQRCode
                     id={`qr-svg-review-${qr.shortCode}`}
                     value={getQrUrl(qr.shortCode)}
+                    fgColor={qr.fgColor || '#000000'}
+                    bgColor={qr.bgColor || '#FFFFFF'}
+                    logoUrl={qr.logoUrl}
+                    logoPreset={qr.customDesign?.logoPreset || 'none'}
+                    frameId={qr.customDesign?.frameId || 'no_frame'}
+                    frameText={qr.customDesign?.frameText || ''}
+                    frameColor={qr.customDesign?.frameColor || '#001b50'}
+                    frameTextColor={qr.customDesign?.frameTextColor || '#ffffff'}
                     size={500}
-                    fgColor={qr.fgColor}
-                    bgColor={qr.bgColor}
-                    level="H"
                   />
                 </div>
 
@@ -325,6 +351,13 @@ export default function ReviewSuiteDirectory() {
                         title="Quick Preview QR"
                       >
                         <Eye className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setSelectedDesignQr(qr)}
+                        className="p-1.5 bg-slate-50 border border-slate-200 text-slate-500 hover:text-[#001B50] rounded-lg hover:bg-slate-100 transition-colors"
+                        title="Customize QR Design"
+                      >
+                        <Palette className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleToggleStatus(qr)}
@@ -486,18 +519,25 @@ export default function ReviewSuiteDirectory() {
                 Close
               </button>
             </div>
-
+ 
             {/* QR Card Container */}
-            <div className="bg-white p-6 rounded-xl flex items-center justify-center border border-slate-200 shadow-inner max-w-[240px] mx-auto">
-              <QRCodeSVG
-                value={getQrUrl(selectedQR.shortCode)}
-                size={180}
-                fgColor={selectedQR.fgColor}
-                bgColor={selectedQR.bgColor}
-                level="H"
-              />
+            <div className="bg-white p-6 rounded-xl flex items-center justify-center border border-slate-200 shadow-inner max-w-[240px] max-h-[288px] mx-auto overflow-hidden">
+              <div className="w-full h-full flex items-center justify-center">
+                <CustomizableQRCode
+                  value={getQrUrl(selectedQR.shortCode)}
+                  fgColor={selectedQR.fgColor || '#000000'}
+                  bgColor={selectedQR.bgColor || '#FFFFFF'}
+                  logoUrl={selectedQR.logoUrl}
+                  logoPreset={selectedQR.customDesign?.logoPreset || 'none'}
+                  frameId={selectedQR.customDesign?.frameId || 'no_frame'}
+                  frameText={selectedQR.customDesign?.frameText || ''}
+                  frameColor={selectedQR.customDesign?.frameColor || '#001b50'}
+                  frameTextColor={selectedQR.customDesign?.frameTextColor || '#ffffff'}
+                  size={180}
+                />
+              </div>
             </div>
-
+ 
             <div className="space-y-4">
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-xs text-slate-500">
                 <div className="flex justify-between">
@@ -506,7 +546,7 @@ export default function ReviewSuiteDirectory() {
                 </div>
                 <div className="flex justify-between">
                   <span>Threshold:</span>
-                  <span className="font-semibold text-slate-850">
+                  <span className="font-semibold text-slate-855">
                     &ge; {selectedQR.destination.positiveThreshold} Stars Direct Redirection
                   </span>
                 </div>
@@ -517,11 +557,11 @@ export default function ReviewSuiteDirectory() {
                   </span>
                 </div>
               </div>
-
+ 
               {/* Modal Buttons */}
               <div className="flex gap-3">
                 <button
-                  onClick={() => downloadQR(selectedQR.shortCode, selectedQR.fgColor, selectedQR.bgColor)}
+                  onClick={() => downloadQR(selectedQR, selectedQR.destination.businessName)}
                   className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white py-2.5 rounded-xl text-xs font-semibold cursor-pointer active:scale-95 transition-all border-none"
                 >
                   <Download className="w-4 h-4" />
@@ -541,7 +581,7 @@ export default function ReviewSuiteDirectory() {
           </div>
         </div>
       )}
-
+ 
       <ConfirmModal
         isOpen={deleteModalOpen}
         title="Delete Review QR Campaign?"
@@ -556,6 +596,20 @@ export default function ReviewSuiteDirectory() {
           setDeletingQrId(null);
         }}
       />
+
+      {/* Universal QR Customization Modal */}
+      {selectedDesignQr && (
+        <QRDesignModal
+          isOpen={!!selectedDesignQr}
+          onClose={() => setSelectedDesignQr(null)}
+          qrCode={selectedDesignQr}
+          onSave={(updatedQr) => {
+            setQrs(prev => prev.map(q => q.id === updatedQr.id ? { ...q, ...updatedQr } : q));
+            // Update selectedQR preview modal state too if open
+            setSelectedQR(prev => prev && prev.id === updatedQr.id ? { ...prev, ...updatedQr } : prev);
+          }}
+        />
+      )}
     </div>
   );
 }

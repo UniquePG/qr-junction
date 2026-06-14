@@ -69,6 +69,8 @@ export async function GET(request: Request) {
         destination: qr.destination,
         fgColor: qr.fgColor,
         bgColor: qr.bgColor,
+        logoUrl: qr.logoUrl,
+        customDesign: qr.customDesign,
         totalScans: qr.totalScans,
         uniqueScans: qr.uniqueScans,
         createdAt: qr.createdAt,
