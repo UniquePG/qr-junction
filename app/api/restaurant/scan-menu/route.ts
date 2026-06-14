@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
 
-export const maxDuration = 300; // Allow up to 5 minutes execution duration on Vercel
+export const maxDuration = 60; // Max allowed duration on Vercel Hobby plan is 60 seconds
 
 // Polyfills for PDF parsing on server-side environments (Node.js/Vercel)
 if (typeof globalThis.DOMMatrix === 'undefined') {
