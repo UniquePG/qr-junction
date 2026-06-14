@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
+import { getQrUrl } from '@/utils/qrUrl';
 
 export default function EditReviewQrPage() {
   const router = useRouter();
@@ -452,7 +453,7 @@ export default function EditReviewQrPage() {
 
           <div className="bg-white p-6 rounded-xl flex items-center justify-center border border-slate-200 shadow-md aspect-square max-w-[200px] mx-auto transition-transform hover:scale-102 animate-fade-in">
             <QRCodeSVG
-              value={`${window.location.origin}/q/${shortCode}`}
+              value={getQrUrl(shortCode)}
               size={150}
               fgColor={fgColor}
               bgColor={bgColor}

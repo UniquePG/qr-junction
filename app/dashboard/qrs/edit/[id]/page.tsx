@@ -16,6 +16,7 @@ import { toast } from 'react-toastify';
 import Link from 'next/link';
 import { TABS, TabType, FormData, validateForm, getDbDestination, getFormDataFromDb, getTabTypeFromQrType, getQrTypeFromTabType } from '@/lib/qrEngine';
 import { TabFormRenderer } from '@/components/qr/TabsForms';
+import { getQrUrl } from '@/utils/qrUrl';
 
 export default function EditQrPage({
   params,
@@ -442,7 +443,7 @@ export default function EditQrPage({
           <div className="bg-white p-6 rounded-xl flex items-center justify-center border border-slate-200 shadow-md aspect-square max-w-[200px] mx-auto transition-transform hover:scale-102">
             {shortCode && typeof window !== 'undefined' && (
               <QRCodeSVG
-                value={`${window.location.origin}/q/${shortCode}`}
+                value={getQrUrl(shortCode)}
                 size={150}
                 fgColor={fgColor}
                 bgColor={bgColor}

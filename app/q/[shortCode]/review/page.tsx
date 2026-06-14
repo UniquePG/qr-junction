@@ -71,7 +71,13 @@ export default function ReviewLandingPage() {
   const businessName = dest.businessName || 'Us';
   const logoUrl = dest.logoUrl || qrCode.logoUrl;
   const primaryColor = qrCode.fgColor || '#3b82f6'; // Fallback to blue-500
-  const publicReviewUrl = dest.publicReviewUrl || 'https://google.com';
+  let publicReviewUrl = dest.publicReviewUrl || 'https://google.com';
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+    const activeHost = window.location.host;
+    publicReviewUrl = publicReviewUrl.replace('localhost:3000', activeHost).replace('127.0.0.1:3000', activeHost);
+  } else if (process.env.NODE_ENV === 'production') {
+    publicReviewUrl = publicReviewUrl.replace('localhost:3000', 'qrjunction.in').replace('127.0.0.1:3000', 'qrjunction.in');
+  }
 
   // Custom configurations
   const positiveThreshold = dest.positiveThreshold ?? 4;

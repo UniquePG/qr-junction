@@ -16,7 +16,10 @@ import {
   FolderOpen,
   User as UserIcon,
   Layout,
-  Star
+  Star,
+  Utensils,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Image from 'next/image';
@@ -30,6 +33,27 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [restaurantOpen, setRestaurantOpen] = useState(pathname.startsWith('/dashboard/restaurant'));
+
+  useEffect(() => {
+    if (pathname.startsWith('/dashboard/restaurant')) {
+      setRestaurantOpen(true);
+    }
+  }, [pathname]);
+
+  // Fetch local network IP in development mode
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      fetch('/api/dev-ip')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.ip) {
+            (window as any).__DEV_IP__ = data.ip;
+          }
+        })
+        .catch((err) => console.error('Failed to fetch dev IP:', err));
+    }
+  }, []);
 
   // Protected route guard
   useEffect(() => {
@@ -70,6 +94,14 @@ export default function DashboardLayout({
     { name: 'Collected Leads', href: '/dashboard/leads', icon: Users },
   ];
 
+  const restaurantSubLinks = [
+    { name: 'Profile Settings', href: '/dashboard/restaurant/profile' },
+    { name: 'Menu Management', href: '/dashboard/restaurant/menu' },
+    { name: 'AI Menu Scanner', href: '/dashboard/restaurant/scanner' },
+    { name: 'Tables & QR Codes', href: '/dashboard/restaurant/tables' },
+    { name: 'Analytics', href: '/dashboard/restaurant/analytics' },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex relative overflow-hidden">
       {/* Background decoration */}
@@ -93,7 +125,68 @@ export default function DashboardLayout({
 
         {/* Sidebar Nav */}
         <nav className="flex-1 px-4 py-6 space-y-1.5">
-          {navLinks.map((link) => {
+          {navLinks.slice(0, 5).map((link) => {
+            const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
+            const Icon = link.icon;
+            return (
+              <Link
+                key={link.name}
+                href={link.href}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group ${
+                  isActive 
+                    ? 'bg-primary text-white shadow-primary' 
+                    : 'text-slate-650 hover:text-[#001B50] hover:bg-slate-50'
+                }`}
+              >
+                <Icon className={`w-5 h-5 transition-transform group-hover:scale-105 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-primary'}`} />
+                <span>{link.name}</span>
+              </Link>
+            );
+          })}
+
+          <div className="space-y-1">
+            <button
+              onClick={() => setRestaurantOpen(!restaurantOpen)}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all group cursor-pointer ${
+                pathname.startsWith('/dashboard/restaurant')
+                  ? 'bg-slate-100 text-[#001B50] font-semibold'
+                  : 'text-slate-650 hover:text-[#001B50] hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Utensils className={`w-5 h-5 transition-transform group-hover:scale-105 ${pathname.startsWith('/dashboard/restaurant') ? 'text-primary' : 'text-slate-500 group-hover:text-primary'}`} />
+                <span>Restaurant QR Suite</span>
+              </div>
+              {restaurantOpen ? (
+                <ChevronDown className="w-4 h-4 text-slate-500" />
+              ) : (
+                <ChevronRight className="w-4 h-4 text-slate-500" />
+              )}
+            </button>
+
+            {restaurantOpen && (
+              <div className="pl-9 pr-2 py-1 space-y-1 border-l-2 border-slate-100 ml-6">
+                {restaurantSubLinks.map((subLink) => {
+                  const isSubActive = pathname === subLink.href;
+                  return (
+                    <Link
+                      key={subLink.name}
+                      href={subLink.href}
+                      className={`block px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                        isSubActive
+                          ? 'text-primary font-bold bg-primary/5'
+                          : 'text-slate-500 hover:text-[#001B50] hover:bg-slate-50'
+                      }`}
+                    >
+                      {subLink.name}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {navLinks.slice(5).map((link) => {
             const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
             const Icon = link.icon;
             return (
@@ -143,7 +236,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 relative z-10 md:pl-64">
+      <div className="flex-1 flex flex-col min-w-0 relative md:pl-64">
         {/* Top Header */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 backdrop-blur-sm shadow-xs">
           <div className="flex items-center gap-4">
@@ -167,7 +260,17 @@ export default function DashboardLayout({
                         ? 'QR Codes' 
                         : pathname.includes('/leads') 
                           ? 'Collected Leads' 
-                          : 'Dashboard'}
+                          : pathname.includes('/restaurant/profile')
+                            ? 'Profile Settings'
+                            : pathname.includes('/restaurant/menu')
+                              ? 'Menu Management'
+                              : pathname.includes('/restaurant/scanner')
+                                ? 'AI Menu Scanner'
+                                : pathname.includes('/restaurant/tables')
+                                  ? 'Tables & QR Codes'
+                                  : pathname.includes('/restaurant/analytics')
+                                    ? 'Restaurant Analytics'
+                                    : 'Dashboard'}
             </h1>
           </div>
 
@@ -212,7 +315,70 @@ export default function DashboardLayout({
             </div>
 
             <nav className="flex-1 space-y-1.5">
-              {navLinks.map((link) => {
+              {navLinks.slice(0, 5).map((link) => {
+                const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                      isActive 
+                        ? 'bg-primary text-white shadow-primary' 
+                        : 'text-slate-650 hover:text-[#001B50] hover:bg-slate-50'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span>{link.name}</span>
+                  </Link>
+                );
+              })}
+
+              <div className="space-y-1">
+                <button
+                  onClick={() => setRestaurantOpen(!restaurantOpen)}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                    pathname.startsWith('/dashboard/restaurant')
+                      ? 'bg-slate-100 text-[#001B50] font-semibold'
+                      : 'text-slate-650 hover:text-[#001B50] hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Utensils className={`w-5 h-5 ${pathname.startsWith('/dashboard/restaurant') ? 'text-primary' : 'text-slate-500'}`} />
+                    <span>Restaurant QR Suite</span>
+                  </div>
+                  {restaurantOpen ? (
+                    <ChevronDown className="w-4 h-4 text-slate-500" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-slate-500" />
+                  )}
+                </button>
+
+                {restaurantOpen && (
+                  <div className="pl-9 py-1 space-y-1 border-l-2 border-slate-100 ml-6">
+                    {restaurantSubLinks.map((subLink) => {
+                      const isSubActive = pathname === subLink.href;
+                      return (
+                        <Link
+                          key={subLink.name}
+                          href={subLink.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`block px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                            isSubActive
+                              ? 'text-primary font-bold bg-primary/5'
+                              : 'text-slate-500 hover:text-[#001B50] hover:bg-slate-50'
+                          }`}
+                        >
+                          {subLink.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {navLinks.slice(5).map((link) => {
                 const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href));
                 const Icon = link.icon;
                 return (

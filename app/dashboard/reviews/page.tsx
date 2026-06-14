@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ConfirmModal';
+import { getQrUrl } from '@/utils/qrUrl';
 
 interface ReviewCampaign {
   id: string;
@@ -110,7 +111,7 @@ export default function ReviewSuiteDirectory() {
   }, [user]);
 
   const handleCopyLink = (id: string, shortCode: string) => {
-    const fullUrl = `${window.location.origin}/q/${shortCode}`;
+    const fullUrl = getQrUrl(shortCode);
     navigator.clipboard.writeText(fullUrl);
     setCopiedId(id);
     toast.success('Campaign review link copied!');
@@ -297,7 +298,7 @@ export default function ReviewSuiteDirectory() {
                 <div className="hidden">
                   <QRCodeSVG
                     id={`qr-svg-review-${qr.shortCode}`}
-                    value={`${window.location.origin}/q/${qr.shortCode}`}
+                    value={getQrUrl(qr.shortCode)}
                     size={500}
                     fgColor={qr.fgColor}
                     bgColor={qr.bgColor}
@@ -489,7 +490,7 @@ export default function ReviewSuiteDirectory() {
             {/* QR Card Container */}
             <div className="bg-white p-6 rounded-xl flex items-center justify-center border border-slate-200 shadow-inner max-w-[240px] mx-auto">
               <QRCodeSVG
-                value={`${window.location.origin}/q/${selectedQR.shortCode}`}
+                value={getQrUrl(selectedQR.shortCode)}
                 size={180}
                 fgColor={selectedQR.fgColor}
                 bgColor={selectedQR.bgColor}
@@ -527,10 +528,10 @@ export default function ReviewSuiteDirectory() {
                   <span>Download PNG</span>
                 </button>
                 <a
-                  href={`${window.location.origin}/q/${selectedQR.shortCode}`}
+                  href={getQrUrl(selectedQR.shortCode)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-750 py-2.5 rounded-xl text-xs font-semibold border border-slate-200 transition-all text-center"
+                  className="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-755 py-2.5 rounded-xl text-xs font-semibold border border-slate-200 transition-all text-center"
                 >
                   <ExternalLink className="w-4 h-4" />
                   <span>Test Link</span>

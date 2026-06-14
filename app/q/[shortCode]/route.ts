@@ -177,13 +177,39 @@ export async function GET(
     } else if (qrCode.type === 'REVIEW') {
       // Route to dynamic review landing page
       redirectUrl = `/q/${shortCode}/review?utm_source=${utmSource}&utm_medium=${utmMedium}&utm_campaign=${utmCampaign}`;
+    } else if (qrCode.type === 'RESTAURANT_MENU') {
+      const restaurantId = dest.restaurantId || qrCode.restaurantId;
+      const tableNumber = dest.tableNumber || '';
+      const menuId = dest.menuId || '';
+      if (menuId) {
+        redirectUrl = `/r/${restaurantId}/${menuId}${tableNumber ? `?table=${encodeURIComponent(tableNumber)}` : ''}`;
+      } else {
+        redirectUrl = `/r/${restaurantId}${tableNumber ? `?table=${encodeURIComponent(tableNumber)}` : ''}`;
+      }
     } else {
       // Fallback
       redirectUrl = dest.url || '/';
     }
 
     if (!response) {
-      response = NextResponse.redirect(new URL(redirectUrl, request.url));
+      const host = request.headers.get('host') || 'localhost:3000';
+      const protocol = request.headers.get('x-forwarded-proto') || 'http';
+      
+      let originBase = '';
+      if (process.env.NODE_ENV === 'production') {
+        originBase = 'https://qrjunction.in';
+      } else {
+        originBase = `${protocol}://${host}`;
+      }
+
+      let resolvedRedirect = redirectUrl;
+      if (process.env.NODE_ENV === 'development') {
+        resolvedRedirect = resolvedRedirect.replace('localhost:3000', host).replace('127.0.0.1:3000', host);
+      } else if (process.env.NODE_ENV === 'production') {
+        resolvedRedirect = resolvedRedirect.replace('localhost:3000', 'qrjunction.in').replace('127.0.0.1:3000', 'qrjunction.in');
+      }
+
+      response = NextResponse.redirect(new URL(resolvedRedirect, originBase));
     }
 
     // Set cookie if unique

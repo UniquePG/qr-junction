@@ -35,6 +35,7 @@ enum QRType {
   PDF
   LANDING_PAGE
   REVIEW
+  RESTAURANT_MENU
 }
 
 enum QRStatus {
@@ -92,6 +93,7 @@ model User {
   leads        Lead[]
   landingPages LandingPage[]
   profile      Profile?
+  restaurant   Restaurant?
 
   @@map("users")
 }
@@ -131,6 +133,7 @@ model QRCode {
   userId        Int       @map("user_id")                          // Links to the creator
   campaignId    Int?      @map("campaign_id")                         // Optional marketing campaign link
   landingPageId Int?      @map("landing_page_id")                     // Optional landing page link
+  restaurantId  Int?      @map("restaurant_id")
 
   // Design appearance
   fgColor       String?   @default("#000000") @map("fg_color")
@@ -152,6 +155,8 @@ model QRCode {
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   campaign      Campaign?  @relation(fields: [campaignId], references: [id], onDelete: SetNull)
   landingPage   LandingPage? @relation(fields: [landingPageId], references: [id], onDelete: SetNull)
+  restaurant    Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantTable RestaurantTable?
   scans         Scan[]
   leads         Lead[]
   conversions   Conversion[]
@@ -309,4 +314,100 @@ model LandingPage {
   @@index([userId])
   @@index([slug])
   @@map("landing_pages")
+}
+
+model Restaurant {
+  id           Int             @id @default(autoincrement())
+  userId       Int             @unique @map("user_id")
+  name         String
+  description  String?         @db.Text
+  logoUrl      String?         @map("logo_url")
+  coverImage   String?         @map("cover_image")
+  currency     String          @default("INR")
+  taxRate      Decimal         @default(0.00) @db.Decimal(5, 2) @map("tax_rate")
+  taxName      String          @default("GST") @map("tax_name")
+  
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  menus        Menu[]
+  categories   MenuCategory[]
+  tables       RestaurantTable[]
+  qrCodes      QRCode[]
+
+  @@map("restaurants")
+}
+
+model Menu {
+  id           Int             @id @default(autoincrement())
+  restaurantId Int             @map("restaurant_id")
+  name         String
+  description  String?         @db.Text
+  theme        String          @default("modern") // modern, minimal, premium, cafe
+  isDefault    Boolean         @default(false) @map("is_default")
+  
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+
+  restaurant   Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  categories   MenuCategory[]
+  tables       RestaurantTable[]
+
+  @@map("menus")
+}
+
+model MenuCategory {
+  id           Int          @id @default(autoincrement())
+  restaurantId Int          @map("restaurant_id")
+  menuId       Int          @map("menu_id")
+  name         String
+  order        Int          @default(0)
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  restaurant   Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menu         Menu         @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  items        MenuItem[]
+
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id           Int          @id @default(autoincrement())
+  categoryId   Int          @map("category_id")
+  name         String
+  description  String?      @db.Text
+  price        Decimal      @db.Decimal(10, 2)
+  variants     Json?        // [{ "label": "Half", "price": 120 }, { "label": "Full", "price": 200 }]
+  image        String?
+  isAvailable  Boolean      @default(true) @map("is_available")
+  isVeg        Boolean      @default(true) @map("is_veg")
+  isNonVeg     Boolean      @default(false) @map("is_non_veg")
+  isVegan      Boolean      @default(false) @map("is_vegan")
+  isPopular    Boolean      @default(false) @map("is_popular")
+  order        Int          @default(0)
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  category     MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("menu_items")
+}
+
+model RestaurantTable {
+  id           Int        @id @default(autoincrement())
+  restaurantId Int        @map("restaurant_id")
+  menuId       Int?       @map("menu_id")
+  tableNumber  String     @map("table_number")
+  capacity     Int?        @default(4)
+  qrCodeId     Int?       @unique @map("qr_code_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menu         Menu?      @relation(fields: [menuId], references: [id], onDelete: SetNull)
+  qrCode       QRCode?    @relation(fields: [qrCodeId], references: [id], onDelete: SetNull)
+
+  @@map("restaurant_tables")
 }

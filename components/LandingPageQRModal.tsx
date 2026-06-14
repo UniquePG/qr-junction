@@ -5,6 +5,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { auth } from '@/lib/firebase';
 import { Loader2, Download, ExternalLink, Check, Save, QrCode } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { getQrUrl } from '@/utils/qrUrl';
 
 interface LandingPageQRModalProps {
   isOpen: boolean;
@@ -205,7 +206,7 @@ export default function LandingPageQRModal({ isOpen, onClose, page }: LandingPag
             <div className="hidden">
               <QRCodeSVG
                 id={`modal-qr-svg-${qrCode.shortCode}`}
-                value={`${window.location.origin}/q/${qrCode.shortCode}`}
+                value={getQrUrl(qrCode.shortCode)}
                 size={500}
                 fgColor={fgColor}
                 bgColor={bgColor}
@@ -216,7 +217,7 @@ export default function LandingPageQRModal({ isOpen, onClose, page }: LandingPag
             {/* QR Card Container */}
             <div className="bg-white p-6 rounded-xl flex items-center justify-center border border-slate-200 shadow-inner max-w-[220px] mx-auto">
               <QRCodeSVG
-                value={`${window.location.origin}/q/${qrCode.shortCode}`}
+                value={getQrUrl(qrCode.shortCode)}
                 size={160}
                 fgColor={fgColor}
                 bgColor={bgColor}
