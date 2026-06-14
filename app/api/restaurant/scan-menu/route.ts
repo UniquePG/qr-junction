@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
 
+export const maxDuration = 300; // Allow up to 5 minutes execution duration on Vercel
+
 // Polyfills for PDF parsing on server-side environments (Node.js/Vercel)
 if (typeof globalThis.DOMMatrix === 'undefined') {
   globalThis.DOMMatrix = class DOMMatrix {
@@ -155,7 +157,7 @@ IMPORTANT: If no size variants exist for an item, omit the 'variants' field or s
     // ═══════════════════════════════════════════════════════════════════════════
     if (process.env.NVIDIA_API_KEY && !resultJson) {
       const nvidiaVisionModels = [
-        'meta/llama-4-maverick-17b-128e-instruct',
+        // 'meta/llama-4-maverick-17b-128e-instruct',
         'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning',
         'meta/llama-3.2-90b-vision-instruct',
         'moonshotai/kimi-k2.6',
@@ -213,7 +215,7 @@ IMPORTANT: If no size variants exist for an item, omit the 'variants' field or s
               top_p: 1.0,
               stream: false,
             }),
-            signal: AbortSignal.timeout(60000),
+            signal: AbortSignal.timeout(20000), // 20-second timeout per model
           });
 
           if (response.ok) {
@@ -243,8 +245,8 @@ IMPORTANT: If no size variants exist for an item, omit the 'variants' field or s
     // ═══════════════════════════════════════════════════════════════════════════
     if (!resultJson && process.env.OPENROUTER_API_KEY) {
       const candidateModels = isImage
-        ? ['google/gemma-4-31b-it:free', 'nvidia/nemotron-nano-12b-v2-vl:free']
-        : ['meta-llama/llama-3.3-70b-instruct:free', 'qwen/qwen3-next-80b-a3b-instruct:free'];
+        ? ['meta-llama/llama-3.2-11b-vision-instruct:free', 'google/gemma-2-9b-it:free']
+        : ['meta-llama/llama-3.3-70b-instruct:free', 'meta-llama/llama-3-8b-instruct:free'];
 
       const contentPayload: any[] = [{ type: 'text', text: promptText }];
       if (isImage) {
@@ -268,6 +270,7 @@ IMPORTANT: If no size variants exist for an item, omit the 'variants' field or s
               messages: [{ role: 'user', content: contentPayload }],
               temperature: 0.1,
             }),
+            signal: AbortSignal.timeout(20000), // 20-second timeout per model
           });
 
           if (response.ok) {
@@ -294,7 +297,7 @@ IMPORTANT: If no size variants exist for an item, omit the 'variants' field or s
     // ═══════════════════════════════════════════════════════════════════════════
     if (!resultJson && process.env.GROQ_API_KEY) {
       const candidateGroqModels = isImage
-        ? ['meta-llama/llama-4-scout-17b-16e-instruct']
+        ? ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview']
         : ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
 
       const contentPayload: any[] = [{ type: 'text', text: promptText }];
@@ -319,6 +322,7 @@ IMPORTANT: If no size variants exist for an item, omit the 'variants' field or s
               messages: [{ role: 'user', content: contentPayload }],
               temperature: 0.1,
             }),
+            signal: AbortSignal.timeout(20000), // 20-second timeout per model
           });
 
           if (response.ok) {
