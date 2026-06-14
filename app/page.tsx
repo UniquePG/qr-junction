@@ -8,6 +8,7 @@ import UseCases from "@/components/sections/UseCases";
 import { PageViewTracker } from "@/hooks/usePageView";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import Script from "next/script";
 
 export default function Home() {
   return (
@@ -81,6 +82,31 @@ export default function Home() {
 
       {/* Landing footer */}
       <Footer />
+
+      <Script id="structured-data-faq" type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "How do I create a QR code for free?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Simply enter your URL, text, or information in the generator, customize the size of qr code if desired, and click generate. Download your QR code instantly for free.",
+              },
+            },
+            {
+              "@type": "Question",
+              "name": "What types of QR codes can I create?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "You can create QR codes for URLs, WiFi credentials, contact information (vCard), email, SMS, social media profiles, and plain text.",
+              },
+            },
+          ],
+        })}
+      </Script>
     </div>
   );
 }

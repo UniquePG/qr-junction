@@ -112,30 +112,6 @@ export default function RootLayout({
             },
           })}
         </Script>
-        <Script id="structured-data-faq" type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": [
-              {
-                "@type": "Question",
-                "name": "How do I create a QR code for free?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "Simply enter your URL, text, or information in the generator, customize the size of qr code if desired, and click generate. Download your QR code instantly for free.",
-                },
-              },
-              {
-                "@type": "Question",
-                "name": "What types of QR codes can I create?",
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": "You can create QR codes for URLs, WiFi credentials, contact information (vCard), email, SMS, social media profiles, and plain text.",
-                },
-              },
-            ],
-          })}
-        </Script>
         <Script
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-HK32BH5KGT"
