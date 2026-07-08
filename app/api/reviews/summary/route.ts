@@ -56,6 +56,12 @@ export async function GET(request: Request) {
             feedback: r.feedback,
             name: r.name,
             phone: r.phone,
+            selectedTags: r.selectedTags,
+            sentiment: r.sentiment,
+            category: r.category,
+            urgency: r.urgency,
+            aiReply: r.aiReply,
+            aiAnalysis: r.aiAnalysis,
             createdAt: r.createdAt,
           });
         });

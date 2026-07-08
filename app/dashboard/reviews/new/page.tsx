@@ -32,6 +32,10 @@ export default function CreateReviewQrPage() {
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [privateFeedbackMessage, setPrivateFeedbackMessage] = useState('');
   const [thankYouMessage, setThankYouMessage] = useState('');
+  
+  // AI Settings
+  const [reviewCategory, setReviewCategory] = useState('Food & Dining');
+  const [language, setLanguage] = useState('English');
 
   // Style Customizer
   const [fgColor, setFgColor] = useState('#000000');
@@ -42,14 +46,16 @@ export default function CreateReviewQrPage() {
   const [utmMedium, setUtmMedium] = useState('');
   const [utmCampaign, setUtmCampaign] = useState('');
 
-  // Fetch campaigns dropdown list
+  // Fetch campaigns and business profile on load
   useEffect(() => {
-    const fetchCampaigns = async () => {
+    const fetchInitialData = async () => {
       try {
         const currentUser = auth.currentUser;
         if (!currentUser) return;
         
         const token = await currentUser.getIdToken();
+        
+        // 1. Fetch Campaigns
         const res = await fetch('/api/campaigns', {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -59,11 +65,45 @@ export default function CreateReviewQrPage() {
           const data = await res.json();
           setCampaigns(data.campaigns || []);
         }
+
+        // 2. Fetch Business Profile to pre-fill
+        const profileRes = await fetch('/api/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          if (profileData.profile) {
+            const prof = profileData.profile;
+            if (prof.businessName) {
+              setBusinessName(prof.businessName);
+              setName(`${prof.businessName} Review QR`);
+            }
+            if (prof.logoUrl) {
+              setLogoUrl(prof.logoUrl);
+            }
+            if (prof.industry) {
+              // Map profile industry to review category if valid
+              const industriesMap: Record<string, string> = {
+                'Food & Beverage': 'Food & Dining',
+                'Retail': 'Retail & Shopping',
+                'Services': 'Professional Services',
+                'Hospitality': 'Hotels & Accommodation',
+                'Health': 'Healthcare & Clinics',
+                'Wellness': 'Spa & Salons',
+              };
+              if (industriesMap[prof.industry]) {
+                setReviewCategory(industriesMap[prof.industry]);
+              }
+            }
+          }
+        }
       } catch (error) {
-        console.error('Error fetching campaigns:', error);
+        console.error('Error fetching initial review QR data:', error);
       }
     };
-    fetchCampaigns();
+    fetchInitialData();
   }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -95,7 +135,9 @@ export default function CreateReviewQrPage() {
         positiveThreshold: parseInt(positiveThreshold, 10),
         welcomeMessage: welcomeMessage.trim() || undefined,
         privateFeedbackMessage: privateFeedbackMessage.trim() || undefined,
-        thankYouMessage: thankYouMessage.trim() || undefined
+        thankYouMessage: thankYouMessage.trim() || undefined,
+        reviewCategory,
+        language
       };
 
       const res = await fetch('/api/qrs', {
@@ -208,6 +250,48 @@ export default function CreateReviewQrPage() {
                   onChange={(e) => setLogoUrl(e.target.value)}
                   className="w-full bg-white border border-slate-200 focus:border-primary rounded-lg py-2.5 px-3 text-xs text-slate-800 outline-none transition-all"
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase flex items-center gap-1">
+                  Review Category (Business Context)
+                  <span className="cursor-help" title="Allows the AI to generate hyper-relevant review suggestions.">
+                    <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
+                  </span>
+                </label>
+                <select
+                  value={reviewCategory}
+                  onChange={(e) => setReviewCategory(e.target.value)}
+                  className="w-full bg-white border border-slate-200 focus:border-primary rounded-lg py-2.5 px-3 text-xs text-slate-700 outline-none cursor-pointer transition-all"
+                >
+                  <option value="Food & Dining">Food & Dining (Restaurants, Cafes)</option>
+                  <option value="Retail & Shopping">Retail & Shopping (Boutiques, Stores)</option>
+                  <option value="Hotels & Accommodation">Hotels & Accommodation (Stays, Resorts)</option>
+                  <option value="Spa & Salons">Spa & Salons (Beauty, Hair, Wellness)</option>
+                  <option value="Healthcare & Clinics">Healthcare & Clinics (Doctors, Dental)</option>
+                  <option value="E-commerce & Delivery">E-commerce & Delivery (Online Products)</option>
+                  <option value="Professional Services">Professional Services (Agencies, Consulting)</option>
+                  <option value="Others">Others (General Context)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-semibold text-slate-500 uppercase flex items-center gap-1">
+                  AI Suggestion Language
+                  <span className="cursor-help" title="Review suggestions will be generated for the customer in this language.">
+                    <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
+                  </span>
+                </label>
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="w-full bg-white border border-slate-200 focus:border-primary rounded-lg py-2.5 px-3 text-xs text-slate-700 outline-none cursor-pointer transition-all"
+                >
+                  <option value="English">English</option>
+                  <option value="Hindi">Hindi (हिंदी)</option>
+                </select>
               </div>
             </div>
 

@@ -207,20 +207,28 @@ model Scan {
 }
 
 model ReviewResponse {
-  id         Int      @id @default(autoincrement())
-  qrCodeId   Int      @map("qr_code_id")
+  id           Int      @id @default(autoincrement())
+  qrCodeId     Int      @map("qr_code_id")
   
-  rating     Int      // 1 to 5
-  feedback   String?  @db.Text
+  rating       Int      // 1 to 5
+  feedback     String?  @db.Text
   
   // Optional lead capture details
-  name       String?
-  phone      String?
+  name         String?
+  phone        String?
   
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  // AI-powered features
+  selectedTags String?  @map("selected_tags") // comma-separated strings of customer selections
+  sentiment    String?                        // e.g. Positive, Neutral, Negative
+  category     String?                        // e.g. Food, Service, Cleanliness
+  urgency      String?                        // e.g. Low, Medium, High
+  aiReply      String?  @db.Text @map("ai_reply") // generated owner reply suggestion
+  aiAnalysis   Json?    @map("ai_analysis")   // other AI recommendations & breakdown
 
-  qrCode     QRCode   @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  qrCode       QRCode   @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
 
   @@index([qrCodeId])
   @@map("review_responses")
