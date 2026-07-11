@@ -115,9 +115,9 @@ export default function DashboardLayout({
             <Image
             src="/NewLogo/Logo.png"
             alt="QR Junction"
-            width={160}
-            height={42}
-            className="h-14 w-auto object-contain"
+            width={120}
+            height={40}
+            className="h-12 w-auto object-contain"
             priority
           />
           </Link>

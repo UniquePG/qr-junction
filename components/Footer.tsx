@@ -15,9 +15,9 @@ export default function Footer() {
               <Image
                 src="/NewLogo/Logo.png"
                 alt="QR Junction"
-                width={120}
-                height={42}
-                className="h-16 w-auto object-contain"
+                width={80}
+                height={30}
+                className="h-12 w-auto object-contain"
                 priority
               />
             </Link>

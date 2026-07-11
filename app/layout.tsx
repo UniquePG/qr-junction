@@ -66,7 +66,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         {/* Favicon and Icons */}
-        <link rel="icon" href="/NewLogo/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/NewLogo/favicon_white.ico" type="image/x-icon" />
         <link rel="icon" type="image/png" sizes="16x16" href="/NewLogo/favicon-16x16.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/NewLogo/favicon-32x32.png" />
         <link rel="apple-touch-icon" href="/NewLogo/apple-touch-icon.png" />
