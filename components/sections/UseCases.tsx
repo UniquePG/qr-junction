@@ -610,7 +610,7 @@ export default function UseCases() {
     <section 
       ref={sectionRef} 
       id="usecases" 
-      className="relative py-24 bg-gradient-to-b from-white via-slate-50 to-white scroll-mt-10"
+      className="relative py-24 bg-gradient-to-b from-white via-slate-50 to-white scroll-mt-[var(--site-header-offset)]"
     >
       {/* Style overrides for custom phone animations */}
       <style dangerouslySetInnerHTML={{ __html: `

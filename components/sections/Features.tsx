@@ -214,7 +214,7 @@ export default function Features() {
   ];
 
   return (
-    <div id="features" className="scroll-mt-10 relative">
+    <div id="features" className="scroll-mt-[var(--site-header-offset)] relative">
       {/* Global CSS Style tag for scroll animation hooks */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes route-dot {

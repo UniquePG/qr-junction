@@ -1,7 +1,9 @@
+import { ListItemText, RichText } from "@/components/blog/RichText";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { blogs } from "@/data/blogsData";
-import { Calendar, Clock, Sparkles } from "lucide-react";
+import type { BlogPost } from "@/data/blogTypes";
+import { Calendar, Clock, HelpCircle, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -58,10 +60,10 @@ export async function generateMetadata({
           alt: blog.hero.title,
         },
       ],
-      locale: "en_US",
+      locale: "en_IN",
       type: "article",
       publishedTime: blog.publishedAt,
-      modifiedTime: blog.updatedAt,
+      modifiedTime: blog.updatedAt || blog.publishedAt,
       authors: blog.author ? [blog.author.name] : undefined,
     },
     twitter: {
@@ -76,7 +78,7 @@ export async function generateMetadata({
     other: {
       "article:author": blog.author?.name || "QR Junction",
       "article:published_time": blog.publishedAt || "",
-      "article:modified_time": blog.updatedAt || "",
+      "article:modified_time": blog.updatedAt || blog.publishedAt || "",
     },
   };
 }
@@ -109,33 +111,98 @@ export default async function BlogPage({ params }: BlogPageProps) {
     });
   };
 
-  // Generate structured data for SEO
+  const ogImageAbs = blog.seo.ogImage
+    ? `${baseUrl}${blog.seo.ogImage}`
+    : `${baseUrl}/NewLogo/logo-192x192.png`;
+
+  const relatedPosts = (blog.relatedSlugs || [])
+    .map((relatedSlug) => blogs[relatedSlug])
+    .filter((post): post is BlogPost => Boolean(post));
+
+  const graph: Record<string, unknown>[] = [
+    {
+      "@type": "BlogPosting",
+      headline: blog.seo.title,
+      description: blog.seo.description,
+      image: ogImageAbs,
+      datePublished: blog.publishedAt,
+      dateModified: blog.updatedAt || blog.publishedAt,
+      inLanguage: "en-IN",
+      author: {
+        "@type": "Person",
+        name: blog.author?.name || "QR Junction Team",
+      },
+      publisher: {
+        "@type": "Organization",
+        name: "QR Junction",
+        logo: {
+          "@type": "ImageObject",
+          url: `${baseUrl}/NewLogo/logo-192x192.png`,
+        },
+      },
+      mainEntityOfPage: {
+        "@type": "WebPage",
+        "@id": blogUrl,
+      },
+      keywords: blog.seo.keywords?.join(", "),
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: baseUrl,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Blog",
+          item: `${baseUrl}/blog`,
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: blog.hero.title,
+          item: blogUrl,
+        },
+      ],
+    },
+  ];
+
+  if (blog.faq && blog.faq.length > 0) {
+    graph.push({
+      "@type": "FAQPage",
+      mainEntity: blog.faq.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.a.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/\*\*/g, ""),
+        },
+      })),
+    });
+  }
+
+  if (blog.howTo && blog.howTo.steps.length > 0) {
+    graph.push({
+      "@type": "HowTo",
+      name: blog.howTo.name,
+      description: blog.seo.description,
+      step: blog.howTo.steps.map((step, idx) => ({
+        "@type": "HowToStep",
+        position: idx + 1,
+        url: `${blogUrl}#step-${idx + 1}`,
+        name: step.title,
+        text: step.text,
+      })),
+    });
+  }
+
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: blog.seo.title,
-    description: blog.seo.description,
-    image: blog.seo.ogImage
-      ? `${baseUrl}${blog.seo.ogImage}`
-      : `${baseUrl}/NewLogo/logo-192x192.png`,
-    datePublished: blog.publishedAt,
-    dateModified: blog.updatedAt || blog.publishedAt,
-    author: {
-      "@type": "Person",
-      name: blog.author?.name || "QR Junction Team",
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "QR Junction",
-      logo: {
-        "@type": "ImageObject",
-        url: `${baseUrl}/NewLogo/logo-192x192.png`,
-      },
-    },
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": blogUrl,
-    },
+    "@graph": graph,
   };
 
   return (
@@ -153,7 +220,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
 
-      <main className="relative z-10 flex-grow max-w-4xl mx-auto px-6 pt-28 pb-20 w-full">
+      <main className="relative z-10 flex-grow max-w-4xl mx-auto px-6 pb-20 w-full">
         <article className="space-y-8">
           {/* Hero Section */}
           <header className="border-b border-slate-200 pb-8 space-y-4">
@@ -223,11 +290,16 @@ export default async function BlogPage({ params }: BlogPageProps) {
                 id={section.id}
               >
                 {/* Section Heading */}
-                {section.heading && (
-                  <h2 className="mb-6 text-2xl sm:text-3xl font-extrabold text-[#001B50]">
-                    {section.heading}
-                  </h2>
-                )}
+                {section.heading &&
+                  (section.headingLevel === 3 ? (
+                    <h3 className="mb-4 text-xl sm:text-2xl font-bold text-[#001B50]">
+                      {section.heading}
+                    </h3>
+                  ) : (
+                    <h2 className="mb-6 text-2xl sm:text-3xl font-extrabold text-[#001B50]">
+                      {section.heading}
+                    </h2>
+                  ))}
 
                 {/* Single Image */}
                 {section.image && (
@@ -282,7 +354,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
                     key={paraIdx}
                     className="mb-4 text-sm sm:text-base leading-relaxed text-slate-700"
                   >
-                    {para}
+                    <RichText text={para} />
                   </p>
                 ))}
 
@@ -323,40 +395,10 @@ export default async function BlogPage({ params }: BlogPageProps) {
                       const text = isString ? item : item.text;
                       const sublist = isString ? undefined : item.sublist;
 
-                      const renderItemText = (str: string) => {
-                        // Check if it has an em-dash " — " to separate heading from text
-                        const emDashIdx = str.indexOf(" — ");
-                        if (emDashIdx !== -1) {
-                          const title = str.substring(0, emDashIdx);
-                          const desc = str.substring(emDashIdx); // contains " — ..."
-                          return (
-                            <>
-                              <strong className="text-[#001B50] font-bold">{title}</strong>
-                              {desc}
-                            </>
-                          );
-                        }
-
-                        // Check if it starts with "Step X:" or similar
-                        if (str.includes(": ") && (str.startsWith("Step ") || str.startsWith("Step:"))) {
-                          const colonIdx = str.indexOf(": ");
-                          const stepPrefix = str.substring(0, colonIdx + 1);
-                          const stepContent = str.substring(colonIdx + 1);
-                          return (
-                            <>
-                              <strong className="text-[#001B50] font-bold">{stepPrefix}</strong>
-                              {stepContent}
-                            </>
-                          );
-                        }
-
-                        return str;
-                      };
-
                       return (
                         <li key={itemIdx} className="space-y-2">
                           <div className="relative text-sm sm:text-base text-slate-700 before:absolute before:-left-6 before:text-primary before:content-['✓'] before:font-bold">
-                            {renderItemText(text)}
+                            <ListItemText text={text} />
                           </div>
                           {sublist && sublist.length > 0 && (
                             <ul className="pl-6 mt-2 space-y-2 list-none">
@@ -365,7 +407,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
                                   key={subItemIdx}
                                   className="relative text-xs sm:text-sm text-slate-600 before:absolute before:-left-5 before:text-slate-400 before:content-['–'] before:font-bold"
                                 >
-                                  {renderItemText(subItem)}
+                                  <ListItemText text={subItem} />
                                 </li>
                               ))}
                             </ul>
@@ -404,7 +446,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
                                   key={cellIdx}
                                   className="px-6 py-4 text-xs sm:text-sm text-slate-700"
                                 >
-                                  {cell}
+                                  <RichText text={cell} />
                                 </td>
                               ))}
                             </tr>
@@ -417,6 +459,58 @@ export default async function BlogPage({ params }: BlogPageProps) {
               </section>
             ))}
           </div>
+
+          {/* FAQ */}
+          {blog.faq && blog.faq.length > 0 && (
+            <section id="faq" className="mt-16 scroll-mt-20 space-y-6">
+              <div className="flex items-center gap-3">
+                <HelpCircle className="h-6 w-6 text-primary" />
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#001B50]">
+                  Frequently asked questions
+                </h2>
+              </div>
+              <div className="space-y-3">
+                {blog.faq.map((item, idx) => (
+                  <details
+                    key={idx}
+                    className="group rounded-xl border border-slate-200 bg-white px-5 py-4 open:bg-slate-50"
+                  >
+                    <summary className="cursor-pointer list-none font-bold text-[#001B50] text-sm sm:text-base [&::-webkit-details-marker]:hidden">
+                      {item.q}
+                    </summary>
+                    <p className="mt-3 text-sm sm:text-base leading-relaxed text-slate-700">
+                      <RichText text={item.a} />
+                    </p>
+                  </details>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Related posts */}
+          {relatedPosts.length > 0 && (
+            <section className="mt-16 space-y-6">
+              <h2 className="text-2xl font-extrabold text-[#001B50]">
+                Related guides
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {relatedPosts.map((related) => (
+                  <Link
+                    key={related.slug}
+                    href={`/blog/${related.slug}`}
+                    className="rounded-xl border border-slate-200 bg-white p-5 hover:border-primary/40 hover:shadow-md transition-all no-underline"
+                  >
+                    <p className="font-bold text-[#001B50] text-sm sm:text-base leading-snug">
+                      {related.hero.title}
+                    </p>
+                    <p className="mt-2 text-xs sm:text-sm text-slate-600 line-clamp-2">
+                      {related.hero.subtitle}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* CTA Section */}
           <div className="mt-16 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-8 sm:p-10 text-center shadow-xs space-y-6">

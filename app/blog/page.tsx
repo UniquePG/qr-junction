@@ -56,7 +56,7 @@ export default function BlogsPage() {
     return (
       <div className="min-h-screen bg-white text-slate-800 flex flex-col justify-between">
         <Header />
-        <main className="flex-1 max-w-7xl mx-auto px-6 pt-32 pb-20 w-full flex items-center justify-center">
+        <main className="flex-1 max-w-7xl mx-auto px-6 pb-20 w-full flex items-center justify-center">
           <div className="text-center py-20 bg-slate-50 border border-slate-200 rounded-3xl max-w-md w-full">
             <p className="text-slate-500 font-medium">No blog posts available yet.</p>
           </div>
@@ -79,7 +79,10 @@ export default function BlogsPage() {
         blog.slug === "what-is-a-qr-code-and-why-everyone-is-using-it" ||
         blog.slug === "how-qr-codes-actually-work-explained-like-youre-10" ||
         blog.slug === "static-vs-dynamic-qr-codes-which-one-do-you-actually-need" ||
-        blog.slug === "how-to-create-an-instagram-qr-code"
+        blog.slug === "how-to-create-an-instagram-qr-code" ||
+        blog.slug === "how-to-make-a-wifi-qr-code" ||
+        blog.slug === "how-to-create-a-custom-qr-code-with-logo" ||
+        blog.slug === "how-to-create-a-whatsapp-qr-code-for-business"
       );
     }
     if (selectedCategory === "Business Growth") {
@@ -87,7 +90,9 @@ export default function BlogsPage() {
         blog.slug === "how-small-businesses-can-use-qr-codes-to-increase-sales" ||
         blog.slug === "how-to-create-a-google-review-qr-code" ||
         blog.slug === "qr-codes-for-business-cards-the-complete-guide" ||
-        blog.slug === "qr-codes-for-small-businesses-the-practical-guide"
+        blog.slug === "qr-codes-for-small-businesses-the-practical-guide" ||
+        blog.slug === "how-to-create-a-qr-code-menu-for-your-restaurant" ||
+        blog.slug === "how-to-track-qr-code-scans"
       );
     }
     if (selectedCategory === "Security & Safety") {
@@ -112,7 +117,7 @@ export default function BlogsPage() {
 
       <Header />
 
-      <main className="relative z-10 flex-1 max-w-7xl mx-auto px-6 pt-32 pb-20 w-full">
+      <main className="relative z-10 flex-1 max-w-7xl mx-auto px-6 pb-20 w-full">
         
         {/* Page Title */}
         <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">

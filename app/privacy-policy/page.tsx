@@ -60,10 +60,10 @@ export default function PrivacyPolicyPage() {
         })}
       </Script>
       <PageViewTracker />
-      <div className="container mx-auto px-4 md:px-6 py-6 sm:py-8">
+      <div className="container mx-auto px-4 md:px-6 pb-8 sm:pb-12">
         <Header />
         
-        <div className="max-w-4xl mx-auto mt-6 sm:mt-8">
+        <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8 sm:mb-12 pb-4 sm:pb-6 border-b-2 border-slate-200">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary mb-2 sm:mb-3">
               Privacy Policy

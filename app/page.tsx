@@ -27,7 +27,7 @@ export default function Home() {
 
       {/* Hero landing container */}
       <main className="relative z-10">
-        <div className="max-w-7xl mx-auto px-6 pt-32 pb-16 sm:pb-24">
+        <div className="max-w-7xl mx-auto px-6 pb-16 sm:pb-24">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
             {/* Left Hero copy */}
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">

@@ -163,7 +163,7 @@ export default async function DynamicQRLandingPage({ params }: PageProps) {
 
       <Header />
 
-      <main className="relative z-10 pt-28 pb-20">
+      <main className="relative z-10 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           
           {/* HERO SECTION */}

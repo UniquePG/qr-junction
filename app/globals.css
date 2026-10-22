@@ -28,6 +28,12 @@
     --gradient-start: #0046a1;
     --gradient-end: #001B50;
     --shadow-color: rgba(0, 70, 161, 0.1);
+    /* Fixed header (~7rem) plus breathing room so page titles never sit under the nav */
+    --site-header-offset: 10.5rem;
+  }
+
+  html {
+    scroll-padding-top: var(--site-header-offset);
   }
 
   body {

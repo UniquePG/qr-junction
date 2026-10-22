@@ -46,7 +46,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Add all blog posts dynamically
   const blogEntries = getAllBlogs().map((b) => ({
     url: `${baseUrl}/blog/${b.slug}`,
-    lastModified: b.publishedAt ? new Date(b.publishedAt) : new Date(),
+    lastModified: b.updatedAt
+      ? new Date(b.updatedAt)
+      : b.publishedAt
+        ? new Date(b.publishedAt)
+        : new Date(),
     changeFrequency: 'monthly' as const,
     priority: 0.9,
   }));
