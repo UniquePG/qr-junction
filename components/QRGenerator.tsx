@@ -28,6 +28,7 @@ import {
   trackTabSwitch,
   type QRCodeType,
 } from "@/lib/analytics";
+import { trackGuestQrEvent } from "@/lib/guestAnalytics";
 
 import {
   FormData,
@@ -173,6 +174,7 @@ export default function QRGenerator({ initialUrl, initialTab, lockTab }: QRGener
       frameConfig: qrConfig.frame,
       downloadConfig: qrConfig.download,
     });
+    trackGuestQrEvent({ event: "DOWNLOADED", qrType: activeTab });
   };
 
   // Generate QR value
@@ -186,6 +188,7 @@ export default function QRGenerator({ initialUrl, initialTab, lockTab }: QRGener
     const data = formatQRData(activeTab, formData);
     setQrValue(data);
     trackQRCodeGeneration(activeTab as QRCodeType, qrConfig.size.width);
+    trackGuestQrEvent({ event: "GENERATED", qrType: activeTab });
   };
 
   return (

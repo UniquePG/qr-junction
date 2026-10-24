@@ -74,6 +74,11 @@ enum ProfileType {
   BUSINESS
 }
 
+enum GuestQrEventType {
+  GENERATED
+  DOWNLOADED
+}
+
 
 model User {
   id             Int        @id @default(autoincrement())
@@ -98,6 +103,7 @@ model User {
   emailOtp             EmailOtp?
   passwordResetTokens  PasswordResetToken[]
 
+  @@index([createdAt])
   @@map("users")
 }
 
@@ -197,6 +203,8 @@ model QRCode {
   @@index([shortCode])
   @@index([userId])
   @@index([landingPageId])
+  @@index([createdAt])
+  @@index([type, status])
   @@map("qr_codes")
 }
 
@@ -262,6 +270,7 @@ model ReviewResponse {
   qrCode       QRCode   @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
 
   @@index([qrCodeId])
+  @@index([createdAt])
   @@map("review_responses")
 }
 
@@ -376,6 +385,7 @@ model Restaurant {
   tables       RestaurantTable[]
   qrCodes      QRCode[]
 
+  @@index([createdAt])
   @@map("restaurants")
 }
 
@@ -450,4 +460,25 @@ model RestaurantTable {
   qrCode       QRCode?    @relation(fields: [qrCodeId], references: [id], onDelete: SetNull)
 
   @@map("restaurant_tables")
+}
+
+model GuestQrEvent {
+  id         Int              @id @default(autoincrement())
+  sessionId  String           @map("session_id")
+  event      GuestQrEventType
+  qrType     QRType           @map("qr_type")
+  source     String
+  sourcePath String           @map("source_path")
+  deviceType DeviceType       @default(UNKNOWN) @map("device_type")
+  browser    String?
+  os         String?
+  country    String?
+  city       String?
+  createdAt  DateTime         @default(now()) @map("created_at")
+
+  @@index([sessionId])
+  @@index([createdAt])
+  @@index([event, createdAt])
+  @@index([qrType])
+  @@map("guest_qr_events")
 }

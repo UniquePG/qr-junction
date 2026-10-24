@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
+import { trackGuestQrEvent } from "@/lib/guestAnalytics";
 
 export default function QuickQRCard() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function QuickQRCard() {
     }
 
     setQrValue(targetUrl);
+    trackGuestQrEvent({ event: "GENERATED", qrType: "URL", source: "homepage" });
     toast.success("QR Code generated instantly!");
   };
 
@@ -53,6 +55,7 @@ export default function QuickQRCard() {
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
+    trackGuestQrEvent({ event: "DOWNLOADED", qrType: "URL", source: "homepage" });
     toast.success("SVG file downloaded!");
   };
 
