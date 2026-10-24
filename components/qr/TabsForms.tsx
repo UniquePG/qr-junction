@@ -1,3 +1,4 @@
+import PasswordInput from "@/components/PasswordInput";
 import { auth } from "@/lib/firebase";
 import { FormData } from "@/lib/qrEngine";
 import {
@@ -455,16 +456,14 @@ export function WiFiTabForm({ formData, updateFormData }: TabFormProps) {
         </div>
         <div className={INPUT_CONTAINER}>
           <label className={LABEL_CLASS}>Password</label>
-          <div className="relative">
-            <Key className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-            <input
-              type="text"
-              value={formData.wifi?.password || ""}
-              onChange={(e) => updateFormData("password", e.target.value)}
-              placeholder="Network Password"
-              className={ICON_INPUT_CLASS}
-            />
-          </div>
+          <PasswordInput
+            leftIcon={<Key className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />}
+            value={formData.wifi?.password || ""}
+            onChange={(e) => updateFormData("password", e.target.value)}
+            placeholder="Network Password"
+            className="w-full bg-white border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl py-3 pl-10 pr-12 text-xs text-slate-800 placeholder-slate-400 outline-none transition-all"
+            autoComplete="off"
+          />
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
