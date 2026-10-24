@@ -62,3 +62,61 @@ export async function sendOtpEmail(options: {
 
   return { delivered: true, fallback: false };
 }
+
+function buildPasswordResetEmailHtml(resetUrl: string, name?: string | null) {
+  const greeting = name ? `Hi ${escapeHtml(name.split(" ")[0])},` : "Hi,";
+  return `
+    <div style="font-family:Inter,Arial,sans-serif;background:#f8fafc;padding:32px 16px;">
+      <div style="max-width:480px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:32px;">
+        <p style="margin:0 0 8px;font-size:18px;font-weight:700;color:#0046a1;">QR Junction</p>
+        <h1 style="margin:0 0 16px;font-size:22px;color:#001B50;">Reset your password</h1>
+        <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#334155;">${greeting} we received a request to reset your QR Junction password. This link expires in 60 minutes.</p>
+        <p style="margin:0 0 24px;text-align:center;">
+          <a href="${escapeHtml(resetUrl)}" style="display:inline-block;background:#0046a1;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:10px;">Choose a new password</a>
+        </p>
+        <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#64748b;word-break:break-all;">${escapeHtml(resetUrl)}</p>
+        <p style="margin:0;font-size:13px;line-height:1.6;color:#64748b;">If you did not ask for this, you can ignore this email. Your password will stay the same.</p>
+      </div>
+    </div>
+  `;
+}
+
+export async function sendPasswordResetEmail(options: {
+  to: string;
+  resetUrl: string;
+  name?: string | null;
+}): Promise<{ delivered: boolean; fallback: boolean }> {
+  const { to, resetUrl, name } = options;
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = Number(process.env.SMTP_PORT || 587);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from =
+    process.env.SMTP_FROM ||
+    (user ? `QR Junction <${user}>` : "QR Junction <noreply@qrjunction.in>");
+
+  if (!user || !pass) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("SMTP is not configured. Set SMTP_USER and SMTP_PASS.");
+    }
+    console.warn(`[Password reset] SMTP is not configured. Reset link for ${to}: ${resetUrl}`);
+    return { delivered: false, fallback: true };
+  }
+
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+  });
+
+  await transporter.sendMail({
+    from,
+    to,
+    subject: "Reset your QR Junction password",
+    text: `${name ? `Hi ${name.split(" ")[0]},\n\n` : ""}Reset your QR Junction password using this link (expires in 60 minutes):\n\n${resetUrl}\n\nIf you did not ask for this, ignore this email.`,
+    html: buildPasswordResetEmailHtml(resetUrl, name),
+  });
+
+  return { delivered: true, fallback: false };
+}

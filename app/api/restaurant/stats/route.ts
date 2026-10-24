@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const startDateParam = searchParams.get('startDate');
     const endDateParam = searchParams.get('endDate');
+    const isAllTime = searchParams.get('range') === 'all';
 
     let startDate = new Date();
     startDate.setDate(startDate.getDate() - 7); // Default to last 7 days
@@ -19,6 +20,15 @@ export async function GET(request: Request) {
 
     let endDate = new Date();
     if (endDateParam) endDate = new Date(endDateParam);
+
+    const scanDateFilter = isAllTime
+      ? undefined
+      : {
+          scannedAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+        };
 
     // Fetch all restaurant QR codes with scans within range
     const qrCodes = await prisma.qRCode.findMany({
@@ -28,12 +38,7 @@ export async function GET(request: Request) {
       },
       include: {
         scans: {
-          where: {
-            scannedAt: {
-              gte: startDate,
-              lte: endDate,
-            },
-          },
+          where: scanDateFilter,
           orderBy: { scannedAt: 'asc' },
         },
         restaurantTable: true,

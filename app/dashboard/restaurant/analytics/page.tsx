@@ -32,7 +32,7 @@ export default function RestaurantAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [timelineLabel, setTimelineLabel] = useState('Last 7 Days');
 
-  const fetchStats = async (start?: Date, end?: Date) => {
+  const fetchStats = async (start?: Date | null, end?: Date | null) => {
     setLoading(true);
     try {
       const currentUser = auth.currentUser;
@@ -42,8 +42,12 @@ export default function RestaurantAnalyticsPage() {
       let url = '/api/restaurant/stats';
       
       const params = new URLSearchParams();
-      if (start) params.append('startDate', start.toISOString());
-      if (end) params.append('endDate', end.toISOString());
+      if (start === null && end === null) {
+        params.append('range', 'all');
+      } else {
+        if (start) params.append('startDate', start.toISOString());
+        if (end) params.append('endDate', end.toISOString());
+      }
       
       const queryString = params.toString();
       if (queryString) {
@@ -71,7 +75,7 @@ export default function RestaurantAnalyticsPage() {
     }
   }, [user]);
 
-  const handleFilterChange = (start: Date, end: Date, label: string) => {
+  const handleFilterChange = (start: Date | null, end: Date | null, label: string) => {
     setTimelineLabel(label);
     fetchStats(start, end);
   };

@@ -13,23 +13,26 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const startDateParam = searchParams.get('startDate');
     const endDateParam = searchParams.get('endDate');
+    const isAllTime = searchParams.get('range') === 'all';
 
     let startDate: Date | undefined;
     let endDate: Date | undefined;
 
-    if (startDateParam) {
-      startDate = new Date(startDateParam);
-    }
-    if (endDateParam) {
-      endDate = new Date(endDateParam);
-    }
+    if (!isAllTime) {
+      if (startDateParam) {
+        startDate = new Date(startDateParam);
+      }
+      if (endDateParam) {
+        endDate = new Date(endDateParam);
+      }
 
-    // Default to last 7 days if no dates provided
-    if (!startDate && !endDate) {
-      startDate = new Date();
-      startDate.setDate(startDate.getDate() - 7);
-      startDate.setHours(0, 0, 0, 0);
-      endDate = new Date();
+      // Default to last 7 days if no dates provided
+      if (!startDate && !endDate) {
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date();
+      }
     }
 
     // 1. Fetch user's QR codes count
@@ -126,40 +129,61 @@ export async function GET(request: Request) {
 
     // 7. Dynamic Trend Calculation
     const trendsMap: { [key: string]: { date: string; scans: number } } = {};
+    if (isAllTime && scans.length > 0) {
+      const earliest = scans.reduce(
+        (min, scan) => (scan.scannedAt < min ? scan.scannedAt : min),
+        scans[0].scannedAt
+      );
+      startDate = new Date(earliest);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date();
+    }
+
     let diffDays = 7;
     if (startDate && endDate) {
       const timeDiff = endDate.getTime() - startDate.getTime();
-      diffDays = timeDiff / (1000 * 3600 * 24);
+      diffDays = Math.max(timeDiff / (1000 * 3600 * 24), 1);
     }
 
-    if (diffDays <= 2) {
-      // Hourly intervals
-      const current = new Date(startDate!);
-      const endLimit = new Date(endDate!);
-      while (current <= endLimit) {
-        const hourStr = current.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
-        const dayStr = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const key = `${dayStr}, ${hourStr}`;
-        trendsMap[key] = { date: key, scans: 0 };
-        current.setHours(current.getHours() + 1);
-      }
-    } else if (diffDays <= 60) {
-      // Daily intervals
-      const current = new Date(startDate!);
-      const endLimit = new Date(endDate!);
-      while (current <= endLimit) {
-        const key = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        trendsMap[key] = { date: key, scans: 0 };
-        current.setDate(current.getDate() + 1);
-      }
-    } else {
-      // Weekly intervals
-      const current = new Date(startDate!);
-      const endLimit = new Date(endDate!);
-      while (current <= endLimit) {
-        const key = 'Week of ' + current.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        trendsMap[key] = { date: key, scans: 0 };
-        current.setDate(current.getDate() + 7);
+    if (startDate && endDate) {
+      if (diffDays <= 2) {
+        // Hourly intervals
+        const current = new Date(startDate);
+        const endLimit = new Date(endDate);
+        while (current <= endLimit) {
+          const hourStr = current.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
+          const dayStr = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const key = `${dayStr}, ${hourStr}`;
+          trendsMap[key] = { date: key, scans: 0 };
+          current.setHours(current.getHours() + 1);
+        }
+      } else if (diffDays <= 60) {
+        // Daily intervals
+        const current = new Date(startDate);
+        const endLimit = new Date(endDate);
+        while (current <= endLimit) {
+          const key = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          trendsMap[key] = { date: key, scans: 0 };
+          current.setDate(current.getDate() + 1);
+        }
+      } else if (diffDays <= 180) {
+        // Weekly intervals
+        const current = new Date(startDate);
+        const endLimit = new Date(endDate);
+        while (current <= endLimit) {
+          const key = 'Week of ' + current.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          trendsMap[key] = { date: key, scans: 0 };
+          current.setDate(current.getDate() + 7);
+        }
+      } else {
+        // Monthly intervals for long / all-time ranges
+        const current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+        const endLimit = new Date(endDate);
+        while (current <= endLimit) {
+          const key = current.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+          trendsMap[key] = { date: key, scans: 0 };
+          current.setMonth(current.getMonth() + 1);
+        }
       }
     }
 
@@ -229,12 +253,14 @@ export async function GET(request: Request) {
         scanKey = `${dayStr}, ${hourStr}`;
       } else if (diffDays <= 60) {
         scanKey = scan.scannedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      } else {
-        const timeDiffScan = scan.scannedAt.getTime() - startDate!.getTime();
-        const weekNum = Math.floor(timeDiffScan / (1000 * 3600 * 24 * 7));
-        const weekStart = new Date(startDate!);
+      } else if (diffDays <= 180 && startDate) {
+        const timeDiffScan = scan.scannedAt.getTime() - startDate.getTime();
+        const weekNum = Math.max(0, Math.floor(timeDiffScan / (1000 * 3600 * 24 * 7)));
+        const weekStart = new Date(startDate);
         weekStart.setDate(weekStart.getDate() + (weekNum * 7));
         scanKey = 'Week of ' + weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      } else {
+        scanKey = scan.scannedAt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
       }
 
       if (trendsMap[scanKey] !== undefined) {

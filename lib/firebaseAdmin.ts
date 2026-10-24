@@ -51,6 +51,10 @@ if (projectId && clientEmail && privateKey) {
       console.warn('Firebase Admin SDK credentials not configured. Skipping updateUser for', uid, data);
       return { uid, ...data };
     },
+    getUserByEmail: async (email: string) => {
+      console.warn('Firebase Admin SDK credentials not configured. Mock getUserByEmail for', email);
+      return { uid: 'mock-user-uid', email };
+    },
   };
 }
 

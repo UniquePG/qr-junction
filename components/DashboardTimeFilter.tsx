@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Calendar as CalendarIcon, Clock, ChevronDown, Check } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, ChevronDown, Check, Infinity as InfinityIcon } from 'lucide-react';
 
-export type TimePeriod = '1day' | '7days' | '30days' | 'custom';
+export type TimePeriod = 'all' | '1day' | '7days' | '30days' | 'custom';
 
 interface DashboardTimeFilterProps {
-  onFilterChange: (startDate: Date, endDate: Date, label: string) => void;
+  onFilterChange: (startDate: Date | null, endDate: Date | null, label: string) => void;
 }
 
 export default function DashboardTimeFilter({ onFilterChange }: DashboardTimeFilterProps) {
@@ -33,7 +33,13 @@ export default function DashboardTimeFilter({ onFilterChange }: DashboardTimeFil
     let end = new Date();
     let newLabel = '';
 
-    if (period === '1day') {
+    if (period === 'all') {
+      newLabel = 'All Time';
+      setActivePeriod(period);
+      setLabel(newLabel);
+      onFilterChange(null, null, newLabel);
+      setIsOpen(false);
+    } else if (period === '1day') {
       start.setDate(end.getDate() - 1);
       newLabel = 'Last 24 Hours';
       setActivePeriod(period);
@@ -100,6 +106,8 @@ export default function DashboardTimeFilter({ onFilterChange }: DashboardTimeFil
         <div className="absolute right-0 mt-2 w-72 origin-top-right rounded-2xl bg-white border border-slate-200/80 shadow-lg ring-1 ring-black/5 focus:outline-none z-50 animate-fade-in divide-y divide-slate-100 max-w-[calc(100vw-2rem)]">
           {/* Quick Selectors */}
           <div className="py-2.5">
+
+
             <button
               onClick={() => handleSelectPeriod('1day')}
               className="w-full flex items-center justify-between px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
@@ -131,6 +139,16 @@ export default function DashboardTimeFilter({ onFilterChange }: DashboardTimeFil
                 Last 30 Days
               </span>
               {activePeriod === '30days' && <Check className="w-3.5 h-3.5 text-primary" />}
+            </button>
+            <button
+              onClick={() => handleSelectPeriod('all')}
+              className="w-full flex items-center justify-between px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <span className="flex items-center gap-2.5">
+                <InfinityIcon className="w-3.5 h-3.5 text-slate-400" />
+                All Time
+              </span>
+              {activePeriod === 'all' && <Check className="w-3.5 h-3.5 text-primary" />}
             </button>
           </div>
 

@@ -46,7 +46,7 @@ export default function DashboardOverview() {
   const [timelineLabel, setTimelineLabel] = useState('Last 7 Days');
   const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({});
 
-  const fetchStats = async (start?: Date, end?: Date) => {
+  const fetchStats = async (start?: Date | null, end?: Date | null) => {
     setLoading(true);
     try {
       const currentUser = auth.currentUser;
@@ -56,8 +56,12 @@ export default function DashboardOverview() {
       let url = '/api/dashboard/stats';
       
       const params = new URLSearchParams();
-      if (start) params.append('startDate', start.toISOString());
-      if (end) params.append('endDate', end.toISOString());
+      if (start === null && end === null) {
+        params.append('range', 'all');
+      } else {
+        if (start) params.append('startDate', start.toISOString());
+        if (end) params.append('endDate', end.toISOString());
+      }
       
       const queryString = params.toString();
       if (queryString) {
@@ -88,8 +92,8 @@ export default function DashboardOverview() {
     }
   }, [user]);
 
-  const handleFilterChange = (start: Date, end: Date, label: string) => {
-    setDateRange({ start, end });
+  const handleFilterChange = (start: Date | null, end: Date | null, label: string) => {
+    setDateRange({ start: start ?? undefined, end: end ?? undefined });
     setTimelineLabel(label);
     fetchStats(start, end);
   };
