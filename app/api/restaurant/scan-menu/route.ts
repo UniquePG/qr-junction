@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
+import { completeChat } from '@/lib/ai';
 
 export const maxDuration = 60; // Max allowed duration on Vercel Hobby plan is 60 seconds
 
@@ -150,198 +151,34 @@ IMPORTANT: If no size variants exist for an item, omit the 'variants' field or s
 
     let resultJson: any = null;
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // TIER 1: NVIDIA NIM (Primary — best quality, uses base64 image)
-    // Vision models: kimi-k2.6 → llama-3.2-90b-vision → llama-3.2-11b-vision → phi-3.5-vision
-    // Text models: kimi-k2.6 (also handles text well)
-    // ═══════════════════════════════════════════════════════════════════════════
-    if (process.env.NVIDIA_API_KEY && !resultJson) {
-      const nvidiaVisionModels = [
-        // 'meta/llama-4-maverick-17b-128e-instruct',
-        'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning',
-        'meta/llama-3.2-90b-vision-instruct',
-        'moonshotai/kimi-k2.6',
-        'meta/llama-3.2-11b-vision-instruct',
-        'microsoft/phi-3.5-vision-instruct',
-      ];
-      const nvidiaTextModels = [
-        'moonshotai/kimi-k2.6',
-        'meta/llama-3.3-70b-instruct',
-      ];
+    const imageUrl = imageBase64Data?.dataUrl || fileUrl;
+    const userContent = isImage
+      ? [
+          { type: 'text' as const, text: promptText },
+          { type: 'image_url' as const, image_url: { url: imageUrl, detail: 'high' as const } },
+        ]
+      : [
+          { type: 'text' as const, text: promptText },
+          { type: 'text' as const, text: `PDF Text Content:\n\n${textContent}` },
+        ];
 
-      const candidateModels = isImage ? nvidiaVisionModels : nvidiaTextModels;
-
-      for (const model of candidateModels) {
-        try {
-          console.log(`[NVIDIA] Attempting menu scan with model: ${model}`);
-
-          // Build message content
-          let messageContent: any[];
-          if (isImage) {
-            // NVIDIA requires base64 data URL for images
-            if (!imageBase64Data) {
-              console.warn(`[NVIDIA] No base64 image available, skipping ${model}`);
-              continue;
-            }
-            messageContent = [
-              { type: 'text', text: promptText },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: imageBase64Data.dataUrl,
-                  detail: 'high', // request high-res analysis for better OCR
-                },
-              },
-            ];
-          } else {
-            messageContent = [
-              { type: 'text', text: promptText },
-              { type: 'text', text: `PDF Text Content:\n\n${textContent}` },
-            ];
-          }
-
-          const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${process.env.NVIDIA_API_KEY}`,
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
-            },
-            body: JSON.stringify({
-              model,
-              messages: [{ role: 'user', content: messageContent }],
-              max_tokens: 8192,
-              temperature: 0.1,
-              top_p: 1.0,
-              stream: false,
-            }),
-            signal: AbortSignal.timeout(20000), // 20-second timeout per model
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            const rawText = data.choices?.[0]?.message?.content || '{}';
-            const parsed = parseMenuJson(rawText);
-            console.log("parsed ", parsed)
-            if (parsed && parsed.categories) {
-              resultJson = parsed;
-              console.log(`[NVIDIA] Successfully parsed menu using model: ${model}`);
-              break;
-            } else {
-              console.warn(`[NVIDIA] Model ${model} returned invalid JSON structure, trying next.`);
-            }
-          } else {
-            const errText = await response.text();
-            console.warn(`[NVIDIA] Error with model ${model} (${response.status}):`, errText.slice(0, 300));
-          }
-        } catch (err: any) {
-          console.error(`[NVIDIA] Exception with model ${model}:`, err?.message || err);
-        }
+    try {
+      const ai = await completeChat({
+        messages: [{ role: 'user', content: userContent }],
+        jsonMode: true,
+        temperature: 0.1,
+        maxTokens: 8192,
+        timeoutMs: 25000,
+        capability: isImage ? 'vision' : 'text',
+        providers: ['openai', 'sarvam', 'openrouter', 'nvidia', 'groq'],
+      });
+      const parsed = parseMenuJson(ai.text);
+      if (parsed?.categories) {
+        resultJson = parsed;
+        console.log(`[Menu Scan] Parsed menu with ${ai.provider}/${ai.model}`);
       }
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // TIER 2: OpenRouter (Fallback 1 — uses external URL for images)
-    // ═══════════════════════════════════════════════════════════════════════════
-    if (!resultJson && process.env.OPENROUTER_API_KEY) {
-      const candidateModels = isImage
-        ? ['meta-llama/llama-3.2-11b-vision-instruct:free', 'google/gemma-2-9b-it:free']
-        : ['meta-llama/llama-3.3-70b-instruct:free', 'meta-llama/llama-3-8b-instruct:free'];
-
-      const contentPayload: any[] = [{ type: 'text', text: promptText }];
-      if (isImage) {
-        contentPayload.push({ type: 'image_url', image_url: { url: fileUrl } });
-      } else {
-        contentPayload.push({ type: 'text', text: `PDF Text Content:\n\n${textContent}` });
-      }
-
-      for (const model of candidateModels) {
-        try {
-          console.log(`[OpenRouter] Attempting menu scan with model: ${model}`);
-          const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model,
-              response_format: { type: 'json_object' },
-              messages: [{ role: 'user', content: contentPayload }],
-              temperature: 0.1,
-            }),
-            signal: AbortSignal.timeout(20000), // 20-second timeout per model
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            const rawText = data.choices?.[0]?.message?.content || '{}';
-            const parsed = parseMenuJson(rawText);
-            if (parsed && parsed.categories) {
-              resultJson = parsed;
-              console.log(`[OpenRouter] Successfully parsed menu using model: ${model}`);
-              break;
-            }
-          } else {
-            const errText = await response.text();
-            console.warn(`[OpenRouter] Error with model ${model}:`, errText.slice(0, 300));
-          }
-        } catch (err: any) {
-          console.error(`[OpenRouter] Exception with model ${model}:`, err?.message || err);
-        }
-      }
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // TIER 3: Groq (Fallback 2 — vision via llama-4-scout, text via llama-3.3)
-    // ═══════════════════════════════════════════════════════════════════════════
-    if (!resultJson && process.env.GROQ_API_KEY) {
-      const candidateGroqModels = isImage
-        ? ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview']
-        : ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
-
-      const contentPayload: any[] = [{ type: 'text', text: promptText }];
-      if (isImage) {
-        contentPayload.push({ type: 'image_url', image_url: { url: fileUrl } });
-      } else {
-        contentPayload.push({ type: 'text', text: `PDF Text Content:\n\n${textContent}` });
-      }
-
-      for (const model of candidateGroqModels) {
-        try {
-          console.log(`[Groq] Attempting menu scan with model: ${model}`);
-          const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model,
-              response_format: { type: 'json_object' },
-              messages: [{ role: 'user', content: contentPayload }],
-              temperature: 0.1,
-            }),
-            signal: AbortSignal.timeout(20000), // 20-second timeout per model
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            const rawText = data.choices?.[0]?.message?.content || '{}';
-            const parsed = parseMenuJson(rawText);
-            if (parsed && parsed.categories) {
-              resultJson = parsed;
-              console.log(`[Groq] Successfully parsed menu using model: ${model}`);
-              break;
-            }
-          } else {
-            const errText = await response.text();
-            console.warn(`[Groq] Error with model ${model}:`, errText.slice(0, 300));
-          }
-        } catch (err: any) {
-          console.error(`[Groq] Exception with model ${model}:`, err?.message || err);
-        }
-      }
+    } catch (err: any) {
+      console.error('[Menu Scan] All AI providers failed:', err?.message || err);
     }
 
     if (!resultJson) {

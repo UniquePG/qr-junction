@@ -16,7 +16,10 @@ import {
   Check, 
   X,
   Info,
-  FolderClosed
+  FolderClosed,
+  ImageIcon,
+  Sparkles,
+  Leaf
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -34,7 +37,37 @@ interface ParsedItem {
   isNonVeg: boolean;
   isVegan: boolean;
   isPopular: boolean;
+  image?: string | null;
   variants?: { label: string; price: number }[] | null;
+}
+
+function emptyParsedItem(): ParsedItem {
+  return {
+    name: 'New Dish',
+    description: '',
+    price: 0,
+    isVeg: true,
+    isNonVeg: false,
+    isVegan: false,
+    isPopular: false,
+    image: null,
+    variants: null,
+  };
+}
+
+function normalizeParsedItem(item: Partial<ParsedItem> | null | undefined): ParsedItem {
+  const source = item || {};
+  return {
+    name: source.name?.trim() || 'New Dish',
+    description: source.description || '',
+    price: Number(source.price) || 0,
+    isVeg: source.isNonVeg ? false : source.isVeg !== false,
+    isNonVeg: Boolean(source.isNonVeg),
+    isVegan: Boolean(source.isVegan),
+    isPopular: Boolean(source.isPopular),
+    image: source.image || null,
+    variants: Array.isArray(source.variants) && source.variants.length > 0 ? source.variants : null,
+  };
 }
 
 
@@ -68,6 +101,9 @@ export default function AIScannerPage() {
   
   // Import Options
   const [importMode, setImportMode] = useState<'append' | 'overwrite'>('append');
+  const [busyImageKey, setBusyImageKey] = useState<string | null>(null);
+  const [generatingImageKey, setGeneratingImageKey] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // Verify restaurant & menus are configured
   const [restaurantExists, setRestaurantExists] = useState(false);
@@ -171,8 +207,12 @@ export default function AIScannerPage() {
 
       const json = await res.json();
       if (json.success && json.menu?.categories) {
-        setParsedCategories(json.menu.categories);
-        if (json.menu.categories.length > 0) {
+        const categories = json.menu.categories.map((cat: ParsedCategory) => ({
+          name: cat.name?.trim() || 'New Category',
+          items: (cat.items || []).map((item) => normalizeParsedItem(item)),
+        }));
+        setParsedCategories(categories);
+        if (categories.length > 0) {
           setActiveReviewCatIdx(0);
         }
         toast.success('AI Menu extraction complete! Please review the results below.');
@@ -231,17 +271,75 @@ export default function AIScannerPage() {
 
   const handleAddItem = (catIdx: number) => {
     const updated = [...parsedCategories];
-    updated[catIdx].items.push({
-      name: 'New Dish',
-      description: '',
-      price: 0,
-      isVeg: true,
-      isNonVeg: false,
-      isVegan: false,
-      isPopular: false,
-      variants: null
-    });
+    updated[catIdx].items.push(emptyParsedItem());
     setParsedCategories(updated);
+  };
+
+  const itemKey = (catIdx: number, itemIdx: number) => `${catIdx}-${itemIdx}`;
+
+  const handleUploadDishImage = async (
+    catIdx: number,
+    itemIdx: number,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      toast.error('Image must be 1MB or smaller.');
+      return;
+    }
+
+    const key = itemKey(catIdx, itemIdx);
+    setBusyImageKey(key);
+    try {
+      const uploadData = new FormData();
+      uploadData.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: uploadData });
+      const json = await res.json();
+      if (!res.ok || !json.url) throw new Error(json.error || 'Upload failed');
+      handleUpdateItem(catIdx, itemIdx, { image: json.url });
+      toast.success('Dish photo uploaded.');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to upload image.');
+    } finally {
+      setBusyImageKey(null);
+    }
+  };
+
+  const handleGenerateDishImage = async (catIdx: number, itemIdx: number) => {
+    const item = parsedCategories[catIdx]?.items[itemIdx];
+    const itemName = item?.name?.trim();
+    if (!itemName || itemName === 'New Dish') {
+      toast.error('Enter the dish name first, then generate an image.');
+      return;
+    }
+
+    const key = itemKey(catIdx, itemIdx);
+    setGeneratingImageKey(key);
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const res = await fetch('/api/restaurant/items/generate-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ itemName }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.url) throw new Error(json.error || 'Failed to generate image.');
+      handleUpdateItem(catIdx, itemIdx, { image: json.url });
+      toast.success('AI dish photo added.');
+    } catch (err: any) {
+      toast.error(err.message || 'Error generating AI image.');
+    } finally {
+      setGeneratingImageKey(null);
+    }
+  };
+
+  const handleClearDishImage = (catIdx: number, itemIdx: number) => {
+    handleUpdateItem(catIdx, itemIdx, { image: null });
   };
 
   const handleImport = async () => {
@@ -467,8 +565,8 @@ export default function AIScannerPage() {
 
               <button
                 onClick={handleImport}
-                disabled={importing}
-                className="bg-primary hover:bg-[#00143c] text-white text-xs font-semibold px-6 py-2.5 rounded-xl transition-all shadow-md flex items-center gap-1.5 border-none cursor-pointer"
+                disabled={importing || Boolean(busyImageKey || generatingImageKey)}
+                className="bg-primary hover:bg-[#00143c] text-white text-xs font-semibold px-6 py-2.5 rounded-xl transition-all shadow-md flex items-center gap-1.5 border-none cursor-pointer disabled:opacity-50"
               >
                 {importing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Import Menu ({parsedCategories.reduce((acc, cat) => acc + (cat.items?.length || 0), 0)} Items)
@@ -596,59 +694,158 @@ export default function AIScannerPage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {activeCategory.items.map((item, itemIdx) => (
-                        <div key={itemIdx} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col md:flex-row gap-4 items-start relative group hover:border-slate-300 transition-all">
-                          <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
-                            <div className="md:col-span-2">
+                      {activeCategory.items.map((item, itemIdx) => {
+                        const key = itemKey(activeReviewCatIdx!, itemIdx);
+                        const uploading = busyImageKey === key;
+                        const generating = generatingImageKey === key;
+                        const imageBusy = uploading || generating;
+                        const inputId = `review-dish-image-${activeReviewCatIdx}-${itemIdx}`;
+
+                        return (
+                        <div key={itemIdx} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl relative group hover:border-slate-300 transition-all min-w-0">
+                          <div className="flex flex-col sm:flex-row gap-4 items-start min-w-0">
+                            <div className="w-full sm:w-auto shrink-0 space-y-2">
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">Dish Image</label>
+                              <button
+                                type="button"
+                                onClick={() => item.image && setPreviewImage(item.image)}
+                                className={`w-full sm:w-24 h-24 bg-white border border-slate-200 rounded-xl flex items-center justify-center overflow-hidden relative ${item.image ? 'cursor-zoom-in hover:border-primary/40' : 'cursor-default'}`}
+                                aria-label={item.image ? 'Preview dish image' : 'No dish image'}
+                              >
+                                {item.image ? (
+                                  <img src={item.image} alt={item.name || 'Dish'} className="w-full h-full object-cover" />
+                                ) : (
+                                  <ImageIcon className="w-7 h-7 text-slate-300" />
+                                )}
+                                {imageBusy && (
+                                  <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                                    <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                                  </div>
+                                )}
+                              </button>
+                              <div className="flex sm:flex-col gap-1.5">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  id={inputId}
+                                  className="hidden"
+                                  disabled={imageBusy}
+                                  onChange={(e) => handleUploadDishImage(activeReviewCatIdx!, itemIdx, e)}
+                                />
+                                <label
+                                  htmlFor={inputId}
+                                  className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 font-semibold rounded-lg text-[10px] border border-slate-200 transition-all select-none ${imageBusy ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  Upload
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => handleGenerateDishImage(activeReviewCatIdx!, itemIdx)}
+                                  disabled={imageBusy}
+                                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1 px-2.5 py-1.5 bg-primary/10 hover:bg-primary/15 text-primary font-bold rounded-lg text-[10px] border-none cursor-pointer disabled:opacity-50"
+                                >
+                                  <Sparkles className="w-3 h-3" />
+                                  {generating ? 'Generating' : 'AI photo'}
+                                </button>
+                                {item.image && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleClearDishImage(activeReviewCatIdx!, itemIdx)}
+                                    disabled={imageBusy}
+                                    className="inline-flex items-center justify-center px-2.5 py-1.5 text-slate-400 hover:text-red-500 text-[10px] font-semibold bg-transparent border-none cursor-pointer disabled:opacity-50"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 w-full min-w-0">
+                            <div className="md:col-span-2 min-w-0">
                               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Dish Name</label>
                               <input 
                                 type="text"
                                 value={item.name}
                                 onChange={(e) => handleUpdateItem(activeReviewCatIdx!, itemIdx, { name: e.target.value })}
-                                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-sans focus:outline-none"
+                                className="w-full min-w-0 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-sans focus:outline-none"
                               />
                             </div>
 
-                            <div>
+                            <div className="min-w-0">
                               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Price</label>
                               <input 
                                 type="number"
                                 value={item.price}
                                 onChange={(e) => handleUpdateItem(activeReviewCatIdx!, itemIdx, { price: Number(e.target.value) })}
-                                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-sans focus:outline-none"
+                                className="w-full min-w-0 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-sans focus:outline-none"
                               />
                             </div>
 
-                            <div>
+                            <div className="min-w-0">
                               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Diet Type</label>
                               <select
                                 value={item.isNonVeg ? 'nonveg' : 'veg'}
                                 onChange={(e) => handleUpdateItem(activeReviewCatIdx!, itemIdx, { 
                                   isVeg: e.target.value === 'veg', 
-                                  isNonVeg: e.target.value === 'nonveg' 
+                                  isNonVeg: e.target.value === 'nonveg',
+                                  isVegan: e.target.value === 'nonveg' ? false : item.isVegan,
                                 })}
-                                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-850 focus:outline-none"
+                                className="w-full min-w-0 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-850 focus:outline-none"
                               >
                                 <option value="veg">Veg</option>
                                 <option value="nonveg">Non-Veg</option>
                               </select>
                             </div>
 
-                            <div className="md:col-span-4">
+                            <div className="md:col-span-4 min-w-0">
                               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Description (Ingredients / Details)</label>
                               <input 
                                 type="text"
                                 value={item.description || ''}
                                 onChange={(e) => handleUpdateItem(activeReviewCatIdx!, itemIdx, { description: e.target.value })}
-                                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-sans focus:outline-none"
+                                className="w-full min-w-0 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-sans focus:outline-none"
                                 placeholder="Ingredients, prep details..."
                               />
                             </div>
 
-                            {/* Variants Section */}
-                            <div className="md:col-span-4 border-t border-slate-200/60 pt-3 mt-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <div>
+                            <div className="md:col-span-4 min-w-0">
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">Tags</label>
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateItem(activeReviewCatIdx!, itemIdx, {
+                                    isVegan: !item.isVegan,
+                                    isVeg: !item.isVegan ? true : item.isVeg,
+                                    isNonVeg: !item.isVegan ? false : item.isNonVeg,
+                                  })}
+                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${
+                                    item.isVegan
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                                  }`}
+                                >
+                                  <Leaf className="w-3.5 h-3.5" />
+                                  Vegan
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateItem(activeReviewCatIdx!, itemIdx, { isPopular: !item.isPopular })}
+                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${
+                                    item.isPopular
+                                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                      : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                                  }`}
+                                >
+                                  <Sparkles className="w-3.5 h-3.5" />
+                                  Popular / Bestseller
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="md:col-span-4 border-t border-slate-200/60 pt-3 mt-1 min-w-0">
+                              <div className="flex items-center justify-between mb-2 gap-2">
+                                <div className="min-w-0">
                                   <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide">Size / Portion Variants</label>
                                   <p className="text-[9px] text-slate-400">e.g. Half ₹120 · Full ₹200</p>
                                 </div>
@@ -660,7 +857,7 @@ export default function AIScannerPage() {
                                       variants: [...current, { label: '', price: 0 }]
                                     });
                                   }}
-                                  className="flex items-center gap-1 text-primary hover:text-primary/80 font-bold text-[10px] cursor-pointer bg-transparent border-none outline-none"
+                                  className="flex items-center gap-1 text-primary hover:text-primary/80 font-bold text-[10px] cursor-pointer bg-transparent border-none outline-none shrink-0"
                                 >
                                   <Plus className="w-3 h-3" />
                                   Add Size
@@ -670,7 +867,7 @@ export default function AIScannerPage() {
                               {item.variants && item.variants.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                                   {item.variants.map((variant, vi) => (
-                                    <div key={vi} className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1.5 pl-2.5">
+                                    <div key={vi} className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1.5 pl-2.5 min-w-0">
                                       <input
                                         type="text"
                                         value={variant.label}
@@ -705,7 +902,7 @@ export default function AIScannerPage() {
                                             variants: updated.length > 0 ? updated : null
                                           });
                                         }}
-                                        className="text-red-400 hover:text-red-655 p-0.5 rounded cursor-pointer shrink-0 transition-colors bg-transparent border-none"
+                                        className="text-red-400 hover:text-red-600 p-0.5 rounded cursor-pointer shrink-0 transition-colors bg-transparent border-none"
                                       >
                                         <X className="w-3.5 h-3.5" />
                                       </button>
@@ -713,19 +910,22 @@ export default function AIScannerPage() {
                                   ))}
                                 </div>
                               ) : (
-                                <p className="text-[10px] text-slate-400 italic">No size variants. Click "Add Size" to create multiple price tiers.</p>
+                                <p className="text-[10px] text-slate-400 italic">No size variants. Click &quot;Add Size&quot; to create multiple price tiers.</p>
                               )}
                             </div>
-                          </div>
+                            </div>
 
-                          <button
-                            onClick={() => handleDeleteItem(activeReviewCatIdx!, itemIdx)}
-                            className="self-end md:self-center p-2 text-red-655 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            <button
+                              onClick={() => handleDeleteItem(activeReviewCatIdx!, itemIdx)}
+                              className="absolute top-3 right-3 sm:static sm:self-start p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all cursor-pointer border-none bg-transparent"
+                              aria-label="Delete dish"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -735,6 +935,29 @@ export default function AIScannerPage() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative max-w-3xl w-full max-h-[85vh] flex flex-col items-center">
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute -top-12 right-0 text-white hover:text-slate-200 bg-white/10 hover:bg-white/20 p-2.5 rounded-full border-none cursor-pointer"
+              aria-label="Close preview"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img
+              src={previewImage}
+              alt="Dish preview"
+              className="max-w-full max-h-[75vh] object-contain rounded-xl bg-white"
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
         </div>
       )}
