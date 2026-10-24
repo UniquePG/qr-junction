@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/components/AuthContext";
+import { needsEmailVerification } from "@/lib/emailVerification";
 import { auth } from "@/lib/firebase";
 import {
   GoogleAuthProvider,
@@ -27,9 +28,8 @@ export default function RegisterPage() {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (!authLoading && user) {
-      router.push("/dashboard");
-    }
+    if (authLoading || !user) return;
+    router.push(needsEmailVerification(user) ? "/verify-email" : "/dashboard");
   }, [user, authLoading, router]);
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -65,8 +65,8 @@ export default function RegisterPage() {
         displayName: name,
       });
 
-      toast.success("Registration successful! Redirecting...");
-      router.push("/dashboard");
+      toast.success("Account created. Check your email for a verification code.");
+      router.push("/verify-email");
     } catch (error: any) {
       console.error("Registration error:", error);
       let message = "Failed to register. Please check your credentials.";

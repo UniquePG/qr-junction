@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
+import { needsEmailVerification } from '@/lib/emailVerification';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -57,8 +58,13 @@ export default function DashboardLayout({
 
   // Protected route guard
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return;
+    if (!user) {
       router.push('/login');
+      return;
+    }
+    if (needsEmailVerification(user)) {
+      router.push('/verify-email');
     }
   }, [user, loading, router]);
 
@@ -72,16 +78,12 @@ export default function DashboardLayout({
     }
   };
 
-  if (loading) {
+  if (loading || !user || needsEmailVerification(user)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />
       </div>
     );
-  }
-
-  if (!user) {
-    return null; // Will redirect in useEffect
   }
 
   const navLinks = [

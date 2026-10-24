@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/components/AuthContext";
+import { needsEmailVerification } from "@/lib/emailVerification";
 import { LayoutDashboard, LogIn, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -90,7 +91,7 @@ export default function Header() {
             <div className="w-24 h-9 bg-slate-100 border border-slate-200 rounded-xl animate-pulse" />
           ) : user ? (
             <Link
-              href="/dashboard"
+              href={needsEmailVerification(user) ? "/verify-email" : "/dashboard"}
               className="bg-[#001B50] hover:bg-[#00143c] text-white font-semibold text-xs py-2 px-4 rounded-xl shadow-sm hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-1.5 no-underline h-[40px] justify-center"
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
@@ -184,7 +185,7 @@ export default function Header() {
               <div className="w-full h-9 bg-slate-100 border border-slate-200 rounded-xl animate-pulse" />
             ) : user ? (
               <Link
-                href="/dashboard"
+                href={needsEmailVerification(user) ? "/verify-email" : "/dashboard"}
                 onClick={() => setMobileOpen(false)}
                 className="bg-[#001B50] hover:bg-[#00143c] text-white font-semibold text-sm py-3 px-4 rounded-xl shadow-sm text-center block no-underline"
               >

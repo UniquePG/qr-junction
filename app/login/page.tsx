@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/components/AuthContext";
+import { needsEmailVerification } from "@/lib/emailVerification";
 import { auth } from "@/lib/firebase";
 import {
   GoogleAuthProvider,
@@ -24,9 +25,8 @@ export default function LoginPage() {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (!authLoading && user) {
-      router.push("/dashboard");
-    }
+    if (authLoading || !user) return;
+    router.push(needsEmailVerification(user) ? "/verify-email" : "/dashboard");
   }, [user, authLoading, router]);
 
   const handleCredentialsLogin = async (e: React.FormEvent) => {
@@ -43,7 +43,6 @@ export default function LoginPage() {
       }
       await signInWithEmailAndPassword(auth, email, password);
       toast.success("Successfully logged in!");
-      router.push("/dashboard");
     } catch (error: any) {
       console.error("Credentials login error:", error);
       let message = "Failed to sign in. Please check your credentials.";
@@ -57,7 +56,6 @@ export default function LoginPage() {
         message = "Please enter a valid email address.";
       }
       toast.error(message);
-    } finally {
       setLoading(false);
     }
   };

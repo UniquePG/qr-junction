@@ -47,6 +47,10 @@ if (projectId && clientEmail && privateKey) {
       }
       throw new Error('Firebase Admin environment variables are missing.');
     },
+    updateUser: async (uid: string, data: Record<string, unknown>) => {
+      console.warn('Firebase Admin SDK credentials not configured. Skipping updateUser for', uid, data);
+      return { uid, ...data };
+    },
   };
 }
 

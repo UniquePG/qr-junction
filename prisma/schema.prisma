@@ -76,26 +76,42 @@ enum ProfileType {
 
 
 model User {
-  id           Int        @id @default(autoincrement())
-  firebaseUid  String     @unique @map("firebase_uid")
-  email        String     @unique
-  name         String?
-  avatarUrl    String?    @map("avatar_url")
-  role         UserRole   @default(USER)
-  passwordHash String?    @map("password_hash")
-  provider     String?
-  providerId   String?    @map("provider_id")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
+  id             Int        @id @default(autoincrement())
+  firebaseUid    String     @unique @map("firebase_uid")
+  email          String     @unique
+  name           String?
+  avatarUrl      String?    @map("avatar_url")
+  role           UserRole   @default(USER)
+  passwordHash   String?    @map("password_hash")
+  provider       String?
+  providerId     String?    @map("provider_id")
+  emailVerified  Boolean    @default(false) @map("email_verified")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
 
-  qrCodes      QRCode[]
-  campaigns    Campaign[]
-  leads        Lead[]
-  landingPages LandingPage[]
-  profile      Profile?
-  restaurant   Restaurant?
+  qrCodes        QRCode[]
+  campaigns      Campaign[]
+  leads          Lead[]
+  landingPages   LandingPage[]
+  profile        Profile?
+  restaurant     Restaurant?
+  emailOtp       EmailOtp?
 
   @@map("users")
+}
+
+model EmailOtp {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique @map("user_id")
+  codeHash   String   @map("code_hash")
+  expiresAt  DateTime @map("expires_at")
+  attempts   Int      @default(0)
+  lastSentAt DateTime @map("last_sent_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_otps")
 }
 
 model Profile {

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { adminAuth } from '@/lib/firebaseAdmin';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
+import { isOAuthProvider, publicUser } from '@/lib/otp';
+import { getEmailVerified, setEmailVerified } from '@/lib/otpDb';
 
 export async function POST(request: Request) {
   try {
@@ -29,6 +31,9 @@ export async function POST(request: Request) {
     let password = null;
     let provider = decodedToken.firebase?.sign_in_provider || 'password';
     let providerId = decodedToken.uid || null;
+    const oauthVerified =
+      isOAuthProvider(provider) ||
+      (provider !== 'password' && Boolean(decodedToken.email_verified));
 
     try {
       const contentType = request.headers.get('content-type');
@@ -68,7 +73,19 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({ success: true, user });
+    if (oauthVerified || decodedToken.email_verified) {
+      await setEmailVerified(user.id, true);
+    }
+
+    const emailVerified =
+      oauthVerified ||
+      Boolean(decodedToken.email_verified) ||
+      (await getEmailVerified(user.id));
+
+    return NextResponse.json({
+      success: true,
+      user: publicUser({ ...user, emailVerified }),
+    });
   } catch (error: any) {
     console.error('Error syncing user:', error);
     return NextResponse.json(
