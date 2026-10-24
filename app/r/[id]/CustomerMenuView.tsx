@@ -9,11 +9,21 @@ import {
   Compass,
   Star,
   Award,
-  Flame,
-  Leaf,
-  Clock,
-  Heart
+  Flame
 } from 'lucide-react';
+import { getThemeChrome } from '@/components/menu/themeChrome';
+import { getMenuTheme, isMenuTheme } from '@/components/menu/themeCatalog';
+import EditorialTheme from '@/components/menu/themes/EditorialTheme';
+import TicketTheme from '@/components/menu/themes/TicketTheme';
+import NeonTheme from '@/components/menu/themes/NeonTheme';
+import ThaliTheme from '@/components/menu/themes/ThaliTheme';
+import GardenTheme from '@/components/menu/themes/GardenTheme';
+import PolaroidTheme from '@/components/menu/themes/PolaroidTheme';
+import BoardTheme from '@/components/menu/themes/BoardTheme';
+import LanternTheme from '@/components/menu/themes/LanternTheme';
+import StampTheme from '@/components/menu/themes/StampTheme';
+import BentoTheme from '@/components/menu/themes/BentoTheme';
+import PlaybillTheme from '@/components/menu/themes/PlaybillTheme';
 
 interface MenuItem {
   id: number;
@@ -58,9 +68,10 @@ interface CustomerMenuViewProps {
   restaurant: Restaurant;
   menu: Menu;
   tableNumber: string | null;
+  layoutPreview?: string | null;
 }
 
-export default function CustomerMenuView({ restaurant, menu, tableNumber }: CustomerMenuViewProps) {
+export default function CustomerMenuView({ restaurant, menu, tableNumber, layoutPreview }: CustomerMenuViewProps) {
   const [search, setSearch] = useState('');
   const [dietFilter, setDietFilter] = useState<'ALL' | 'VEG' | 'NON_VEG'>('ALL');
   const [popularFilter, setPopularFilter] = useState(false);
@@ -113,118 +124,10 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
 
   const taxRate = parseFloat(restaurant.taxRate?.toString() || '0');
   const theme = menu.theme || 'modern';
-
+  const chrome = getThemeChrome(theme);
   const isGourmet = theme === 'gourmet';
-  const isStreet = theme === 'street';
   const isCafe = theme === 'cafe';
-  const isPremium = theme === 'premium';
-  const isMinimal = theme === 'minimal';
-  const isModern = theme === 'modern';
-
-  // Dynamic Page Styling
-  let pageBgClass = 'bg-slate-50 text-slate-800';
-  if (isGourmet) pageBgClass = 'bg-[#0c0d10] text-[#eaeaea]';
-  else if (isStreet) pageBgClass = 'bg-[#fffdf9] text-slate-800';
-  else if (isPremium) pageBgClass = 'bg-[#FCFAF2] text-slate-850';
-  else if (isCafe) pageBgClass = 'bg-[#faf6f0] text-slate-850';
-
-  let infoCardClass = 'bg-white border-slate-200/80 shadow-md';
-  if (isGourmet) infoCardClass = 'bg-[#13151b] border-amber-900/10 text-white shadow-[0_4px_30px_rgba(0,0,0,0.5)]';
-  else if (isStreet) infoCardClass = 'bg-white border-orange-100 text-slate-900 shadow-md';
-  else if (isPremium) infoCardClass = 'bg-[#FCFAF2] border-amber-200 p-5 shadow-xs';
-  else if (isCafe) infoCardClass = 'bg-white border-2 border-slate-900 shadow-[4px_4px_0px_#1e293b]';
-
-  let restaurantTitleClass = 'text-slate-905';
-  if (isGourmet) restaurantTitleClass = 'text-amber-500 font-serif font-black';
-  else if (isStreet) restaurantTitleClass = 'text-orange-600 font-black';
-  else if (isPremium) restaurantTitleClass = 'text-amber-950 font-serif font-black';
-
-  let stickyHeaderClass = 'bg-slate-50/90 border-slate-200/80';
-  if (isGourmet) stickyHeaderClass = 'bg-[#0c0d10]/95 border-slate-900/80';
-  else if (isStreet) stickyHeaderClass = 'bg-[#fffdf9]/95 border-orange-100/50';
-  else if (isPremium) stickyHeaderClass = 'bg-[#FCFAF2]/95 border-amber-200/30';
-  else if (isCafe) stickyHeaderClass = 'bg-[#faf6f0]/95 border-slate-900/10';
-
-  let inputClass = 'bg-white border-slate-200 focus:ring-primary/10 focus:border-primary text-slate-800';
-  if (isGourmet) inputClass = 'bg-[#13151b] border-slate-800 focus:ring-amber-500/20 focus:border-amber-500 text-white placeholder-slate-600';
-  else if (isStreet) inputClass = 'bg-white border-orange-100 focus:ring-orange-500/20 focus:border-orange-500 text-slate-800';
-  else if (isPremium) inputClass = 'bg-[#fcfbf7] border-amber-200 focus:ring-amber-500/20 focus:border-amber-700 text-slate-800';
-  else if (isCafe) inputClass = 'bg-white border-2 border-slate-900 focus:ring-2 focus:ring-slate-900 text-slate-900';
-
-  let catPillClass = (active: boolean): string => active
-    ? 'bg-[#001B50] text-white border-[#001B50]' 
-    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100';
-  if (isGourmet) {
-    catPillClass = (active: boolean): string => active
-      ? 'bg-amber-500 text-slate-950 border-amber-500 font-bold' 
-      : 'bg-[#13151b] border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white';
-  } else if (isStreet) {
-    catPillClass = (active: boolean): string => active
-      ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white border-transparent' 
-      : 'bg-white border-orange-100 text-orange-950 hover:bg-orange-50';
-  } else if (isPremium) {
-    catPillClass = (active: boolean): string => active
-      ? 'bg-amber-850 text-white border-amber-850' 
-      : 'bg-[#FCFAF4] border-amber-250 text-amber-900 hover:bg-amber-50/50';
-  } else if (isCafe) {
-    catPillClass = (active: boolean): string => active
-      ? 'bg-slate-950 text-white border-slate-950 shadow-[2px_2px_0px_rgba(0,0,0,1)]' 
-      : 'bg-white border-2 border-slate-900 text-slate-950 hover:bg-slate-50';
-  }
-
-  let dietPillClass = (type: 'ALL' | 'VEG' | 'NON_VEG', active: boolean): string => {
-    if (active) {
-      if (type === 'VEG') return 'bg-emerald-600 text-white border-transparent';
-      if (type === 'NON_VEG') return 'bg-red-600 text-white border-transparent';
-      return 'bg-[#001B50] text-white border-transparent';
-    }
-    if (type === 'VEG') return 'bg-white border-slate-200 text-emerald-655 hover:bg-emerald-50';
-    if (type === 'NON_VEG') return 'bg-white border-slate-200 text-red-655 hover:bg-red-50';
-    return 'bg-white border border-slate-200 text-slate-650 hover:bg-slate-100';
-  };
-  if (isGourmet) {
-    dietPillClass = (type: 'ALL' | 'VEG' | 'NON_VEG', active: boolean): string => {
-      if (active) {
-        if (type === 'VEG') return 'bg-emerald-500 text-slate-950 border-transparent font-bold';
-        if (type === 'NON_VEG') return 'bg-red-500 text-slate-950 border-transparent font-bold';
-        return 'bg-amber-500 text-slate-950 border-transparent font-bold';
-      }
-      return 'bg-[#13151b] border-slate-800 text-slate-400 hover:bg-slate-800';
-    };
-  } else if (isStreet) {
-    dietPillClass = (type: 'ALL' | 'VEG' | 'NON_VEG', active: boolean): string => {
-      if (active) {
-        if (type === 'VEG') return 'bg-emerald-500 text-white border-transparent font-bold';
-        if (type === 'NON_VEG') return 'bg-red-550 text-white border-transparent font-bold';
-        return 'bg-gradient-to-r from-orange-500 to-red-500 text-white border-transparent font-bold';
-      }
-      return 'bg-white border border-orange-100 text-orange-950 hover:bg-orange-50';
-    };
-  } else if (isCafe) {
-    dietPillClass = (type: 'ALL' | 'VEG' | 'NON_VEG', active: boolean): string => {
-      if (active) {
-        return 'bg-slate-950 text-white border-2 border-slate-900';
-      }
-      return 'bg-white border-2 border-slate-900 text-slate-950 hover:bg-slate-50';
-    };
-  }
-
-  let bestSellerClass: string = popularFilter 
-    ? 'bg-amber-500 text-slate-950 border-transparent font-bold' 
-    : 'bg-white border border-slate-200 text-amber-600 hover:bg-amber-50';
-  if (isGourmet) {
-    bestSellerClass = popularFilter 
-      ? 'bg-amber-500 text-slate-950 border-transparent font-bold shadow-[0_0_15px_rgba(245,158,11,0.25)]' 
-      : 'bg-[#13151b] border border-slate-800 text-amber-500 hover:bg-slate-800';
-  } else if (isStreet) {
-    bestSellerClass = popularFilter 
-      ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white border-transparent font-bold' 
-      : 'bg-white border border-orange-100 text-amber-600 hover:bg-amber-50';
-  } else if (isCafe) {
-    bestSellerClass = popularFilter 
-      ? 'bg-amber-400 text-slate-950 border-2 border-slate-900 shadow-[2px_2px_0px_rgba(0,0,0,1)] font-bold' 
-      : 'bg-white border-2 border-slate-900 text-amber-600 hover:bg-amber-50';
-  }
+  const hideCover = theme === 'ticket' || theme === 'neon' || theme === 'board' || theme === 'lantern' || theme === 'playbill';
 
   // 1. MODERN CARD LAYOUT
   const renderModern = () => (
@@ -237,16 +140,16 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
             <div className="flex-1 h-[1px] bg-slate-200/60" />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {cat.items.map((item) => (
               <div 
                 key={item.id} 
-                className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex h-36 cursor-pointer group"
+                className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex min-h-32 sm:h-36 cursor-pointer group"
                 onClick={() => setSelectedItem(item)}
               >
-                <div className="flex-1 p-5 flex flex-col justify-between min-w-0">
+                <div className="flex-1 p-3.5 sm:p-5 flex flex-col justify-between min-w-0">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       {item.isVeg && (
                         <span className="w-4 h-4 rounded border border-emerald-500 flex items-center justify-center shrink-0">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -257,9 +160,9 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
                           <span className="w-1.5 h-1.5 bg-red-500 rotate-45 transform" />
                         </span>
                       )}
-                      <h4 className="font-extrabold text-slate-900 truncate text-sm sm:text-base group-hover:text-primary transition-colors">{item.name}</h4>
+                      <h4 className="font-extrabold text-slate-900 wrap-anywhere text-sm sm:text-base group-hover:text-primary transition-colors">{item.name}</h4>
                     </div>
-                    {item.description && <p className="text-slate-505 text-xs line-clamp-2 leading-relaxed font-sans">{item.description}</p>}
+                    {item.description && <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed font-sans">{item.description}</p>}
                   </div>
 
                   <div className="flex items-center justify-between mt-2">
@@ -323,8 +226,8 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
                 className="pt-5 first:pt-0 flex flex-col gap-2 cursor-pointer group"
                 onClick={() => setSelectedItem(item)}
               >
-                <div className="flex items-baseline justify-between gap-3">
-                  <h4 className="font-serif font-black text-slate-900 text-lg group-hover:text-primary transition-colors flex items-center gap-2">
+                <div className="flex items-baseline justify-between gap-3 min-w-0">
+                  <h4 className="font-serif font-black text-slate-900 text-base sm:text-lg group-hover:text-primary transition-colors flex items-center gap-2 min-w-0 wrap-anywhere">
                     {item.isVeg && (
                       <span className="w-4 h-4 rounded border border-emerald-500 flex items-center justify-center shrink-0 bg-white">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -404,7 +307,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
                 <div className="flex-1 flex flex-col justify-between min-w-0">
                   <div>
                     <div className="flex items-start justify-between gap-2">
-                      <h4 className="font-serif font-black text-amber-950 text-base truncate flex items-center gap-2">
+                      <h4 className="font-serif font-black text-amber-950 text-base wrap-anywhere flex items-center gap-2 min-w-0">
                         {item.isVeg && (
                           <span className="w-4 h-4 rounded border border-emerald-500 flex items-center justify-center shrink-0 bg-white">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -463,12 +366,17 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
             {cat.items.map((item) => (
               <div 
                 key={item.id} 
-                className="bg-white border-2 border-slate-900 p-5 rounded-3xl shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all cursor-pointer flex flex-col justify-between gap-4"
+                className="bg-white border-2 border-slate-900 p-4 sm:p-5 rounded-3xl shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all cursor-pointer flex flex-col justify-between gap-4 min-w-0"
                 onClick={() => setSelectedItem(item)}
               >
-                <div className="flex justify-between items-start gap-4">
+                {item.image && (
+                  <div className="h-36 w-full rounded-2xl overflow-hidden border-2 border-slate-900 bg-slate-100">
+                    <img src={item.image} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="flex justify-between items-start gap-4 min-w-0">
                   <div className="space-y-1.5 flex-1 min-w-0">
-                    <h4 className="font-black text-slate-900 text-base flex items-center gap-2">
+                    <h4 className="font-black text-slate-900 text-base flex items-center gap-2 wrap-anywhere min-w-0">
                       {item.isVeg && (
                         <span className="w-4 h-4 rounded border border-emerald-500 flex items-center justify-center shrink-0 bg-white">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -481,7 +389,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
                       )}
                       {item.name}
                     </h4>
-                    {item.description && <p className="text-slate-650 text-xs line-clamp-2 leading-relaxed">{item.description}</p>}
+                    {item.description && <p className="text-slate-600 text-xs line-clamp-2 leading-relaxed">{item.description}</p>}
                   </div>
                   {!item.variants || item.variants.length === 0 ? (
                     <span className="bg-amber-400 text-slate-900 font-black px-3 py-1 rounded-xl text-sm border-2 border-slate-900 shrink-0 shadow-[2px_2px_0px_#1e293b]">
@@ -544,7 +452,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
                 <div className="flex-1 flex flex-col justify-between min-w-0">
                   <div>
                     <div className="flex items-start justify-between gap-2">
-                      <h4 className="font-serif font-black text-amber-100 text-base truncate flex items-center gap-2">
+                      <h4 className="font-serif font-black text-amber-100 text-base wrap-anywhere flex items-center gap-2 min-w-0">
                         {item.isVeg && (
                           <span className="w-4 h-4 rounded border border-emerald-500 flex items-center justify-center shrink-0">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -616,7 +524,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
               >
                 {/* Image Banner */}
                 {item.image ? (
-                  <div className="h-44 w-full rounded-2xl overflow-hidden relative bg-slate-50 shrink-0">
+                  <div className="h-36 sm:h-44 w-full rounded-2xl overflow-hidden relative bg-slate-50 shrink-0">
                     <img 
                       src={item.image} 
                       alt={item.name} 
@@ -629,7 +537,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
                     )}
                   </div>
                 ) : (
-                  <div className="h-44 w-full rounded-2xl bg-gradient-to-br from-orange-400/10 to-red-500/10 flex items-center justify-center shrink-0 mb-1">
+                  <div className="h-36 sm:h-44 w-full rounded-2xl bg-gradient-to-br from-orange-400/10 to-red-500/10 flex items-center justify-center shrink-0 mb-1">
                     <Utensils className="w-8 h-8 text-orange-400" />
                   </div>
                 )}
@@ -637,7 +545,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
                 <div className="flex-1 flex flex-col justify-between space-y-2">
                   <div className="space-y-1">
                     <div className="flex items-center justify-between gap-2">
-                      <h4 className="font-black text-slate-900 text-base truncate flex items-center gap-2">
+                      <h4 className="font-black text-slate-900 text-base wrap-anywhere flex items-center gap-2 min-w-0">
                         {item.isVeg && (
                           <span className="w-4 h-4 rounded border border-emerald-500 flex items-center justify-center shrink-0 bg-white">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -686,9 +594,14 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
   );
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 relative font-sans ${pageBgClass}`}>
+    <div className={`min-h-screen overflow-x-clip transition-colors duration-300 relative font-sans ${chrome.page}`}>
+      {layoutPreview && (
+        <div className="sticky top-0 z-40 px-3 py-2 text-center text-[11px] font-bold leading-snug bg-[#001B50] text-white wrap-anywhere">
+          Previewing {getMenuTheme(layoutPreview).name} — not applied to guests yet
+        </div>
+      )}
       {/* Cover Banner */}
-      <div className="h-44 sm:h-56 w-full bg-slate-200 relative">
+      <div className={`${hideCover ? 'h-16 sm:h-20' : 'h-44 sm:h-56'} w-full bg-slate-200 relative`}>
         {restaurant.coverImage ? (
           <img src={restaurant.coverImage} alt="Cover" className="w-full h-full object-cover" />
         ) : (
@@ -698,11 +611,11 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
       </div>
 
       {/* Brand Profile Info Card overlay */}
-      <div className="max-w-4xl mx-auto px-4 -mt-20 relative z-10">
-        <div className={`rounded-3xl border p-5 sm:p-6 transition-all duration-300 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4 ${infoCardClass}`}>
+      <div className={`max-w-4xl mx-auto px-4 relative z-10 ${hideCover ? 'mt-4' : '-mt-20'}`}>
+        <div className={`rounded-3xl border p-5 sm:p-6 transition-all duration-300 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4 ${chrome.card}`}>
           <div className="flex flex-col sm:flex-row items-center gap-4">
             {/* Logo overlay */}
-            <div className="w-24 h-24 rounded-2xl bg-white border border-slate-200 shadow-md overflow-hidden shrink-0 -mt-16 sm:-mt-12">
+            <div className={`w-24 h-24 rounded-2xl bg-white border border-slate-200 shadow-md overflow-hidden shrink-0 ${hideCover ? '' : '-mt-16 sm:-mt-12'}`}>
               {restaurant.logoUrl ? (
                 <img src={restaurant.logoUrl} alt="Logo" className="w-full h-full object-cover" />
               ) : (
@@ -713,19 +626,13 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
             </div>
 
             <div className="space-y-1 text-center sm:text-left">
-              <h1 className={`text-2xl tracking-tight leading-tight ${restaurantTitleClass}`}>{restaurant.name}</h1>
+              <h1 className={`text-2xl tracking-tight leading-tight wrap-anywhere ${chrome.title}`}>{restaurant.name}</h1>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1">
-                <span className={`px-2 py-0.5 rounded text-[10px] font-black border uppercase tracking-wider ${
-                  isGourmet 
-                    ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
-                    : isStreet 
-                      ? 'bg-orange-500/10 text-orange-655 border-orange-500/20' 
-                      : 'bg-primary/5 text-primary border border-primary/10'
-                }`}>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-black border uppercase tracking-wider ${chrome.menuChip}`}>
                   {menu.name}
                 </span>
                 {menu.description && (
-                  <span className={`text-xs truncate max-w-[200px] ${isGourmet ? 'text-slate-400' : 'text-slate-500'}`} title={menu.description}>
+                  <span className={`text-xs truncate max-w-[200px] ${chrome.modalMuted}`} title={menu.description}>
                     • {menu.description}
                   </span>
                 )}
@@ -744,7 +651,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
       </div>
 
       {/* Sticky Filters & Search */}
-      <div className={`sticky top-0 backdrop-blur-md border-b z-20 py-3 mt-6 transition-all duration-300 ${stickyHeaderClass}`}>
+      <div className={`sticky top-0 backdrop-blur-md border-b z-20 py-3 mt-6 transition-all duration-300 ${chrome.sticky}`}>
         <div className="max-w-4xl mx-auto px-4 space-y-3.5">
           {/* Search bar */}
           <div className="relative">
@@ -754,7 +661,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
               placeholder="Search dishes, drinks, appetizers..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className={`w-full rounded-2xl py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 transition-all font-sans ${inputClass}`}
+              className={`w-full min-w-0 rounded-2xl py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 transition-all font-sans ${chrome.input}`}
             />
           </div>
 
@@ -764,7 +671,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
               <button
                 onClick={() => setDietFilter('ALL')}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer select-none border border-transparent ${
-                  dietPillClass('ALL', dietFilter === 'ALL')
+                  chrome.dietPill('ALL', dietFilter === 'ALL')
                 }`}
               >
                 All
@@ -772,12 +679,12 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
               <button
                 onClick={() => setDietFilter('VEG')}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer select-none flex items-center gap-1.5 border border-transparent ${
-                  dietPillClass('VEG', dietFilter === 'VEG')
+                  chrome.dietPill('VEG', dietFilter === 'VEG')
                 }`}
               >
                 <span className={`w-2 h-2 rounded-full shrink-0 transition-colors ${
                   dietFilter === 'VEG'
-                    ? (isGourmet ? 'bg-slate-950' : isCafe ? 'bg-emerald-500' : 'bg-white')
+                    ? (isGourmet || isCafe ? 'bg-emerald-300' : 'bg-white')
                     : 'bg-emerald-500'
                 }`} />
                 Veg
@@ -785,12 +692,12 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
               <button
                 onClick={() => setDietFilter('NON_VEG')}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer select-none flex items-center gap-1.5 border border-transparent ${
-                  dietPillClass('NON_VEG', dietFilter === 'NON_VEG')
+                  chrome.dietPill('NON_VEG', dietFilter === 'NON_VEG')
                 }`}
               >
                 <span className={`w-2 h-2 rounded-full shrink-0 transition-colors ${
                   dietFilter === 'NON_VEG'
-                    ? (isGourmet ? 'bg-slate-950' : isCafe ? 'bg-red-500' : 'bg-white')
+                    ? (isGourmet || isCafe ? 'bg-red-300' : 'bg-white')
                     : 'bg-red-500'
                 }`} />
                 Non-Veg
@@ -800,7 +707,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
             <button
               onClick={() => setPopularFilter(!popularFilter)}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer select-none flex items-center gap-1 border border-transparent shrink-0 ${
-                bestSellerClass
+                chrome.popularPill(popularFilter)
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -816,7 +723,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
                   key={cat.id}
                   onClick={() => handleCategoryClick(cat.id)}
                   className={`px-4 py-1.5 text-xs font-bold rounded-full whitespace-nowrap cursor-pointer select-none active:scale-95 transition-all border ${
-                    catPillClass(false)
+                    chrome.catPill(false)
                   }`}
                 >
                   {cat.name}
@@ -830,9 +737,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
       {/* Categories & Items Content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
         {filteredCategories.length === 0 ? (
-          <div className={`text-center py-20 border rounded-3xl p-8 ${
-            isGourmet ? 'bg-[#13151b] border-slate-900 text-slate-300' : 'bg-white border-slate-200 text-slate-800'
-          }`}>
+          <div className={`text-center py-20 border rounded-3xl p-8 ${chrome.empty}`}>
             <Utensils className="w-12 h-12 text-slate-300 mx-auto mb-4 animate-pulse" />
             <h3 className="font-bold text-lg mb-1">No Items Found</h3>
             <p className="text-slate-500 text-sm max-w-sm mx-auto">Try modifying your search queries or diet toggles to view available dishes.</p>
@@ -842,27 +747,56 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
             {theme === 'minimal' && renderMinimal()}
             {theme === 'premium' && renderPremium()}
             {theme === 'cafe' && renderCafe()}
-            {theme === 'modern' && renderModern()}
+            {(theme === 'modern' || !isMenuTheme(theme)) && renderModern()}
             {theme === 'gourmet' && renderGourmet()}
             {theme === 'street' && renderStreet()}
+            {theme === 'editorial' && (
+              <EditorialTheme categories={filteredCategories} currencySymbol={currencySymbol} onSelectItem={setSelectedItem} />
+            )}
+            {theme === 'ticket' && (
+              <TicketTheme categories={filteredCategories} currencySymbol={currencySymbol} onSelectItem={setSelectedItem} />
+            )}
+            {theme === 'neon' && (
+              <NeonTheme categories={filteredCategories} currencySymbol={currencySymbol} onSelectItem={setSelectedItem} />
+            )}
+            {theme === 'thali' && (
+              <ThaliTheme categories={filteredCategories} currencySymbol={currencySymbol} onSelectItem={setSelectedItem} />
+            )}
+            {theme === 'garden' && (
+              <GardenTheme categories={filteredCategories} currencySymbol={currencySymbol} onSelectItem={setSelectedItem} />
+            )}
+            {theme === 'polaroid' && (
+              <PolaroidTheme categories={filteredCategories} currencySymbol={currencySymbol} onSelectItem={setSelectedItem} />
+            )}
+            {theme === 'board' && (
+              <BoardTheme categories={filteredCategories} currencySymbol={currencySymbol} onSelectItem={setSelectedItem} />
+            )}
+            {theme === 'lantern' && (
+              <LanternTheme categories={filteredCategories} currencySymbol={currencySymbol} onSelectItem={setSelectedItem} />
+            )}
+            {theme === 'stamp' && (
+              <StampTheme categories={filteredCategories} currencySymbol={currencySymbol} onSelectItem={setSelectedItem} />
+            )}
+            {theme === 'bento' && (
+              <BentoTheme categories={filteredCategories} currencySymbol={currencySymbol} onSelectItem={setSelectedItem} />
+            )}
+            {theme === 'playbill' && (
+              <PlaybillTheme categories={filteredCategories} currencySymbol={currencySymbol} onSelectItem={setSelectedItem} />
+            )}
           </div>
         )}
       </main>
 
       {/* Tax & Footer Details */}
-      <footer className={`border-t py-12 mt-16 text-center text-xs space-y-2 transition-all duration-300 ${
-        isGourmet 
-          ? 'border-slate-900 bg-[#0c0d10] text-slate-500' 
-          : 'border-slate-200 bg-white text-slate-400'
-      }`}>
-        <p className={`font-black uppercase tracking-widest text-[10px] ${isGourmet ? 'text-amber-500' : 'text-slate-655'}`}>
+      <footer className={`border-t py-12 mt-16 text-center text-xs space-y-2 transition-all duration-300 ${chrome.footer}`}>
+        <p className="font-black uppercase tracking-widest text-[10px]">
           {restaurant.name}
         </p>
-        <p className={isGourmet ? 'text-slate-400' : 'text-slate-500'}>Currently viewing: {menu.name}</p>
+        <p>Currently viewing: {menu.name}</p>
         {taxRate > 0 && (
-          <p className={isGourmet ? 'text-slate-400' : 'text-slate-505'}>Subject to local taxes: {restaurant.taxName} of {taxRate}% included or added at checkout.</p>
+          <p>Subject to local taxes: {restaurant.taxName} of {taxRate}% included or added at checkout.</p>
         )}
-        {tableNumber && <p className={`font-bold ${isGourmet ? 'text-slate-300' : 'text-slate-650'}`}>Dining Location: Table {tableNumber}</p>}
+        {tableNumber && <p className="font-bold">Dining Location: Table {tableNumber}</p>}
         <p className="pt-4 text-slate-350">Powered by QR Junction Menu Suite</p>
       </footer>
 
@@ -870,17 +804,13 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
       {selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setSelectedItem(null)}>
           <div 
-            className={`rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-scale-up relative max-h-[90vh] flex flex-col transition-all duration-300 ${
-              isGourmet ? 'bg-[#13151b] text-white border border-slate-800' : 'bg-white text-slate-800'
-            }`}
+            className={`rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-scale-up relative max-h-[90vh] flex flex-col transition-all duration-300 ${chrome.modal}`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
             <button
               onClick={() => setSelectedItem(null)}
-              className={`absolute top-4 right-4 z-10 text-white rounded-full p-2 transition-all cursor-pointer border-none shadow-sm ${
-                isGourmet ? 'bg-black/60 hover:bg-black/80' : 'bg-black/40 hover:bg-black/60'
-              }`}
+              className="absolute top-4 right-4 z-10 text-white rounded-full p-2 transition-all cursor-pointer border-none shadow-sm bg-black/50 hover:bg-black/70"
             >
               <X className="w-4 h-4" />
             </button>
@@ -891,9 +821,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
                 <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-full object-cover" />
               </div>
             ) : (
-              <div className={`h-28 w-full flex items-center justify-center shrink-0 border-b ${
-                isGourmet ? 'bg-[#0c0d10] text-slate-600 border-slate-900' : 'bg-slate-50 text-slate-350 border-slate-100'
-              }`}>
+              <div className={`h-28 w-full flex items-center justify-center shrink-0 border-b ${chrome.empty}`}>
                 <Utensils className="w-10 h-10" />
               </div>
             )}
@@ -912,27 +840,21 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
                       <span className="w-2.5 h-2.5 bg-red-500 rotate-45 transform" />
                     </span>
                   )}
-                  <h3 className={`text-xl font-bold tracking-tight ${isGourmet ? 'text-amber-100 font-serif' : 'text-slate-900'}`}>{selectedItem.name}</h3>
+                  <h3 className={`text-xl font-bold tracking-tight wrap-anywhere ${chrome.title}`}>{selectedItem.name}</h3>
                 </div>
                 
                 <div className="flex items-center gap-2">
                   {selectedItem.variants && selectedItem.variants.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {selectedItem.variants.map((v: any, vi: number) => (
-                        <div key={vi} className={`flex flex-col items-center border rounded-xl px-3 py-2 min-w-[75px] ${
-                          isGourmet 
-                            ? 'bg-[#191b24] border-slate-800 text-amber-500' 
-                            : isStreet 
-                              ? 'bg-orange-50/50 border-orange-100 text-orange-950'
-                              : 'bg-slate-50 border border-slate-200 text-slate-800'
-                        }`}>
-                          <span className={`text-[9px] font-semibold uppercase tracking-wider ${isGourmet ? 'text-slate-500' : 'text-slate-400'}`}>{v.label}</span>
+                        <div key={vi} className={`flex flex-col items-center border rounded-xl px-3 py-2 min-w-[75px] ${chrome.empty}`}>
+                          <span className={`text-[9px] font-semibold uppercase tracking-wider ${chrome.modalMuted}`}>{v.label}</span>
                           <span className="text-base font-black">{currencySymbol}{Number(v.price).toFixed(0)}</span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <span className={`text-lg font-black ${isGourmet ? 'text-amber-500' : 'text-slate-850'}`}>
+                    <span className="text-lg font-black">
                       {currencySymbol}{parseFloat(selectedItem.price.toString()).toFixed(2)}
                     </span>
                   )}
@@ -945,9 +867,9 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber }: Cust
               </div>
 
               {selectedItem.description && (
-                <div className={`space-y-1.5 border-t pt-4 ${isGourmet ? 'border-slate-800' : 'border-slate-100'}`}>
-                  <h5 className={`text-xs font-bold uppercase tracking-wider ${isGourmet ? 'text-slate-500' : 'text-slate-405'}`}>Dish Description</h5>
-                  <p className={`text-sm leading-relaxed font-sans ${isGourmet ? 'text-slate-300' : 'text-slate-655'}`}>{selectedItem.description}</p>
+                <div className="space-y-1.5 border-t border-current/10 pt-4">
+                  <h5 className={`text-xs font-bold uppercase tracking-wider ${chrome.modalMuted}`}>Dish Description</h5>
+                  <p className="text-sm leading-relaxed font-sans">{selectedItem.description}</p>
                 </div>
               )}
             </div>

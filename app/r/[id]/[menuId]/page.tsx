@@ -3,10 +3,11 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import CustomerMenuView from '../CustomerMenuView';
 import { Metadata } from 'next';
+import { isMenuTheme } from '@/components/menu/themeCatalog';
 
 interface PageProps {
   params: Promise<{ id: string; menuId: string }>;
-  searchParams: Promise<{ table?: string }>;
+  searchParams: Promise<{ table?: string; previewTheme?: string }>;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string; menuId: string }> }): Promise<Metadata> {
@@ -37,7 +38,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function SpecificMenuPage({ params, searchParams }: PageProps) {
   const { id, menuId } = await params;
-  const { table } = await searchParams;
+  const { table, previewTheme } = await searchParams;
+  const layoutPreview = isMenuTheme(previewTheme) ? previewTheme : null;
 
   const restaurantId = parseInt(id, 10);
   const targetMenuId = parseInt(menuId, 10);
@@ -82,8 +84,9 @@ export default async function SpecificMenuPage({ params, searchParams }: PagePro
   return (
     <CustomerMenuView 
       restaurant={serializedRestaurant} 
-      menu={serializedMenu}
-      tableNumber={table || null} 
+      menu={layoutPreview ? { ...serializedMenu, theme: layoutPreview } : serializedMenu}
+      tableNumber={table || null}
+      layoutPreview={layoutPreview}
     />
   );
 }
