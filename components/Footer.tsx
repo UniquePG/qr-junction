@@ -88,18 +88,27 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Free Generators */}
+          {/* Free Generators — ordered by common Google searches */}
           <div className="lg:col-span-1">
             <h4 className="text-[#001B50] text-sm font-bold uppercase tracking-wider mb-5">Free Generators</h4>
             <ul className="list-none p-0 space-y-3 text-sm">
               <li>
-                <Link href="/url-qr-code-generator" className="text-slate-600 hover:text-primary transition-colors no-underline">URL Link QR Code</Link>
+                <Link href="/url-qr-code-generator" className="text-slate-600 hover:text-primary transition-colors no-underline">URL / Website QR Code</Link>
               </li>
               <li>
-                <Link href="/vcard-qr-code-generator" className="text-slate-600 hover:text-primary transition-colors no-underline">vCard QR Code</Link>
+                <Link href="/wifi-qr-code-generator" className="text-slate-600 hover:text-primary transition-colors no-underline">Wi-Fi QR Code</Link>
+              </li>
+              <li>
+                <Link href="/vcard-qr-code-generator" className="text-slate-600 hover:text-primary transition-colors no-underline">vCard / Business Card QR</Link>
+              </li>
+              <li>
+                <Link href="/google-review-qr-code-generator" className="text-slate-600 hover:text-primary transition-colors no-underline">Google Review QR Code</Link>
               </li>
               <li>
                 <Link href="/pdf-qr-code-generator" className="text-slate-600 hover:text-primary transition-colors no-underline">PDF QR Code</Link>
+              </li>
+              <li>
+                <Link href="/menu-qr-code-generator" className="text-slate-600 hover:text-primary transition-colors no-underline">Restaurant Menu QR Code</Link>
               </li>
               <li>
                 <Link href="/image-qr-code-generator" className="text-slate-600 hover:text-primary transition-colors no-underline">Image QR Code</Link>
@@ -108,10 +117,10 @@ export default function Footer() {
                 <Link href="/video-qr-code-generator" className="text-slate-600 hover:text-primary transition-colors no-underline">Video QR Code</Link>
               </li>
               <li>
-                <Link href="/wifi-qr-code-generator" className="text-slate-600 hover:text-primary transition-colors no-underline">Wi-Fi QR Code</Link>
+                <Link href="/app-store-qr-code-generator" className="text-slate-600 hover:text-primary transition-colors no-underline">App Store QR Code</Link>
               </li>
               <li>
-                <Link href="/app-store-qr-code-generator" className="text-slate-600 hover:text-primary transition-colors no-underline">App Store QR Code</Link>
+                <Link href="/email-qr-code-generator" className="text-slate-600 hover:text-primary transition-colors no-underline">Email QR Code</Link>
               </li>
             </ul>
           </div>

@@ -1,6 +1,4 @@
-import { TabType } from './qrEngine';
 import {
-  Link as LinkIcon,
   Type as TypeIcon,
   Instagram,
   Facebook,
@@ -9,78 +7,30 @@ import {
   Send,
   Ghost,
   X as XIcon,
-  Contact as ContactIcon,
   Phone,
   MessageSquareText,
   Mail,
-  Wifi,
-  Smartphone,
   Layout,
-  FileText,
   Utensils,
   Youtube
 } from 'lucide-react';
+import { FREE_GENERATOR_PAGES } from './qrLanding/freeGenerators';
+import { TOPIC_ARTICLES } from './qrLanding/topicArticles';
+import type { QRLandingContent } from './qrLanding/types';
 
-export interface QRLandingContent {
-  type: string;
-  tabType: TabType;
-  title: string;
-  description: string;
-  heroHeading: string;
-  heroSubheading: string;
-  fact: string;
-  icon: any;
-  useCases: { title: string; desc: string }[];
-  benefits: { title: string; desc: string }[];
-  faq: { q: string; a: string }[];
-  howToSteps?: { title: string; desc: string }[];
-  comparison?: { 
-    title: string; 
-    theirProduct: string; 
-    ourProduct: string; 
-    points: { feature: string; them: string; us: string }[] 
-  };
-  printGuide?: {
-    title: string;
-    description: string;
-    tips: { title: string; desc: string }[];
-  };
-  ctaExamples?: { title: string; desc: string }[];
-  imagePrompts?: { section: string; prompt: string }[];
-  internalLinks?: { anchor: string; path: string }[];
+export type { QRLandingContent } from './qrLanding/types';
+
+export function landingDisplayName(content: QRLandingContent): string {
+  if (content.displayName) return content.displayName;
+  return content.type.replace(/-/g, ' ');
 }
 
-export const qrLandingContent: Record<string, QRLandingContent> = {
-  url: {
-    type: 'url',
-    tabType: 'url',
-    title: 'Free URL QR Code Generator | Convert Links to QR Codes',
-    description: 'Instantly convert any website URL into a scannable, high-quality QR code. Perfect for driving offline traffic to your online destinations, sharing digital portfolios, and tracking campaign engagement seamlessly without relying on manual link typing.',
-    heroHeading: 'Convert Any URL to a High-Quality QR Code',
-    heroSubheading: 'Bridge the gap between physical marketing and your digital presence. Drive instant traffic to your website, landing page, or online store with a simple, frictionless smartphone scan.',
-    fact: 'Studies show that over 60% of modern consumers prefer scanning a QR code over manually typing a URL on their mobile devices, significantly reducing bounce rates and drop-offs during physical marketing campaigns.',
-    icon: LinkIcon,
-    useCases: [
-      { title: 'Print Marketing Campaigns', desc: 'Add URL QR codes to flyers, posters, billboards, and direct mail to track offline to online conversions seamlessly. By turning static print materials into interactive portals, you can measure the exact ROI of your physical advertising.' },
-      { title: 'Product Packaging & Inserts', desc: 'Link directly to digital user manuals, warranty registrations, or promotional up-sell offers from your product packaging. This reduces printing costs for bulky instruction booklets and keeps your customers engaged post-purchase.' },
-      { title: 'Event Management & Networking', desc: 'Provide quick access to event schedules, speaker biographies, and feedback forms for attendees. Instead of handing out heavy brochures, give them a simple scan that keeps all their event resources right in their pocket.' }
-    ],
-    benefits: [
-      { title: 'Instant Content Access', desc: 'Eliminates the friction of typing long, complex URLs, providing immediate access to your content. This frictionless experience drastically increases the likelihood that a user will actually visit your intended destination.' },
-      { title: 'Trackable Campaign Performance', desc: 'Monitor scan rates, user locations, and peak interaction times to understand campaign effectiveness. This data allows marketers to pivot strategies in real-time based on actual user engagement.' },
-      { title: 'Universal Device Compatibility', desc: 'Standard URL QR codes are natively supported by the built-in camera apps on all modern iOS and Android devices, requiring absolutely no third-party app installations for the user.' }
-    ],
-    faq: [
-      { q: 'Do URL QR codes ever expire?', a: 'Static URL QR codes never expire because the destination link is permanently embedded in the pattern. If you use a dynamic URL QR code, it will remain active as long as your service subscription is active, allowing you to change the destination at any time.' },
-      { q: 'Can I link to any type of website?', a: 'Yes, you can link to any valid HTTP or HTTPS website address. This includes social media profiles, Google Docs, Dropbox files, personal portfolios, and enterprise corporate websites.' },
-      { q: 'How do I test to ensure my URL QR code works?', a: 'Simply open your smartphone\'s native camera app and point it at the generated QR code on your screen. A link bubble should appear; tapping it will verify that it opens the correct destination.' }
-    ]
-  },
+const OTHER_GENERATOR_PAGES: Record<string, QRLandingContent> = {
   text: {
     type: 'text',
     tabType: 'text',
-    title: 'Text QR Code Generator | Share Messages & Notes Offline',
-    description: 'Create a highly secure QR code that displays plain text immediately when scanned, requiring zero internet connection. Perfect for sharing serial numbers, secret messages, inventory data, and offline operational instructions.',
+    title: 'Free Text QR Code Generator | Offline QR Code for Messages & Serials',
+    description: 'Create a free text QR code that shows a message, serial number, or note on scan — no internet required. Use it for inventory labels, coupon codes, and offline instructions.',
     heroHeading: 'Share Plain Text Offline via QR Code',
     heroSubheading: 'Generate dynamic or static QR codes containing text, serial numbers, or operational notes that can be read instantaneously by any smartphone, completely independent of network availability or cellular service.',
     fact: 'Text QR codes are entirely self-contained. The data is stored directly within the geometric pattern itself, meaning absolute zero internet connectivity or cellular data is required to decode and read the message.',
@@ -506,36 +456,11 @@ export const qrLandingContent: Record<string, QRLandingContent> = {
       { q: 'Will scanning this automatically open the X application?', a: 'Yes, if the scanning user currently has the native X app installed on their device, their operating system will automatically route the link to open inside the app.' }
     ]
   },
-  vcard: {
-    type: 'vcard',
-    tabType: 'contact',
-    title: 'vCard QR Code Generator | Digital Smart Business Cards',
-    description: 'Create a dense vCard QR code to instantly share your entire professional contact portfolio. Users can securely save your name, direct phone, work email, and office address directly to their phonebook with one tap.',
-    heroHeading: 'Share Your Full Contact Details Instantly',
-    heroSubheading: 'Generate a highly reliable vCard QR code. When scanned, it immediately prompts the user to save all your comprehensive contact information directly to their native phonebook.',
-    fact: 'Industry statistics show that 88% of traditional physical business cards are thrown away or lost within a week. Digital vCard QR codes guarantee your details actually make it safely into their phone.',
-    icon: ContactIcon,
-    useCases: [
-      { title: 'Modernizing Physical Business Cards', desc: 'Print this code clearly on your physical cards so people can digitize your details instantaneously without ever needing to manually type in a single letter.' },
-      { title: 'Real Estate Agents & Brokers', desc: 'Place these codes prominently on open house brochures to ensure highly-motivated potential buyers save your direct line immediately before leaving the property.' },
-      { title: 'Corporate Conference Badges', desc: 'Allow other busy attendees to quickly scan and save your contact info while actively networking on the floor, saving massive amounts of time.' }
-    ],
-    benefits: [
-      { title: 'Zero Typing Friction', desc: 'Completely eliminates the incredibly tedious, error-prone process of manually typing complex names, international numbers, and long corporate emails.' },
-      { title: 'Comprehensive Data Payload', desc: 'Store your full name, job title, direct phone line, email, physical address, and company website all seamlessly consolidated in one single scan.' },
-      { title: '100% Offline Compatible', desc: 'The entirety of the vCard data is mathematically embedded directly within the QR image itself, requiring absolutely no internet connection for the user to save your info.' }
-    ],
-    faq: [
-      { q: 'Does this technology work on both iPhone and Android devices?', a: 'Yes, absolutely! Both modern iOS and Android operating systems natively support reading and saving vCard data directly from their built-in stock camera apps.' },
-      { q: 'Do users need an active internet connection to scan and save it?', a: 'No, they do not. The contact information is stored entirely offline directly within the QR geometric pattern, making it highly reliable in deep conference halls.' },
-      { q: 'Can I embed a profile picture into the vCard data?', a: 'Standard offline vCards do not support high-res images well due to strict data limits in the QR pattern. For rich images, we highly recommend using a "Landing Page" QR code.' }
-    ]
-  },
   phone: {
     type: 'phone',
     tabType: 'phone',
-    title: 'Phone Call QR Code Generator | Instant Tap-to-Call',
-    description: 'Create a highly actionable QR code that immediately initiates a phone call when scanned. Perfect for aggressive direct response marketing and providing immediate, frictionless customer support.',
+    title: 'Free Phone QR Code Generator | Tap-to-Call QR for Any Number',
+    description: 'Create a free tap-to-call QR code. Scanning opens the phone dialer with your number filled in. Use it on vans, posters, machinery, and support cards. Include the country code.',
     heroHeading: 'Enable Instant Tap-to-Call Functionality',
     heroSubheading: 'Generate an action-oriented QR code that instantly opens the scanning user\'s native phone dialer with your specific business number pre-filled and ready to dial.',
     fact: 'Data proves that inbound phone calls convert at a staggering 10x to 15x higher rate than standard web form leads. Making it incredibly easy to call you is crucial for closing high-ticket sales.',
@@ -559,8 +484,8 @@ export const qrLandingContent: Record<string, QRLandingContent> = {
   sms: {
     type: 'sms',
     tabType: 'sms',
-    title: 'SMS QR Code Generator | Trigger Pre-filled Texts',
-    description: 'Generate a smart SMS QR code that seamlessly opens the user\'s messaging app with a pre-filled phone number and custom text message. The ultimate tool for marketing opt-ins and instant inquiries.',
+    title: 'Free SMS QR Code Generator | Pre-filled Text Message QR',
+    description: 'Create a free SMS QR code that opens the messages app with a number and draft text (JOIN, a keyword, a question). The person still taps Send. Built for opt-ins and shortcodes.',
     heroHeading: 'Trigger Instant SMS Messages from Print',
     heroSubheading: 'Create an intelligent QR code that pre-fills a highly specific text message directed to your business number. Ideal for rapid SMS marketing opt-ins, contest entries, and quick customer inquiries.',
     fact: 'SMS marketing boasts an absolutely astounding 98% open rate, with upwards of 90% of all messages being read by the recipient within the first 3 minutes of delivery.',
@@ -584,8 +509,8 @@ export const qrLandingContent: Record<string, QRLandingContent> = {
   email: {
     type: 'email',
     tabType: 'email',
-    title: 'Email QR Code Generator | Trigger Pre-filled Emails',
-    description: 'Generate a highly sophisticated Email QR code that automatically opens the user\'s preferred email client with a pre-filled destination address, specific subject line, and detailed body text.',
+    title: 'Free Email QR Code Generator | mailto QR with Subject & Body',
+    description: 'Create a free email QR code that opens the mail app with To, subject, and optional body already filled. Useful for warranty, feedback, and RSVP flows that need a structured inbox.',
     heroHeading: 'Enable Seamless Email Communication',
     heroSubheading: 'Make it completely effortless for physical customers to send you a detailed email with complex, predefined subject lines and structured message bodies instantly.',
     fact: 'UX research shows that providing a pre-filled email template increases customer response rates by over 40% by drastically reducing the cognitive load required to write a message from scratch.',
@@ -604,56 +529,6 @@ export const qrLandingContent: Record<string, QRLandingContent> = {
       { q: 'Which exact email application does this QR code open?', a: 'It utilizes deep-linking to automatically open the default mail client that is configured on the user\'s specific device (e.g., Apple Mail on iOS, Gmail on Android).' },
       { q: 'Can I leave the subject or body completely blank?', a: 'Yes, absolutely! You can choose to fill out just the destination email address, or add the specific subject and body text only as needed for your specific use case.' },
       { q: 'Are there any length limits I should be aware of?', a: 'Extremely long body text will result in a visually very dense QR code that can be difficult for older cameras to scan quickly, so we highly recommend keeping the template concise.' }
-    ]
-  },
-  wifi: {
-    type: 'wifi',
-    tabType: 'wifi',
-    title: 'WiFi QR Code Generator | Connect Instantly Without Passwords',
-    description: 'Create a secure, highly-reliable WiFi QR code to let guests connect to your network instantly. Completely eliminate the frustration of typing long, complex, case-sensitive passwords forever!',
-    heroHeading: 'Provide Instant WiFi Access via QR Code',
-    heroSubheading: 'Generate a highly secure QR code that connects your guests, café customers, or office visitors to your WiFi network instantaneously without ever forcing them to type a password manually.',
-    fact: 'Usability studies show the average person spends over 2 frustrating minutes trying to correctly type in a complex, secure WiFi password. A simple QR code reduces this entire process to literally 2 seconds.',
-    icon: Wifi,
-    useCases: [
-      { title: 'Cafes, Coffee Shops & Restaurants', desc: 'Place these branded codes on tables or print them dynamically on receipts to provide an incredibly seamless, premium internet access experience for your paying patrons.' },
-      { title: 'Corporate Offices & Co-working Spaces', desc: 'Allow visiting VIP clients, freelancers, and short-term contractors to securely and rapidly join the isolated guest network without bothering the IT department.' },
-      { title: 'Airbnbs, VRBOs & Boutique Hotels', desc: 'Welcome your tired travelers with an incredibly easy-to-scan code placed prominently right on the nightstand or directly inside the welcome binder upon arrival.' }
-    ],
-    benefits: [
-      { title: 'Dramatically Enhanced Security', desc: 'Guests connect to the network instantly without you ever having to reveal or write down the actual complex plaintext password on a whiteboard for everyone to see.' },
-      { title: 'Zero Typing Friction', desc: 'Completely eliminates user errors and frustration from trying to distinguish between uppercase letters, lowercase letters, and complex special characters on mobile keyboards.' },
-      { title: 'Premium Hospitality Experience', desc: 'Provides a highly modern, frictionless, and hospitable technological experience for absolutely anyone visiting your physical location, elevating your brand perception.' }
-    ],
-    faq: [
-      { q: 'Is it actually safe to share my private WiFi network this way?', a: 'Yes, it is exactly as safe as handing them a piece of paper with the password written on it, but significantly more convenient and less prone to being copied by shoulder-surfers.' },
-      { q: 'Does this technology still work for Hidden networks?', a: 'Yes, absolutely! Just ensure you explicitly check the "Hidden Network" option when generating the code so the smartphone knows exactly how to search for the SSID.' },
-      { q: 'What specific encryption type should I choose?', a: 'WPA/WPA2 is the modern, highly secure standard for almost all consumer home and enterprise business networks deployed today. Only select WEP if you are using legacy hardware.' }
-    ]
-  },
-  "app-store": {
-    type: 'app-store',
-    tabType: 'app_download',
-    title: 'App Store QR Code Generator | Drive Massive App Installs',
-    description: 'Generate one single, highly-intelligent QR code that smartly routes users to either the Apple App Store or Google Play Store based on their specific device. Radically boost your offline app downloads!',
-    heroHeading: 'One Single QR Code, Multiple App Stores',
-    heroSubheading: 'Drive massive app installations seamlessly from print. Our intelligent QR code instantly detects the user\'s operating system and routes them directly to the correct app store with zero friction.',
-    fact: 'Utilizing Smart App Store QR codes on physical media can increase offline-to-digital app download conversion rates by up to 40% simply by eliminating platform confusion and extra clicks.',
-    icon: Smartphone,
-    useCases: [
-      { title: 'In-Store Retail Promotions', desc: 'Aggressively encourage physical shoppers to download your lucrative digital loyalty app right at the checkout counter to unlock an immediate discount on their current purchase.' },
-      { title: 'Out of Home (OOH) Advertising', desc: 'Place massive codes on subway ads, bus stops, and billboards to capture high-intent users looking for entertainment or utility during their daily physical commute.' },
-      { title: 'Smart Product Packaging', desc: 'Direct users immediately to download your specific companion app which is required to set up and configure their brand new smart IoT device right out of the box.' }
-    ],
-    benefits: [
-      { title: 'Intelligent Device Detection', desc: 'The routing link automatically detects the OS, flawlessly routing iOS users to the Apple App Store, and Android users directly to the Google Play Store in milliseconds.' },
-      { title: 'Saves Massive Print Space', desc: 'Allows you to print one single, clean QR code on your highly constrained marketing materials instead of cluttering the design with two separate, confusing codes.' },
-      { title: 'Secure Fallback URL', desc: 'Provides a completely safe fallback website redirection for users who accidentally scan the code from unsupported desktop webcams or obscure operating systems.' }
-    ],
-    faq: [
-      { q: 'How exactly does the device detection technology work?', a: 'We generate a smart cloud link. When scanned, our lightning-fast server checks the user\'s mobile OS User-Agent header, then instantly redirects them to the appropriate store URL.' },
-      { q: 'What happens if they scan the code on a laptop or desktop computer?', a: 'The system will intelligently recognize it is not a mobile device and redirect them to the "Fallback URL" you provided, which is typically your website\'s main homepage or a dedicated desktop landing page.' },
-      { q: 'Can I track the exact number of app downloads generated?', a: 'While our platform provides highly detailed analytics on the number of physical scans, you will need to cross-reference with your Apple/Google App Store analytics to track the final installation conversions.' }
     ]
   },
   "landing-page": {
@@ -681,36 +556,11 @@ export const qrLandingContent: Record<string, QRLandingContent> = {
       { q: 'Can I add rich media like images, galleries, and videos?', a: 'Yes, our powerful landing page builder natively supports a wide array of rich media elements including high-res image galleries, embedded YouTube videos, and custom call-to-action buttons.' }
     ]
   },
-  pdf: {
-    type: 'pdf',
-    tabType: 'url',
-    title: 'PDF QR Code Generator | Share Heavy Documents Instantly',
-    description: 'Seamlessly convert any heavy PDF file into a lightning-fast, scannable QR code. The absolute perfect solution for instantly sharing digital menus, massive user manuals, corporate whitepapers, and annual reports.',
-    heroHeading: 'Share Massive PDF Documents Instantly',
-    heroSubheading: 'Turn incredibly heavy, multi-page PDF files into a remarkably simple, highly scannable QR code. Perfect for replacing physical restaurant menus, appliance manuals, and corporate reports.',
-    fact: 'Transitioning to sharing PDFs via QR code dramatically reduces paper waste and slashes physical printing costs by up to 80% for large restaurants, hotels, and corporate event organizers annually.',
-    icon: FileText,
-    useCases: [
-      { title: 'Touchless Restaurant Menus', desc: 'Provide an incredibly hygienic, modern touchless dining experience by linking customers directly to a beautifully formatted PDF version of your extensive food and drink menu.' },
-      { title: 'Appliance User Manuals', desc: 'Stick a highly durable QR code directly on heavy appliances so frustrated customers can instantly pull up the massive PDF instruction guide without tearing apart their house looking for the booklet.' },
-      { title: 'Academic & Educational Materials', desc: 'University professors and teachers can instantly share massive course syllabuses, required reading materials, and lecture slides quickly with hundreds of students in a lecture hall.' }
-    ],
-    benefits: [
-      { title: 'Highly Sustainable & Eco-Friendly', desc: 'Save massive amounts of money and hundreds of trees by digitizing your heavy printed documents, drastically improving your company\'s environmental sustainability metrics.' },
-      { title: 'Always 100% Up-to-Date', desc: 'By linking to a cloud-hosted PDF, you can silently update the document behind the scenes correcting typos or prices without ever changing the physical QR code printed on the wall.' },
-      { title: 'Instantaneous Mobile Viewing', desc: 'Modern iOS and Android smartphones feature highly optimized, built-in PDF viewers that natively render the document instantly right in the browser after scanning, ensuring a flawless UX.' }
-    ],
-    faq: [
-      { q: 'How exactly do I upload the PDF to make this work?', a: 'Simply upload your heavy PDF file to any reliable cloud storage provider like Google Drive, Dropbox, or AWS. Ensure the link privacy is set to "Public", and paste that URL into our generator.' },
-      { q: 'Can the users actually download the PDF to their phone to read later?', a: 'Yes! Once the PDF file natively opens in their mobile browser after scanning, they will always have the standard OS option to save it permanently to their device\'s local storage.' },
-      { q: 'Will this technology work smoothly on much older smartphones?', a: 'Yes, absolutely all modern and even legacy mobile browsers have incredibly robust, built-in PDF rendering engines that handle standard PDF files with ease.' }
-    ]
-  },
   menu: {
     type: 'menu',
     tabType: 'url',
-    title: 'Menu QR Code Generator | Create Touchless Digital Menus',
-    description: 'Instantly create a lightning-fast digital menu QR code for your restaurant, bar, or cafe. Provide an incredibly hygienic, contactless, and modern ordering experience that your dining customers will absolutely love.',
+    title: 'Free Restaurant Menu QR Code Generator | Digital Cafe & Hotel Menus',
+    description: 'Create a free restaurant menu QR code for cafes, bars, and hotels. Link a live digital menu or a PDF so guests scan the table tent instead of sharing a sticky paper card. Update items without reprinting.',
     heroHeading: 'Deploy Modern Touchless Digital Menus',
     heroSubheading: 'Rapidly modernize your restaurant\'s dining experience by allowing guests to easily scan and view your extensive menu instantly in high resolution directly on their personal smartphones.',
     fact: 'Data confirms that modern restaurants actively utilizing digital QR code menus report up to a 15% increase in average order value. This is driven by easier browsing and the ability to display high-quality, mouth-watering imagery.',
@@ -734,8 +584,8 @@ export const qrLandingContent: Record<string, QRLandingContent> = {
   youtube: {
     type: 'youtube',
     tabType: 'url',
-    title: 'YouTube QR Code Generator | Instantly Share High-Res Videos',
-    description: 'Generate an aggressive YouTube QR code to instantly share specific viral videos or your entire creator channel. Drive massive views, high engagement, and new subscribers directly from physical marketing channels.',
+    title: 'Free YouTube QR Code Generator | Channel, Video & Playlist QR',
+    description: 'Create a free YouTube QR code for a channel, a single video, or a playlist. Print it on merch, packaging, or a talk slide so people open YouTube instead of typing a watch URL.',
     heroHeading: 'Drive Instant, High-Intent Views to Your Videos',
     heroSubheading: 'Link static physical objects directly to your high-quality YouTube videos, educational tutorials, or massive channel page to drastically boost your digital engagement and subscriber count.',
     fact: 'Marketing studies prove that viewers retain an incredible 95% of a brand\'s message when they watch it in a high-quality video format, compared to a mere 10% when reading it in standard text.',
@@ -757,3 +607,25 @@ export const qrLandingContent: Record<string, QRLandingContent> = {
     ]
   }
 };
+
+function mergeLandingPages(): Record<string, QRLandingContent> {
+  const merged: Record<string, QRLandingContent> = {
+    ...OTHER_GENERATOR_PAGES,
+    ...FREE_GENERATOR_PAGES,
+  };
+
+  for (const [key, extra] of Object.entries(TOPIC_ARTICLES)) {
+    const existing = merged[key];
+    if (!existing) continue;
+    const { extraFaq, ...rest } = extra;
+    merged[key] = {
+      ...existing,
+      ...rest,
+      faq: extraFaq ? [...existing.faq, ...extraFaq] : existing.faq,
+    };
+  }
+
+  return merged;
+}
+
+export const qrLandingContent: Record<string, QRLandingContent> = mergeLandingPages();
