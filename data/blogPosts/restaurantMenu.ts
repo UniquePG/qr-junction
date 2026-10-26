@@ -59,7 +59,7 @@ export const restaurantMenuBlog: BlogPost = {
     ],
   },
   relatedSlugs: [
-    "how-to-track-qr-code-scans",
+    "best-qr-code-generator-for-restaurants-india",
     "static-vs-dynamic-qr-codes-which-one-do-you-actually-need",
     "how-to-create-a-google-review-qr-code",
   ],

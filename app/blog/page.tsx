@@ -82,7 +82,8 @@ export default function BlogsPage() {
         blog.slug === "how-to-create-an-instagram-qr-code" ||
         blog.slug === "how-to-make-a-wifi-qr-code" ||
         blog.slug === "how-to-create-a-custom-qr-code-with-logo" ||
-        blog.slug === "how-to-create-a-whatsapp-qr-code-for-business"
+        blog.slug === "how-to-create-a-whatsapp-qr-code-for-business" ||
+        blog.slug === "free-vs-paid-qr-code-generator"
       );
     }
     if (selectedCategory === "Business Growth") {
@@ -92,7 +93,20 @@ export default function BlogsPage() {
         blog.slug === "qr-codes-for-business-cards-the-complete-guide" ||
         blog.slug === "qr-codes-for-small-businesses-the-practical-guide" ||
         blog.slug === "how-to-create-a-qr-code-menu-for-your-restaurant" ||
-        blog.slug === "how-to-track-qr-code-scans"
+        blog.slug === "how-to-track-qr-code-scans" ||
+        blog.slug === "best-qr-code-generator-for-restaurants-india" ||
+        blog.slug === "free-vs-paid-qr-code-generator"
+      );
+    }
+    if (selectedCategory === "Comparisons") {
+      return (
+        blog.slug === "best-free-qr-code-generator-2026" ||
+        blog.slug === "qrcode-monkey-vs-dynamic-qr-code-generator" ||
+        blog.slug === "canva-qr-code-vs-qr-code-generator" ||
+        blog.slug === "qr-tiger-alternative" ||
+        blog.slug === "bitly-vs-qr-tiger" ||
+        blog.slug === "best-qr-code-generator-for-restaurants-india" ||
+        blog.slug === "free-vs-paid-qr-code-generator"
       );
     }
     if (selectedCategory === "Security & Safety") {
@@ -105,6 +119,7 @@ export default function BlogsPage() {
     { label: "All Resources", id: "All" },
     { label: "Guides & Tips", id: "Guides & Tips" },
     { label: "Business Growth", id: "Business Growth" },
+    { label: "Comparisons", id: "Comparisons" },
     { label: "Security & Safety", id: "Security & Safety" },
   ];
 

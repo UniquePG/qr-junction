@@ -12,10 +12,10 @@ export default function ContactInfo() {
           Send us an email and we&apos;ll respond as soon as possible.
         </p>
         <a
-          href="mailto:uniquetechexplorer7@gmail.com"
+          href="mailto:qrjunction1@gmail.com"
           className="text-primary hover:text-accent font-semibold transition-colors text-sm sm:text-base"
         >
-          uniquetechexplorer7@gmail.com
+          qrjunction1@gmail.com
         </a>
       </div>
 

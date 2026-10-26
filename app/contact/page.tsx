@@ -86,7 +86,7 @@ export default function ContactPage() {
           mainEntity: {
             '@type': 'Organization',
             name: 'QR Junction',
-            email: 'uniquetechexplorer7@gmail.com',
+            email: 'qrjunction1@gmail.com',
             url: 'https://www.qrjunction.in/',
           },
         })}

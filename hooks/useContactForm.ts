@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { trackContactFormSubmit } from '@/lib/analytics';
+import { useState } from 'react';
 
 interface ContactFormData {
   name: string;
@@ -40,7 +40,7 @@ export function useContactForm() {
     trackContactFormSubmit(subject);
     
     // Create mailto link
-    const mailtoLink = `mailto:uniquetechexplorer7@gmail.com?subject=${encodeURIComponent(subject)} - ${encodeURIComponent(name)}&body=${encodeURIComponent('Name: ' + name + '\nEmail: ' + email + '\n\nMessage:\n' + message)}`;
+    const mailtoLink = `mailto:qrjunction1@gmail.com?subject=${encodeURIComponent(subject)} - ${encodeURIComponent(name)}&body=${encodeURIComponent('Name: ' + name + '\nEmail: ' + email + '\n\nMessage:\n' + message)}`;
     
     // Open email client
     window.location.href = mailtoLink;
@@ -48,7 +48,7 @@ export function useContactForm() {
     // Show success message
     setFormMessage({
       type: 'success',
-      text: 'Your email client should open. If not, please email us directly at uniquetechexplorer7@gmail.com',
+      text: 'Your email client should open. If not, please email us directly at qrjunction1@gmail.com',
     });
     
     // Reset form

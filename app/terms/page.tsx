@@ -213,7 +213,7 @@ export default function TermsPage() {
               <h2 className="text-2xl font-bold text-primary mb-4 pb-3 border-b-2 border-slate-200">14. Contact Information</h2>
               <p className="text-gray-700 leading-relaxed mb-4">If you have any questions about these Terms of Service, please contact us at:</p>
               <p className="text-gray-700 leading-relaxed">
-                <strong>Email:</strong> uniquetechexplorer7@gmail.com<br />
+                <strong>Email:</strong> qrjunction1@gmail.com<br />
                 <strong>Website:</strong> <Link href="/" className="text-primary hover:underline">www.qrjunction.in</Link>
               </p>
             </section>

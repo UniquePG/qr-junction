@@ -1,5 +1,5 @@
-import { ToastProvider } from "@/components/ToastProvider";
 import { AuthProvider } from "@/components/AuthContext";
+import { ToastProvider } from "@/components/ToastProvider";
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import Script from "next/script";
@@ -108,7 +108,7 @@ export default function RootLayout({
             "contactPoint": {
               "@type": "ContactPoint",
               "contactType": "Customer Support",
-              "email": "uniquetechexplorer7@gmail.com",
+              "email": "qrjunction1@gmail.com",
             },
           })}
         </Script>

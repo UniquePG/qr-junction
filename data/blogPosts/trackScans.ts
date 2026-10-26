@@ -60,7 +60,7 @@ export const trackScansBlog: BlogPost = {
   },
   relatedSlugs: [
     "static-vs-dynamic-qr-codes-which-one-do-you-actually-need",
-    "how-to-create-a-qr-code-menu-for-your-restaurant",
+    "bitly-vs-qr-tiger",
     "qr-codes-for-small-businesses-the-practical-guide",
   ],
   sections: [

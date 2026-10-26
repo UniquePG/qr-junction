@@ -55,8 +55,8 @@ export const staticVsDynamicBlog: BlogPost = {
   },
   relatedSlugs: [
     "how-to-track-qr-code-scans",
-    "how-to-create-a-qr-code-menu-for-your-restaurant",
-    "what-is-a-qr-code-and-why-everyone-is-using-it",
+    "free-vs-paid-qr-code-generator",
+    "qrcode-monkey-vs-dynamic-qr-code-generator",
   ],
   sections: [
     {
