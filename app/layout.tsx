@@ -5,11 +5,13 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 
+import { HOME_DESCRIPTION, HOME_TITLE } from "@/lib/homeSeo";
+
 export const metadata: Metadata = {
-  title: "Free QR Code Generator | Create Custom QR Codes - QR Junction",
-  description: "Generate free QR codes instantly for URLs, WiFi, contacts, social media & more. Easy-to-use tool with customization options. No registration required.",
+  title: HOME_TITLE,
+  description: HOME_DESCRIPTION,
   keywords: "free QR code generator, create QR code online, custom QR codes, URL QR code, WiFi QR code, vCard QR code, social media QR code, QR code maker, dynamic QR codes, QR Junction",
-  authors: [{ name: "QR Junction" }],
+  authors: [{ name: "QR Junction", url: "https://www.qrjunction.in/about" }],
   creator: "QR Junction",
   publisher: "QR Junction",
   metadataBase: new URL("https://www.qrjunction.in"),
@@ -30,8 +32,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "QR Junction",
-    title: "Free QR Code Generator | Create Custom QR Codes - QR Junction",
-    description: "Generate free QR codes instantly for URLs, WiFi, contacts, social media & more. Easy-to-use tool with customization options.",
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
     url: "https://www.qrjunction.in/",
     images: [
       {
@@ -45,8 +47,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Free QR Code Generator | Create Custom QR Codes - QR Junction",
-    description: "Generate free QR codes instantly for URLs, WiFi, contacts, social media & more. Easy-to-use tool with customization options.",
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
     images: ["https://www.qrjunction.in/NewLogo/logo-192x192.png"],
   },
   alternates: {
@@ -73,6 +75,7 @@ export default function RootLayout({
         
         {/* Sitemap */}
         <link rel="sitemap" type="application/xml" href="https://www.qrjunction.in/sitemap.xml" />
+        <link rel="author" href="https://www.qrjunction.in/about" />
         
         {/* Language and Geographic Targeting */}
         <meta name="language" content="English" />
@@ -94,8 +97,13 @@ export default function RootLayout({
             "applicationCategory": "UtilityApplication",
             "operatingSystem": "All",
             "url": "https://www.qrjunction.in/",
-            "description": "Free online QR code generator tool to create custom QR codes for URLs, WiFi, contacts, social media, and more with instant download.",
+            "description": "QR Junction is a free QR code generator and tracking platform for URLs, Wi-Fi, vCards, WhatsApp, PDFs, restaurant menus, and Google reviews.",
             "image": "https://www.qrjunction.in/NewLogo/logo-192x192.png",
+            "author": {
+              "@type": "Organization",
+              "name": "QR Junction",
+              "url": "https://www.qrjunction.in/about",
+            },
           })}
         </Script>
         <Script id="structured-data-org" type="application/ld+json">
@@ -103,12 +111,21 @@ export default function RootLayout({
             "@context": "https://schema.org",
             "@type": "Organization",
             "name": "QR Junction",
+            "legalName": "QR Junction",
             "url": "https://www.qrjunction.in/",
             "logo": "https://www.qrjunction.in/NewLogo/logo-192x192.png",
+            "description": "QR Junction is a free QR code generator built in India. You create website, Wi-Fi, vCard, WhatsApp, PDF, menu, and Google Review QR codes and download PNG or SVG.",
+            "email": "qrjunction1@gmail.com",
+            "areaServed": "IN",
+            "address": {
+              "@type": "PostalAddress",
+              "addressCountry": "IN",
+            },
             "contactPoint": {
               "@type": "ContactPoint",
               "contactType": "Customer Support",
               "email": "qrjunction1@gmail.com",
+              "availableLanguage": ["English", "Hindi"],
             },
           })}
         </Script>
@@ -128,16 +145,21 @@ export default function RootLayout({
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "name": "Ultimate QR Code Generator",
+            "name": "QR Junction",
             "applicationCategory": "UtilityApplication",
             "operatingSystem": "Web",
             "url": "https://www.qrjunction.in/",
-            "description": "Free online QR code generator tool to create custom QR codes for URLs, WiFi, contacts, social media, and more with instant download.",
+            "description": "QR Junction is a free QR code generator for URLs, Wi-Fi, contacts, social profiles, PDFs, and menus, with optional scan tracking.",
             "image": "https://www.qrjunction.in/NewLogo/logo-192x192.png",
+            "author": {
+              "@type": "Organization",
+              "name": "QR Junction",
+              "url": "https://www.qrjunction.in/about",
+            },
             "offers": {
               "@type": "Offer",
               "price": "0",
-              "priceCurrency": "USD",
+              "priceCurrency": "INR",
             },
           })}
         </Script>

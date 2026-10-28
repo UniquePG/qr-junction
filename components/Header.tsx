@@ -78,6 +78,12 @@ export default function Header() {
             FAQ
           </Link>
           <Link
+            href="/about"
+            className="hover:text-[#001B50] transition-colors no-underline"
+          >
+            About
+          </Link>
+          <Link
             href="/contact"
             className="hover:text-[#001B50] transition-colors no-underline"
           >
@@ -170,6 +176,13 @@ export default function Header() {
               className="hover:text-[#001B50] no-underline"
             >
               FAQ
+            </Link>
+            <Link
+              href="/about"
+              onClick={() => setMobileOpen(false)}
+              className="hover:text-[#001B50] no-underline"
+            >
+              About
             </Link>
             <Link
               href="/contact"

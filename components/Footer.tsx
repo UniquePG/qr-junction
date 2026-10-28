@@ -47,6 +47,12 @@ export default function Footer() {
               <li>
                 <Link href="/faq" className="text-slate-600 hover:text-primary transition-colors no-underline">Help &amp; FAQ</Link>
               </li>
+              <li>
+                <Link href="/about" className="text-slate-600 hover:text-primary transition-colors no-underline">About</Link>
+              </li>
+              <li>
+                <Link href="/changelog" className="text-slate-600 hover:text-primary transition-colors no-underline">Changelog</Link>
+              </li>
             </ul>
 
             <h4 className="text-[#001B50] text-sm font-bold uppercase tracking-wider mb-5 mt-10">Legal</h4>
@@ -56,6 +62,9 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/terms" className="text-slate-600 hover:text-primary transition-colors no-underline">Terms of Service</Link>
+              </li>
+              <li>
+                <a href="/llms.txt" className="text-slate-600 hover:text-primary transition-colors no-underline">llms.txt</a>
               </li>
             </ul>
           </div>

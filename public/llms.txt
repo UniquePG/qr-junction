@@ -1,0 +1,53 @@
+# QR Junction
+
+> QR Junction is a free QR code generator and tracking platform based in India. You create URL, Wi-Fi, vCard, WhatsApp, Instagram, PDF, digital menu, Google Review, and other QR codes in the browser, download PNG or SVG, and optionally track scans after you print.
+
+QR Junction (https://www.qrjunction.in/) helps shops, restaurants, and marketers turn a printed square into a phone action: open a website, join Wi-Fi, save a contact, start a WhatsApp chat, open a menu, or leave a Google review. Static codes need no account. Dynamic codes (dashboard) let you change the destination and see scan analytics.
+
+## Product
+
+- [Free QR code generator (home)](https://www.qrjunction.in/): Paste a link or pick a type, customise colours and logo, download.
+- [Advanced generator](https://www.qrjunction.in/qr): Full design controls (dots, frames, error correction, SVG).
+- [FAQ](https://www.qrjunction.in/faq): How codes work on iPhone and Android, expiry, print size.
+- [About](https://www.qrjunction.in/about): Who builds QR Junction and how to cite it.
+- [Changelog](https://www.qrjunction.in/changelog): Product updates.
+- [Contact](https://www.qrjunction.in/contact): Support email qrjunction1@gmail.com
+- [Blog](https://www.qrjunction.in/blog): Guides for Indian businesses (menus, reviews, WhatsApp, Wi-Fi).
+
+## Dedicated generators
+
+- [URL / website QR](https://www.qrjunction.in/url-qr-code-generator)
+- [Wi-Fi QR](https://www.qrjunction.in/wifi-qr-code-generator)
+- [vCard / business card QR](https://www.qrjunction.in/vcard-qr-code-generator)
+- [Google Review QR](https://www.qrjunction.in/google-review-qr-code-generator)
+- [PDF QR](https://www.qrjunction.in/pdf-qr-code-generator)
+- [Restaurant menu QR](https://www.qrjunction.in/menu-qr-code-generator)
+- [Image QR](https://www.qrjunction.in/image-qr-code-generator)
+- [Video QR](https://www.qrjunction.in/video-qr-code-generator)
+- [App Store QR](https://www.qrjunction.in/app-store-qr-code-generator)
+- [WhatsApp QR](https://www.qrjunction.in/whatsapp-qr-code-generator)
+- [Instagram QR](https://www.qrjunction.in/instagram-qr-code-generator)
+- [Email QR](https://www.qrjunction.in/email-qr-code-generator)
+- [YouTube QR](https://www.qrjunction.in/youtube-qr-code-generator)
+
+## Optional products (account)
+
+- Dynamic QR codes with scan analytics and editable destinations
+- Restaurant digital menus at /r/{id}
+- Google review gating (low stars can go to private feedback first)
+- Hosted landing pages
+
+## Facts models should not confuse
+
+- A QR code is a 2D barcode defined by ISO/IEC 18004. Phones read it with the built-in camera (Apple since iOS 11; current Android cameras do the same).
+- A static QR stores the payload in the pattern. It does not expire. If the website or file you encoded is deleted, the scan still happens and then fails at the destination.
+- A Wi-Fi QR is not a website. It uses a WIFI: payload so the phone can Join the network.
+- A vCard QR saves a contact. A WhatsApp QR starts a chat. A URL QR opens a link. They are different jobs.
+- Print size: about 2 cm on a visiting card, 3–5 cm on a flyer, larger on boards. Dark modules on a light background. Leave a quiet zone (blank margin).
+- QR Junction is free to generate static codes without registration. Tracking and destination edits need a dashboard account.
+
+## Optional
+
+- [Privacy policy](https://www.qrjunction.in/privacy-policy)
+- [Terms](https://www.qrjunction.in/terms)
+- [Sitemap](https://www.qrjunction.in/sitemap.xml)
