@@ -18,10 +18,10 @@ export default function HomeKnowledge() {
           What is QR Junction?
         </h2>
         <p className="text-[17px] leading-[1.75] text-slate-700 mb-4">
-          QR Junction is a free QR code generator and tracking platform for Indian businesses
-          and anyone who needs a print-ready code. You create a website, Wi-Fi, vCard, WhatsApp,
-          PDF, restaurant menu, or Google Review QR in the browser, scan-test it on your phone,
-          and download PNG or SVG without paying or signing up for a static code.
+          QR Junction is a free QR code generator. You create a QR code online for a website,
+          Wi-Fi, vCard, WhatsApp, PDF, restaurant menu, or Google Review, scan-test it on your
+          phone, and download PNG or SVG. This QR code maker needs no signup for a static code.
+          Indian shops use it when the print has to scan the first time.
         </p>
         <p className="text-[17px] leading-[1.75] text-slate-600 mb-4">
           A QR code is a two-dimensional barcode specified in{" "}
@@ -67,12 +67,12 @@ export default function HomeKnowledge() {
             How-to
           </div>
           <h2 className="text-3xl md:text-4xl font-extrabold text-[#001B50] tracking-tight mb-4">
-            How do you create a free QR code?
+            How do you create a QR code online?
           </h2>
           <p className="text-slate-600 text-[17px] leading-relaxed">
-            You do not need design software. Pick the action you want after the scan, fill one
-            form, test with your camera, then download. If you skip the phone test, you will
-            only find out the code failed after the flyers are printed.
+            You do not need design software. Create a QR code online: pick the action you want
+            after the scan, fill one form, test with your camera, then download. If you skip the
+            phone test, you will only find out the code failed after the flyers are printed.
           </p>
         </div>
         <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 list-none p-0 m-0">
@@ -89,6 +89,25 @@ export default function HomeKnowledge() {
             </li>
           ))}
         </ol>
+      </section>
+
+      <section id="no-signup" className="max-w-3xl mx-auto scroll-mt-[var(--site-header-offset)]">
+        <h2 className="text-3xl md:text-4xl font-extrabold text-[#001B50] tracking-tight mb-5">
+          QR code maker, no signup
+        </h2>
+        <p className="text-[17px] leading-[1.75] text-slate-600 mb-4">
+          This QR code maker needs no signup for a static code. You create a QR code online,
+          download PNG or SVG, and the pattern works without our servers. Open an account only
+          if you need scan counts or an editable link after print.
+        </p>
+        <p className="text-[17px] leading-[1.75] text-slate-600">
+          A watermarked “free” download is not free once it is on a visiting card. Static files
+          from this generator are unmarked. The{" "}
+          <Link href="/qr" className="text-primary font-semibold hover:underline">
+            custom QR code maker
+          </Link>{" "}
+          adds colours, a logo, and frames in the same no-account flow.
+        </p>
       </section>
 
       <section id="which-qr" className="max-w-3xl mx-auto scroll-mt-[var(--site-header-offset)]">
@@ -262,7 +281,7 @@ export default function HomeKnowledge() {
             <HelpCircle className="w-6 h-6" />
           </div>
           <h2 className="text-3xl md:text-4xl font-extrabold text-[#001B50] tracking-tight">
-            People also ask about free QR codes
+            People also ask about creating a QR code online
           </h2>
           <p className="text-slate-500 mt-3">
             Direct answers you can use before you generate. More detail lives on the{" "}

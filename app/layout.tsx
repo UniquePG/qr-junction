@@ -5,12 +5,12 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 
-import { HOME_DESCRIPTION, HOME_TITLE } from "@/lib/homeSeo";
+import { HOME_DESCRIPTION, HOME_KEYWORDS, HOME_TITLE } from "@/lib/homeSeo";
 
 export const metadata: Metadata = {
   title: HOME_TITLE,
   description: HOME_DESCRIPTION,
-  keywords: "free QR code generator, create QR code online, custom QR codes, URL QR code, WiFi QR code, vCard QR code, social media QR code, QR code maker, dynamic QR codes, QR Junction",
+  keywords: HOME_KEYWORDS,
   authors: [{ name: "QR Junction", url: "https://www.qrjunction.in/about" }],
   creator: "QR Junction",
   publisher: "QR Junction",
@@ -97,7 +97,8 @@ export default function RootLayout({
             "applicationCategory": "UtilityApplication",
             "operatingSystem": "All",
             "url": "https://www.qrjunction.in/",
-            "description": "QR Junction is a free QR code generator and tracking platform for URLs, Wi-Fi, vCards, WhatsApp, PDFs, restaurant menus, and Google reviews.",
+            "alternateName": ["Free QR Code Generator", "QR Code Maker"],
+            "description": "Create a QR code online with QR Junction, a free QR code generator. QR code maker with no signup for static codes. URLs, Wi-Fi, vCards, WhatsApp, PDFs, restaurant menus, and Google reviews.",
             "image": "https://www.qrjunction.in/NewLogo/logo-192x192.png",
             "author": {
               "@type": "Organization",
@@ -114,7 +115,7 @@ export default function RootLayout({
             "legalName": "QR Junction",
             "url": "https://www.qrjunction.in/",
             "logo": "https://www.qrjunction.in/NewLogo/logo-192x192.png",
-            "description": "QR Junction is a free QR code generator built in India. You create website, Wi-Fi, vCard, WhatsApp, PDF, menu, and Google Review QR codes and download PNG or SVG.",
+            "description": "QR Junction is a free QR code generator built in India. Create a QR code online for a website, Wi-Fi, vCard, WhatsApp, PDF, menu, or Google Review and download PNG or SVG. QR code maker, no signup for static codes.",
             "email": "qrjunction1@gmail.com",
             "areaServed": "IN",
             "address": {
@@ -149,7 +150,8 @@ export default function RootLayout({
             "applicationCategory": "UtilityApplication",
             "operatingSystem": "Web",
             "url": "https://www.qrjunction.in/",
-            "description": "QR Junction is a free QR code generator for URLs, Wi-Fi, contacts, social profiles, PDFs, and menus, with optional scan tracking.",
+            "alternateName": "Free QR Code Generator",
+            "description": "Create a QR code online with this free QR code generator. QR code maker, no signup for static URLs, Wi-Fi, contacts, social profiles, PDFs, and menus, with optional scan tracking.",
             "image": "https://www.qrjunction.in/NewLogo/logo-192x192.png",
             "author": {
               "@type": "Organization",

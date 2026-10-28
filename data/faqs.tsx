@@ -7,10 +7,10 @@ export interface FAQ {
 
 export const faqs: FAQ[] = [
   {
-    question: 'How do I create a QR code for free?',
+    question: 'Can I create a QR code online for free?',
     answer: (
       <>
-        <p className="mb-3">Creating a QR code with QR Junction is simple and completely free. Just follow these steps:</p>
+        <p className="mb-3">Yes. QR Junction is a free QR code generator. Create a QR code online in your browser:</p>
         <ol className="list-decimal list-inside mb-3 space-y-2 ml-4">
           <li>Select the type of QR code you want to create (URL, Text, Social Media, Contact, etc.)</li>
           <li>Enter the required information in the input fields</li>
@@ -18,7 +18,7 @@ export const faqs: FAQ[] = [
           <li>Click the &quot;Generate QR Code&quot; button</li>
           <li>Download your QR code instantly</li>
         </ol>
-        <p>No registration or payment is required. You can generate unlimited QR codes for free.</p>
+        <p>This QR code maker needs no signup for static codes. No payment is required.</p>
       </>
     ),
   },
@@ -41,9 +41,9 @@ export const faqs: FAQ[] = [
     ),
   },
   {
-    question: 'Do I need to register to use QR Junction?',
+    question: 'Is this a QR code maker with no signup?',
     answer: (
-      <p>No, QR Junction is completely free to use and requires no registration. You can generate unlimited QR codes without creating an account. All QR code generation happens locally in your browser, ensuring your privacy and data security.</p>
+      <p>Yes. This QR code maker needs no signup for a static code. You can generate unlimited static QR codes without creating an account. Generation happens in your browser. Create an account only if you want scan analytics or an editable destination after print.</p>
     ),
   },
   {

@@ -1,7 +1,11 @@
-export const HOME_TITLE = 'Free QR Code Generator | Custom QR Codes - QR Junction';
+export const HOME_TITLE =
+  'Free QR Code Generator | Create QR Code Online - QR Junction';
 
 export const HOME_DESCRIPTION =
-  'QR Junction is a free QR code generator for websites, Wi-Fi, vCards, WhatsApp, PDFs, and restaurant menus. Create a custom QR in your browser, scan-test it, and download PNG or SVG. No signup required.';
+  'Create a QR code online with QR Junction, a free QR code generator. QR code maker, no signup: websites, Wi-Fi, vCards, WhatsApp, PDFs, and restaurant menus. Scan-test, then download PNG or SVG.';
+
+export const HOME_KEYWORDS =
+  'free QR code generator, create QR code online, create a QR code online, QR code maker, QR code maker no signup, no signup QR code, custom QR codes, URL QR code, WiFi QR code, vCard QR code, QR Junction';
 
 export const HOME_HOW_TO = [
   {
@@ -24,8 +28,12 @@ export const HOME_HOW_TO = [
 
 export const HOME_FAQS: { q: string; a: string }[] = [
   {
-    q: 'How do I create a QR code for free?',
-    a: 'Open QR Junction, pick a type (URL, Wi-Fi, vCard, WhatsApp, and others), fill the field, customise colours if you want, and download PNG or SVG. You do not need an account for a static code. Always scan it with your phone camera before you print.',
+    q: 'Can I create a QR code online for free?',
+    a: 'Yes. This is a free QR code generator. Create a QR code online in your browser: pick a type (URL, Wi-Fi, vCard, WhatsApp, and others), fill the field, customise if you want, and download PNG or SVG. Static codes need no signup. Scan with your phone camera before you print.',
+  },
+  {
+    q: 'Is this a QR code maker with no signup?',
+    a: 'Yes. This QR code maker needs no signup for a static code. You generate, style, and download without an account. Create an account only if you want scan analytics or an editable destination after print. We do not watermark the static download.',
   },
   {
     q: 'What is a QR code?',
@@ -57,7 +65,7 @@ export const HOME_FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Is QR Junction free? Do I need to register?',
-    a: 'Generating and downloading a static QR is free and does not require a login. Create an account if you want scan analytics, editable destinations, restaurant menus, or review flows. We do not put a watermark on the static download.',
+    a: 'This QR code maker is free for static codes and needs no signup. Generating and downloading PNG or SVG does not require a login. Create an account if you want scan analytics, editable destinations, restaurant menus, or review flows. We do not put a watermark on the static download.',
   },
   {
     q: 'Which QR code should a restaurant or shop use?',

@@ -68,9 +68,17 @@ interface QRGeneratorProps {
   initialUrl?: string;
   initialTab?: TabType;
   lockTab?: boolean;
+  heading?: string;
+  subheading?: string;
 }
 
-export default function QRGenerator({ initialUrl, initialTab, lockTab }: QRGeneratorProps) {
+export default function QRGenerator({
+  initialUrl,
+  initialTab,
+  lockTab,
+  heading = "Advanced QR Designer Canvas",
+  subheading = "Design, style, and export highly customizable vector or raster QR codes with analytics",
+}: QRGeneratorProps) {
   const [activeTab, setActiveTab] = useState<TabType>(initialTab || "url");
   const [formData, setFormData] = useState<FormData>(() => {
     return initialUrl ? { url: initialUrl } : {};
@@ -196,12 +204,10 @@ export default function QRGenerator({ initialUrl, initialTab, lockTab }: QRGener
       {/* Header bar */}
       <div className="bg-white border border-slate-200/80 px-6 sm:px-8 py-6 rounded-3xl shadow-md">
         <h2 className="text-[#001B50] font-extrabold text-2xl flex items-center gap-2.5">
-          <QrCode className="w-7 h-7 text-primary" /> Advanced QR Designer
-          Canvas
+          <QrCode className="w-7 h-7 text-primary" /> {heading}
         </h2>
         <p className="text-slate-500 text-xs sm:text-sm mt-1.5 font-medium">
-          Design, style, and export highly customizable vector or raster QR
-          codes with analytics
+          {subheading}
         </p>
       </div>
 

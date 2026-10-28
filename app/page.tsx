@@ -26,9 +26,9 @@ export default function Home() {
   const howToJsonLd = {
     "@context": "https://schema.org",
     "@type": "HowTo",
-    name: "How to create a free QR code",
+    name: "How to create a QR code online",
     description:
-      "Create a free QR code for a website, Wi-Fi network, vCard, WhatsApp chat, or menu, then download PNG or SVG.",
+      "Create a QR code online with this free QR code generator. QR code maker, no signup for a website, Wi-Fi, vCard, WhatsApp, or menu. Download PNG or SVG.",
     step: HOME_HOW_TO.map((step, idx) => ({
       "@type": "HowToStep",
       position: idx + 1,
@@ -52,18 +52,18 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
               <p className="text-xs font-bold uppercase tracking-widest text-primary">
-                Free QR code generator · Made in India
+                Free QR code generator · QR code maker, no signup
               </p>
               <h1 className="text-4xl sm:text-[48px] font-bold text-[#001B50] tracking-tight leading-tight sm:leading-[56px]">
-                Free QR Code Generator for Your Website, Wi-Fi, and Shop
+                Free QR Code Generator — Create a QR Code Online
               </h1>
 
               <p className="text-slate-700 text-base sm:text-lg leading-[28px] max-w-2xl mx-auto lg:mx-0">
-                QR Junction is a free QR code generator. You paste a website, Wi-Fi
-                password, WhatsApp number, or menu link, customise the design, and
-                download a PNG or SVG. iPhone and Android cameras scan it — no extra
-                app. Static codes need no signup; tracking lives in the dashboard if
-                you want it.
+                QR Junction is a free QR code generator. Create a QR code online for
+                a website, Wi-Fi password, WhatsApp number, or menu, then download
+                PNG or SVG. This QR code maker needs no signup for static codes.
+                iPhone and Android cameras scan it — no extra app. Tracking lives in
+                the dashboard if you want it.
               </p>
 
               <p className="text-sm text-slate-500">

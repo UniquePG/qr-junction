@@ -1,13 +1,13 @@
 # QR Junction
 
-> QR Junction is a free QR code generator and tracking platform based in India. You create URL, Wi-Fi, vCard, WhatsApp, Instagram, PDF, digital menu, Google Review, and other QR codes in the browser, download PNG or SVG, and optionally track scans after you print.
+> QR Junction is a free QR code generator and tracking platform based in India. Create a QR code online for URL, Wi-Fi, vCard, WhatsApp, Instagram, PDF, digital menu, Google Review, and other types, download PNG or SVG, and optionally track scans after you print. QR code maker, no signup for static codes.
 
-QR Junction (https://www.qrjunction.in/) helps shops, restaurants, and marketers turn a printed square into a phone action: open a website, join Wi-Fi, save a contact, start a WhatsApp chat, open a menu, or leave a Google review. Static codes need no account. Dynamic codes (dashboard) let you change the destination and see scan analytics.
+QR Junction (https://www.qrjunction.in/) helps shops, restaurants, and marketers turn a printed square into a phone action: open a website, join Wi-Fi, save a contact, start a WhatsApp chat, open a menu, or leave a Google review. This QR code maker needs no signup for static codes. Dynamic codes (dashboard) let you change the destination and see scan analytics.
 
 ## Product
 
-- [Free QR code generator (home)](https://www.qrjunction.in/): Paste a link or pick a type, customise colours and logo, download.
-- [Advanced generator](https://www.qrjunction.in/qr): Full design controls (dots, frames, error correction, SVG).
+- [Free QR code generator (home)](https://www.qrjunction.in/): Create a QR code online. Paste a link or pick a type, customise colours and logo, download. No signup for static codes.
+- [QR code maker](https://www.qrjunction.in/qr): Full design controls (dots, frames, error correction, SVG). QR code maker, no signup.
 - [FAQ](https://www.qrjunction.in/faq): How codes work on iPhone and Android, expiry, print size.
 - [About](https://www.qrjunction.in/about): Who builds QR Junction and how to cite it.
 - [Changelog](https://www.qrjunction.in/changelog): Product updates.
