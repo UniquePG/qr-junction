@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { qrService, reviewService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import Link from 'next/link';
@@ -152,12 +153,7 @@ export default function ReviewSuiteDirectory() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch('/api/reviews/summary', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await reviewService.summary();
 
       if (!res.ok) throw new Error('Failed to retrieve review suite data.');
       const data = await res.json();
@@ -178,16 +174,7 @@ export default function ReviewSuiteDirectory() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const url = qrId === 'all' 
-        ? '/api/reviews/weekly-insights' 
-        : `/api/reviews/weekly-insights?qrCodeId=${qrId}`;
-
-      const res = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await reviewService.weeklyInsights(qrId);
 
       if (res.ok) {
         const data = await res.json();
@@ -225,15 +212,7 @@ export default function ReviewSuiteDirectory() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/qrs/${qr.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      const res = await qrService.update(qr.id, { status: newStatus });
 
       if (!res.ok) throw new Error('Failed to toggle status.');
       setQrs(prev => prev.map(item => item.id === qr.id ? { ...item, status: newStatus } : item));
@@ -257,13 +236,7 @@ export default function ReviewSuiteDirectory() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/qrs/${deletingQrId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await qrService.remove(deletingQrId);
 
       if (!res.ok) throw new Error('Failed to delete review campaign.');
       setQrs(prev => prev.filter(item => item.id !== deletingQrId));
@@ -286,17 +259,9 @@ export default function ReviewSuiteDirectory() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
-        },
-        body: JSON.stringify({
-          id: selectedInboxReview.id,
-          aiReply: editingReplyText
-        }),
+      const res = await reviewService.save({
+        id: selectedInboxReview.id,
+        aiReply: editingReplyText,
       });
 
       if (res.ok) {

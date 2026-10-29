@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { campaignService, qrService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
@@ -43,12 +44,7 @@ export default function CreateQrPage() {
         const currentUser = auth.currentUser;
         if (!currentUser) return;
         
-        const token = await currentUser.getIdToken();
-        const res = await fetch('/api/campaigns', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const res = await campaignService.list();
         if (res.ok) {
           const data = await res.json();
           setCampaigns(data.campaigns || []);
@@ -108,25 +104,17 @@ export default function CreateQrPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error('Unauthenticated user.');
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch('/api/qrs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name,
-          type,
-          destination,
-          fgColor,
-          bgColor,
-          utmSource: utmSource || null,
-          utmMedium: utmMedium || null,
-          utmCampaign: utmCampaign || null,
-          campaignId: campaignId ? parseInt(campaignId, 10) : null,
-          landingPageId: activeTab === 'landing_page' ? destination.landingPageId : null,
-        }),
+      const res = await qrService.create({
+        name,
+        type,
+        destination,
+        fgColor,
+        bgColor,
+        utmSource: utmSource || null,
+        utmMedium: utmMedium || null,
+        utmCampaign: utmCampaign || null,
+        campaignId: campaignId ? parseInt(campaignId, 10) : null,
+        landingPageId: activeTab === 'landing_page' ? destination.landingPageId : null,
       });
 
       if (!res.ok) {

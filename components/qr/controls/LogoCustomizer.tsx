@@ -1,5 +1,6 @@
 'use client';
 
+import { uploadService } from '@/lib/api';
 import type { QRLogoConfig } from '@/types/qrTypes';
 import { useRef, useState } from 'react';
 import { AlertTriangle, ImagePlus, Upload } from 'lucide-react';
@@ -47,10 +48,7 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
       const uploadData = new FormData();
       uploadData.append('file', file);
 
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: uploadData,
-      });
+      const res = await uploadService.file(uploadData);
 
       if (!res.ok) throw new Error('Upload failed');
       const json = await res.json();

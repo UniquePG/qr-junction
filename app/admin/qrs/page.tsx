@@ -9,7 +9,8 @@ import {
   AdminSelect,
   AdminTable,
 } from "@/components/admin/AdminUI";
-import { adminFetch, formatDate } from "@/lib/adminClient";
+import { adminService } from "@/lib/api";
+import { formatDate } from "@/lib/adminClient";
 import React, { useEffect, useState } from "react";
 
 const TYPES = ["URL","TEXT","WHATSAPP","EMAIL","PHONE","WIFI","SNAPCHAT","INSTAGRAM","FACEBOOK","LINKEDIN","TELEGRAM","TWITTER","CONTACT","SMS","APP_DOWNLOAD","PDF","LANDING_PAGE","REVIEW","RESTAURANT_MENU"];
@@ -28,8 +29,7 @@ export default function AdminQrsPage() {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams({ page: String(page), search, type, status });
-        const data = await adminFetch(`/api/admin/qrs?${params}`);
+        const data = await adminService.qrs({ page: String(page), search, type, status });
         setRows(data.qrs || []);
         setTotalPages(data.totalPages || 1);
         setTotal(data.total || 0);

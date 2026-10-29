@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { campaignService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import Link from 'next/link';
@@ -84,12 +85,7 @@ export default function CampaignsPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch('/api/campaigns', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await campaignService.list();
 
       if (!res.ok) throw new Error('Failed to fetch campaigns.');
       const data = await res.json();
@@ -112,12 +108,7 @@ export default function CampaignsPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/campaigns/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await campaignService.get(id);
 
       if (!res.ok) throw new Error('Failed to fetch campaign details.');
       const data = await res.json();
@@ -166,19 +157,11 @@ export default function CampaignsPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch('/api/campaigns', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: formName,
-          description: formDescription || null,
-          startDate: formStartDate || null,
-          endDate: formEndDate || null,
-        }),
+      const res = await campaignService.create({
+        name: formName,
+        description: formDescription || null,
+        startDate: formStartDate || null,
+        endDate: formEndDate || null,
       });
 
       if (!res.ok) throw new Error('Failed to create campaign.');
@@ -206,19 +189,11 @@ export default function CampaignsPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/campaigns/${selectedCampaignId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: formName,
-          description: formDescription || null,
-          startDate: formStartDate || null,
-          endDate: formEndDate || null,
-        }),
+      const res = await campaignService.update(selectedCampaignId!, {
+        name: formName,
+        description: formDescription || null,
+        startDate: formStartDate || null,
+        endDate: formEndDate || null,
       });
 
       if (!res.ok) throw new Error('Failed to update campaign.');
@@ -250,13 +225,7 @@ export default function CampaignsPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/campaigns/${deletingCampaignId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await campaignService.remove(deletingCampaignId);
 
       if (!res.ok) throw new Error('Failed to delete campaign.');
 

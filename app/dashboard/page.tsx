@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { dashboardService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { Globe, Loader2 } from 'lucide-react';
@@ -51,28 +52,8 @@ export default function DashboardOverview() {
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
-      
-      const token = await currentUser.getIdToken();
-      let url = '/api/dashboard/stats';
-      
-      const params = new URLSearchParams();
-      if (start === null && end === null) {
-        params.append('range', 'all');
-      } else {
-        if (start) params.append('startDate', start.toISOString());
-        if (end) params.append('endDate', end.toISOString());
-      }
-      
-      const queryString = params.toString();
-      if (queryString) {
-        url += `?${queryString}`;
-      }
 
-      const res = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await dashboardService.stats(start, end);
 
       if (!res.ok) throw new Error('Failed to load dashboard statistics.');
       const data = await res.json();

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { qrService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import Link from 'next/link';
@@ -75,12 +76,7 @@ export default function QrListPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch('/api/qrs', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await qrService.list();
 
       if (!res.ok) throw new Error('Failed to fetch QR codes.');
       const data = await res.json();
@@ -111,15 +107,7 @@ export default function QrListPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/qrs/${qr.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      const res = await qrService.update(qr.id, { status: newStatus });
 
       if (!res.ok) throw new Error('Failed to update status.');
       
@@ -149,13 +137,7 @@ export default function QrListPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/qrs/${deletingQrId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await qrService.remove(deletingQrId);
 
       if (!res.ok) throw new Error('Failed to delete QR code.');
       

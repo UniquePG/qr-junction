@@ -1,7 +1,8 @@
 "use client";
 
 import { AdminEmpty, AdminLink, AdminLoading, AdminPagination, AdminSearch, AdminSelect, AdminTable } from "@/components/admin/AdminUI";
-import { adminFetch, formatDateTime } from "@/lib/adminClient";
+import { adminService } from "@/lib/api";
+import { formatDateTime } from "@/lib/adminClient";
 import React, { useEffect, useState } from "react";
 
 export default function AdminScansPage() {
@@ -18,8 +19,7 @@ export default function AdminScansPage() {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams({ page: String(page), search, device, country });
-        const data = await adminFetch(`/api/admin/scans?${params}`);
+        const data = await adminService.scans({ page: String(page), search, device, country });
         setRows(data.scans || []);
         setTotalPages(data.totalPages || 1);
         setTotal(data.total || 0);

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
-import { auth } from '@/lib/firebase';
+import { profileService, uploadService } from '@/lib/api';
 import { 
   Save, 
   Building2, 
@@ -47,13 +47,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const currentUser = auth.currentUser;
-        const token = await currentUser?.getIdToken();
-        const res = await fetch('/api/profile', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        const res = await profileService.get();
         if (res.ok) {
           const json = await res.json();
           if (json.profile) {
@@ -79,16 +73,7 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const currentUser = auth.currentUser;
-      const token = await currentUser?.getIdToken();
-      const res = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(data)
-      });
+      const res = await profileService.update(data);
       
       if (!res.ok) throw new Error('Failed to update profile');
       toast.success('Profile updated successfully!');
@@ -143,10 +128,7 @@ export default function ProfilePage() {
                   try {
                     const uploadData = new FormData();
                     uploadData.append('file', file);
-                    const res = await fetch('/api/upload', {
-                      method: 'POST',
-                      body: uploadData
-                    });
+                    const res = await uploadService.file(uploadData);
                     if (!res.ok) throw new Error('Upload failed');
                     const json = await res.json();
                     if (!json.success) throw new Error(json.error || 'Upload failed');

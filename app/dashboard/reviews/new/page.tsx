@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { campaignService, profileService, qrService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
@@ -53,25 +54,14 @@ export default function CreateReviewQrPage() {
         const currentUser = auth.currentUser;
         if (!currentUser) return;
         
-        const token = await currentUser.getIdToken();
-        
-        // 1. Fetch Campaigns
-        const res = await fetch('/api/campaigns', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const res = await campaignService.list();
         if (res.ok) {
           const data = await res.json();
           setCampaigns(data.campaigns || []);
         }
 
         // 2. Fetch Business Profile to pre-fill
-        const profileRes = await fetch('/api/profile', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const profileRes = await profileService.get();
         if (profileRes.ok) {
           const profileData = await profileRes.json();
           if (profileData.profile) {
@@ -126,8 +116,6 @@ export default function CreateReviewQrPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error('Unauthenticated user.');
 
-      const token = await currentUser.getIdToken();
-
       const destination = {
         businessName,
         logoUrl: logoUrl.trim() || undefined,
@@ -140,23 +128,16 @@ export default function CreateReviewQrPage() {
         language
       };
 
-      const res = await fetch('/api/qrs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name,
-          type: 'REVIEW',
-          destination,
-          fgColor,
-          bgColor,
-          utmSource: utmSource || null,
-          utmMedium: utmMedium || null,
-          utmCampaign: utmCampaign || null,
-          campaignId: campaignId ? parseInt(campaignId, 10) : null,
-        }),
+      const res = await qrService.create({
+        name,
+        type: 'REVIEW',
+        destination,
+        fgColor,
+        bgColor,
+        utmSource: utmSource || null,
+        utmMedium: utmMedium || null,
+        utmCampaign: utmCampaign || null,
+        campaignId: campaignId ? parseInt(campaignId, 10) : null,
       });
 
       if (!res.ok) {

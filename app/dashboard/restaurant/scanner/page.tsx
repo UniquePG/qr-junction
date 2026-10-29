@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
-import { auth } from '@/lib/firebase';
+import { restaurantService, uploadService } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { 
   Upload, 
@@ -111,19 +111,14 @@ export default function AIScannerPage() {
   useEffect(() => {
     const checkRestaurantAndMenus = async () => {
       try {
-        const token = await auth.currentUser?.getIdToken();
-        const res = await fetch('/api/restaurant/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await restaurantService.getProfile();
         if (res.ok) {
           const json = await res.json();
           if (json.restaurant) {
             setRestaurantExists(true);
             
             // Fetch menus list
-            const menusRes = await fetch('/api/restaurant/menus', {
-              headers: { Authorization: `Bearer ${token}` }
-            });
+            const menusRes = await restaurantService.listMenus();
             if (menusRes.ok) {
               const menusJson = await menusRes.json();
               setMenus(menusJson.menus || []);
@@ -170,10 +165,7 @@ export default function AIScannerPage() {
     try {
       const uploadData = new FormData();
       uploadData.append('file', file);
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: uploadData
-      });
+      const res = await uploadService.file(uploadData);
       if (!res.ok) throw new Error('Upload failed');
       const json = await res.json();
       if (!json.success) throw new Error(json.error || 'Upload failed');
@@ -190,15 +182,7 @@ export default function AIScannerPage() {
   const runScanner = async (url: string, type: string) => {
     setScanning(true);
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch('/api/restaurant/scan-menu', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ fileUrl: url, fileType: type })
-      });
+      const res = await restaurantService.scanMenu({ fileUrl: url, fileType: type });
 
       if (!res.ok) {
         const json = await res.json();
@@ -295,7 +279,7 @@ export default function AIScannerPage() {
     try {
       const uploadData = new FormData();
       uploadData.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: uploadData });
+      const res = await uploadService.file(uploadData);
       const json = await res.json();
       if (!res.ok || !json.url) throw new Error(json.error || 'Upload failed');
       handleUpdateItem(catIdx, itemIdx, { image: json.url });
@@ -318,15 +302,7 @@ export default function AIScannerPage() {
     const key = itemKey(catIdx, itemIdx);
     setGeneratingImageKey(key);
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch('/api/restaurant/items/generate-image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ itemName }),
-      });
+      const res = await restaurantService.generateImage({ itemName });
       const json = await res.json();
       if (!res.ok || !json.url) throw new Error(json.error || 'Failed to generate image.');
       handleUpdateItem(catIdx, itemIdx, { image: json.url });
@@ -355,18 +331,10 @@ export default function AIScannerPage() {
 
     setImporting(true);
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch('/api/restaurant/import-menu', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          categories: parsedCategories,
-          mode: importMode,
-          menuId: selectedMenuId
-        })
+      const res = await restaurantService.importMenu({
+        categories: parsedCategories,
+        mode: importMode,
+        menuId: selectedMenuId,
       });
 
       if (res.ok) {
@@ -586,7 +554,7 @@ export default function AIScannerPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Parsed Categories Panel */}
-            <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm h-fit">
+            <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm h-fit lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100dvh-7.5rem)] lg:overflow-y-auto">
               <div className="flex items-center justify-between mb-4 px-2">
                 <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Categories</h4>
                 <button 

@@ -2,7 +2,7 @@
 
 import PasswordInput from "@/components/PasswordInput";
 import { useAuth } from "@/components/AuthContext";
-import { adminFetch } from "@/lib/adminClient";
+import { adminService } from "@/lib/api";
 import { auth } from "@/lib/firebase";
 import {
   GoogleAuthProvider,
@@ -31,7 +31,7 @@ export default function AdminLoginPage() {
     const verify = async () => {
       setChecking(true);
       try {
-        await adminFetch("/api/admin/me");
+        await adminService.me();
         if (!cancelled) router.replace("/admin");
       } catch {
         toast.error("This account does not have admin access.");

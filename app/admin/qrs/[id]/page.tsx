@@ -1,7 +1,8 @@
 "use client";
 
 import { AdminCard, AdminLink, AdminLoading, AdminTable } from "@/components/admin/AdminUI";
-import { adminFetch, formatDateTime } from "@/lib/adminClient";
+import { adminService } from "@/lib/api";
+import { formatDateTime } from "@/lib/adminClient";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -11,7 +12,7 @@ export default function AdminQrDetailPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    adminFetch(`/api/admin/qrs/${params.id}`).then(setData).catch(() => setError("QR code not found."));
+    adminService.qr(params.id).then(setData).catch(() => setError("QR code not found."));
   }, [params.id]);
 
   if (error) return <p className="text-sm text-slate-500">{error}</p>;

@@ -3,7 +3,7 @@
 import DashboardMap from "@/components/DashboardMap";
 import DashboardTimeFilter from "@/components/DashboardTimeFilter";
 import { AdminCard, AdminLoading, AdminStatCard } from "@/components/admin/AdminUI";
-import { adminFetch } from "@/lib/adminClient";
+import { adminService } from "@/lib/api";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Area,
@@ -66,11 +66,11 @@ export default function AdminOverviewPage() {
   const load = async (start?: Date | null, end?: Date | null) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (start === null && end === null) params.set("range", "all");
-      if (start) params.set("startDate", start.toISOString());
-      if (end) params.set("endDate", end.toISOString());
-      const json = await adminFetch<OverviewResponse>(`/api/admin/overview?${params.toString()}`);
+      const query: Record<string, string> = {};
+      if (start === null && end === null) query.range = "all";
+      if (start) query.startDate = start.toISOString();
+      if (end) query.endDate = end.toISOString();
+      const json = await adminService.overview<OverviewResponse>(query);
       setData(json);
     } finally {
       setLoading(false);

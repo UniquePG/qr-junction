@@ -12,6 +12,7 @@ import {
   Phone,
   Twitter,
 } from "lucide-react";
+import { leadService, publicService } from "@/lib/api";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 
@@ -156,15 +157,11 @@ export default function PublicLandingPageClient({
     // If we have a QR Code context, log the scan conversion event
     if (qrCodeId) {
       try {
-        await fetch("/api/conversions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            qrCodeId: parseInt(qrCodeId, 10),
-            eventType,
-            eventName,
-            value: 5.0, // minor conversion value for link click
-          }),
+        await publicService.conversion({
+          qrCodeId: parseInt(qrCodeId, 10),
+          eventType,
+          eventName,
+          value: 5.0,
         });
       } catch (err) {
         console.error("Failed to log click conversion:", err);
@@ -193,25 +190,17 @@ export default function PublicLandingPageClient({
       }
 
       // 1. Submit lead details
-      const leadRes = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const leadRes = await leadService.create(payload, { auth: false });
 
       if (!leadRes.ok) throw new Error("Lead registration failed.");
 
       // 2. Track lead form conversion event
       if (qrCodeId) {
-        await fetch("/api/conversions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            qrCodeId: parseInt(qrCodeId, 10),
-            eventType: "FORM_SUBMIT",
-            eventName: "landing_page_lead_form",
-            value: 15.0, // higher value for lead acquisition
-          }),
+        await publicService.conversion({
+          qrCodeId: parseInt(qrCodeId, 10),
+          eventType: "FORM_SUBMIT",
+          eventName: "landing_page_lead_form",
+          value: 15.0,
         });
       }
 

@@ -28,7 +28,7 @@ function adminResponse(response: NextResponse) {
   return response;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const host = request.headers.get("host") || "";
   if (!isAdminHost(host)) {
     return NextResponse.next();

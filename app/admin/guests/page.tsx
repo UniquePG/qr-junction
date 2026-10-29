@@ -9,7 +9,8 @@ import {
   AdminStatCard,
   AdminTable,
 } from "@/components/admin/AdminUI";
-import { adminFetch, formatDateTime } from "@/lib/adminClient";
+import { adminService } from "@/lib/api";
+import { formatDateTime } from "@/lib/adminClient";
 import React, { useEffect, useState } from "react";
 
 const TYPES = [
@@ -33,8 +34,7 @@ export default function AdminGuestsPage() {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams({ page: String(page), search, event, type, source });
-        const data = await adminFetch(`/api/admin/guests?${params}`);
+        const data = await adminService.guests({ page: String(page), search, event, type, source });
         setRows(data.events || []);
         setTotalPages(data.totalPages || 1);
         setTotal(data.total || 0);

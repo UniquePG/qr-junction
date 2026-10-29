@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/components/AuthContext";
-import { adminFetch } from "@/lib/adminClient";
+import { adminService } from "@/lib/api";
 import {
   Fingerprint,
   FolderOpen,
@@ -61,7 +61,7 @@ function AuthenticatedShell({ children }: { children: React.ReactNode }) {
     }
 
     let cancelled = false;
-    adminFetch<{ admin: { name: string | null; email: string; role: string } }>("/api/admin/me")
+    adminService.me<{ admin: { name: string | null; email: string; role: string } }>()
       .then((data) => {
         if (cancelled) return;
         setAdminName(data.admin.name || data.admin.email);

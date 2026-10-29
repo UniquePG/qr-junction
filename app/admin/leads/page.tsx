@@ -1,7 +1,8 @@
 "use client";
 
 import { AdminEmpty, AdminLink, AdminLoading, AdminPagination, AdminSearch, AdminSelect, AdminTable } from "@/components/admin/AdminUI";
-import { adminFetch, formatDate } from "@/lib/adminClient";
+import { adminService } from "@/lib/api";
+import { formatDate } from "@/lib/adminClient";
 import React, { useEffect, useState } from "react";
 
 export default function AdminLeadsPage() {
@@ -17,8 +18,7 @@ export default function AdminLeadsPage() {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams({ page: String(page), search, status });
-        const data = await adminFetch(`/api/admin/leads?${params}`);
+        const data = await adminService.leads({ page: String(page), search, status });
         setRows(data.leads || []);
         setTotalPages(data.totalPages || 1);
         setTotal(data.total || 0);

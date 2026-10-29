@@ -1,5 +1,6 @@
 "use client";
 
+import { authService } from "@/lib/api";
 import { useAuth } from "@/components/AuthContext";
 import { needsEmailVerification, maskEmail } from "@/lib/emailVerification";
 import { auth } from "@/lib/firebase";
@@ -51,10 +52,7 @@ export default function VerifyEmailPage() {
       setSending(true);
       setError("");
       try {
-        const res = await fetch("/api/auth/otp/send", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await authService.sendOtp();
         const data = await res.json().catch(() => ({}));
 
         if (res.status === 429) {
@@ -132,14 +130,7 @@ export default function VerifyEmailPage() {
     setVerifying(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/otp/verify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ code: value }),
-      });
+      const res = await authService.verifyOtp(value);
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {

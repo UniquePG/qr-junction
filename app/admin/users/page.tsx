@@ -9,7 +9,8 @@ import {
   AdminSelect,
   AdminTable,
 } from "@/components/admin/AdminUI";
-import { adminFetch, formatDate } from "@/lib/adminClient";
+import { adminService } from "@/lib/api";
+import { formatDate } from "@/lib/adminClient";
 import React, { useEffect, useState } from "react";
 
 type UserRow = {
@@ -41,10 +42,13 @@ export default function AdminUsersPage() {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams({ page: String(page), search, role, verified, provider });
-        const data = await adminFetch<{ users: UserRow[]; totalPages: number; total: number }>(
-          `/api/admin/users?${params}`,
-        );
+        const data = await adminService.users<{ users: UserRow[]; totalPages: number; total: number }>({
+          page: String(page),
+          search,
+          role,
+          verified,
+          provider,
+        });
         setRows(data.users);
         setTotalPages(data.totalPages);
         setTotal(data.total || 0);

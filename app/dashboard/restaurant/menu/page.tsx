@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
-import { auth } from '@/lib/firebase';
+import { restaurantService, uploadService } from '@/lib/api';
 import { QRCodeSVG } from 'qrcode.react';
 import { getQrUrl } from '@/utils/qrUrl';
 import { 
@@ -172,10 +172,7 @@ export default function MenuManagementPage() {
   const fetchMenusList = async (selectId?: number) => {
     setMenusLoading(true);
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch('/api/restaurant/menus', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await restaurantService.listMenus();
       if (res.ok) {
         const json = await res.json();
         setMenus(json.menus || []);
@@ -205,10 +202,7 @@ export default function MenuManagementPage() {
     }
     setLoading(true);
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch(`/api/restaurant/menu?menuId=${selectedMenuId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await restaurantService.getMenu(selectedMenuId);
       if (res.ok) {
         const json = await res.json();
         if (json.restaurant) setRestaurant(json.restaurant);
@@ -251,16 +245,8 @@ export default function MenuManagementPage() {
     if (!editingMenu?.name?.trim()) return;
     setSavingMenu(true);
     try {
-      const token = await auth.currentUser?.getIdToken();
       const method = editingMenu.id ? 'PUT' : 'POST';
-      const res = await fetch('/api/restaurant/menus', {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(editingMenu)
-      });
+      const res = await restaurantService.saveMenu(method, editingMenu);
       const json = await res.json();
       if (res.ok) {
         toast.success(`Menu ${editingMenu.id ? 'updated' : 'created'} successfully!`);
@@ -286,11 +272,7 @@ export default function MenuManagementPage() {
     if (!confirm('Are you sure you want to delete this entire menu? All categories and dishes inside it will be permanently deleted.')) return;
     
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch(`/api/restaurant/menus?id=${selectedMenuId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await restaurantService.deleteMenu(selectedMenuId!);
       if (res.ok) {
         toast.success('Menu deleted successfully!');
         setSelectedMenuId(null);
@@ -309,15 +291,7 @@ export default function MenuManagementPage() {
     if (!newCatName.trim() || !selectedMenuId) return;
     setSavingCat(true);
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch('/api/restaurant/categories', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ name: newCatName, menuId: selectedMenuId })
-      });
+      const res = await restaurantService.createCategory({ name: newCatName, menuId: selectedMenuId });
       if (res.ok) {
         toast.success('Category added successfully!');
         setNewCatName('');
@@ -337,15 +311,7 @@ export default function MenuManagementPage() {
     if (!editingCatName.trim()) return;
     setSavingCat(true);
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch('/api/restaurant/categories', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ id, name: editingCatName })
-      });
+      const res = await restaurantService.updateCategories({ id, name: editingCatName });
       if (res.ok) {
         toast.success('Category renamed!');
         setEditingCatId(null);
@@ -363,11 +329,7 @@ export default function MenuManagementPage() {
   const handleDeleteCategory = async (id: number) => {
     if (!confirm('Are you sure you want to delete this category? All menu items inside it will be deleted!')) return;
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch(`/api/restaurant/categories?id=${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await restaurantService.deleteCategory(id);
       if (res.ok) {
         toast.success('Category deleted');
         if (activeTabCategoryId === id) {
@@ -391,16 +353,8 @@ export default function MenuManagementPage() {
     list[targetIndex].order = temp;
 
     try {
-      const token = await auth.currentUser?.getIdToken();
-      await fetch('/api/restaurant/categories', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          categories: list.map(c => ({ id: c.id, order: c.order }))
-        })
+      await restaurantService.updateCategories({
+        categories: list.map(c => ({ id: c.id, order: c.order }))
       });
       await fetchMenuHierarchy();
     } catch (e) {
@@ -411,15 +365,7 @@ export default function MenuManagementPage() {
   // Item Actions
   const handleItemToggle = async (item: MenuItem) => {
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch('/api/restaurant/items', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ id: item.id, isAvailable: !item.isAvailable })
-      });
+      const res = await restaurantService.updateItems({ id: item.id, isAvailable: !item.isAvailable });
       if (res.ok) {
         toast.success(`${item.name} is now ${!item.isAvailable ? 'Available' : 'Sold Out'}`);
         await fetchMenuHierarchy();
@@ -437,10 +383,7 @@ export default function MenuManagementPage() {
     try {
       const uploadData = new FormData();
       uploadData.append('file', file);
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: uploadData
-      });
+      const res = await uploadService.file(uploadData);
       if (res.ok) {
         const json = await res.json();
         setEditingItem(prev => ({ ...prev, image: json.url }));
@@ -466,15 +409,7 @@ export default function MenuManagementPage() {
 
     setGeneratingAiImage(true);
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch('/api/restaurant/items/generate-image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ itemName })
-      });
+      const res = await restaurantService.generateImage({ itemName });
       const json = await res.json();
       if (res.ok) {
         setEditingItem(prev => (prev ? { ...prev, image: json.url } : null));
@@ -497,16 +432,8 @@ export default function MenuManagementPage() {
 
     setSavingItem(true);
     try {
-      const token = await auth.currentUser?.getIdToken();
       const method = editingItem.id ? 'PUT' : 'POST';
-      const res = await fetch('/api/restaurant/items', {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(editingItem)
-      });
+      const res = await restaurantService.saveItem(method, editingItem);
       if (res.ok) {
         toast.success(`Item ${editingItem.id ? 'updated' : 'added'}!`);
         setShowItemModal(false);
@@ -525,11 +452,7 @@ export default function MenuManagementPage() {
   const handleDeleteItem = async (id: number) => {
     if (!confirm('Are you sure you want to delete this menu item?')) return;
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch(`/api/restaurant/items?id=${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await restaurantService.deleteItem(id);
       if (res.ok) {
         toast.success('Item deleted');
         await fetchMenuHierarchy();
@@ -549,16 +472,8 @@ export default function MenuManagementPage() {
     list[targetIndex].order = temp;
 
     try {
-      const token = await auth.currentUser?.getIdToken();
-      await fetch('/api/restaurant/items', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          items: list.map(i => ({ id: i.id, order: i.order }))
-        })
+      await restaurantService.updateItems({
+        items: list.map(i => ({ id: i.id, order: i.order }))
       });
       await fetchMenuHierarchy();
     } catch (e) {
@@ -577,15 +492,7 @@ export default function MenuManagementPage() {
     }
     if (!currentMenu) return;
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch('/api/restaurant/menus', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ...currentMenu, theme: themeId }),
-      });
+      const res = await restaurantService.saveMenu('PUT', { ...currentMenu, theme: themeId });
       if (!res.ok) {
         const json = await res.json();
         throw new Error(json.error || 'Failed to update layout');
@@ -724,7 +631,7 @@ export default function MenuManagementPage() {
         /* Categories Sidebar & Dishes Editor Grid */
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Categories Sidebar */}
-          <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col h-fit">
+          <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col h-fit lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100dvh-7.5rem)] lg:overflow-y-auto">
             <div className="flex items-center justify-between mb-4 px-2">
               <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Categories</h3>
               <button 
@@ -745,7 +652,7 @@ export default function MenuManagementPage() {
                 <p className="text-xs">No categories created yet.</p>
               </div>
             ) : (
-              <div className="space-y-1.5 flex-1 max-h-[500px] overflow-y-auto pr-1">
+              <div className="space-y-1.5 flex-1 pr-1">
                 {categories.map((cat, index) => {
                   const isSelected = activeTabCategoryId === cat.id;
                   const isEditing = editingCatId === cat.id;

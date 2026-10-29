@@ -1,4 +1,5 @@
 import PasswordInput from "@/components/PasswordInput";
+import { landingPageService, uploadService } from "@/lib/api";
 import { auth } from "@/lib/firebase";
 import { FormData } from "@/lib/qrEngine";
 import {
@@ -564,12 +565,7 @@ export function LandingPageTabForm({ formData, updateFormData }: TabFormProps) {
           return;
         }
 
-        const token = await currentUser.getIdToken();
-        const res = await fetch("/api/landing-pages", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await landingPageService.list();
         if (!res.ok) throw new Error("Failed to fetch landing pages");
         const data = await res.json();
         if (data.success) {
@@ -716,10 +712,7 @@ export function ReviewTabForm({ formData, updateFormData }: TabFormProps) {
       const uploadData = new globalThis.FormData();
       uploadData.append("file", file);
 
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: uploadData,
-      });
+      const res = await uploadService.file(uploadData);
 
       if (!res.ok) throw new Error("Upload failed");
       const json = await res.json();

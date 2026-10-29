@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { landingPageService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { 
   ArrowLeft, 
@@ -77,12 +78,7 @@ export default function LandingPageBuilder({ pageId }: LandingPageBuilderProps) 
         const currentUser = auth.currentUser;
         if (!currentUser) return;
 
-        const token = await currentUser.getIdToken();
-        const res = await fetch(`/api/landing-pages/${pageId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const res = await landingPageService.get(pageId!);
 
         if (!res.ok) throw new Error('Failed to load page configurations.');
         const data = await res.json();
@@ -182,10 +178,6 @@ export default function LandingPageBuilder({ pageId }: LandingPageBuilderProps) 
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error('Unauthenticated user.');
 
-      const token = await currentUser.getIdToken();
-      const endpoint = isEditMode ? `/api/landing-pages/${pageId}` : '/api/landing-pages';
-      const method = isEditMode ? 'PUT' : 'POST';
-
       const socialLinks = {
         instagram: instagram.trim() || null,
         facebook: facebook.trim() || null,
@@ -196,23 +188,19 @@ export default function LandingPageBuilder({ pageId }: LandingPageBuilderProps) 
         email: emailAddress.trim() || null,
       };
 
-      const res = await fetch(endpoint, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: title.trim(),
-          slug: cleanSlug,
-          theme,
-          profileName: profileName.trim() || title.trim(),
-          bio: bio.trim() || null,
-          avatarUrl: avatarUrl.trim() || null,
-          socialLinks,
-          buttons,
-        }),
-      });
+      const payload = {
+        title: title.trim(),
+        slug: cleanSlug,
+        theme,
+        profileName: profileName.trim() || title.trim(),
+        bio: bio.trim() || null,
+        avatarUrl: avatarUrl.trim() || null,
+        socialLinks,
+        buttons,
+      };
+      const res = isEditMode
+        ? await landingPageService.update(pageId!, payload)
+        : await landingPageService.create(payload);
 
       if (!res.ok) {
         const errorData = await res.json();

@@ -1,6 +1,7 @@
 "use client";
 
 import PasswordInput from "@/components/PasswordInput";
+import { authService } from "@/lib/api";
 import { ArrowRight, Loader2, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -31,7 +32,7 @@ function ResetPasswordForm() {
       }
 
       try {
-        const res = await fetch(`/api/auth/password/validate?token=${encodeURIComponent(token)}`);
+        const res = await authService.validateResetToken(token);
         const data = await res.json().catch(() => ({}));
         if (cancelled) return;
         if (!res.ok || !data.valid) {
@@ -69,11 +70,7 @@ function ResetPasswordForm() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/password/reset", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password, confirmPassword }),
-      });
+      const res = await authService.resetPassword({ token, password, confirmPassword });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(data.error || "Failed to reset password.");

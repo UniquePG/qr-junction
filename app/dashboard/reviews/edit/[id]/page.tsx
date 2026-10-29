@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { campaignService, qrService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
@@ -57,21 +58,14 @@ export default function EditReviewQrPage() {
         const currentUser = auth.currentUser;
         if (!currentUser) return;
         
-        const token = await currentUser.getIdToken();
-
-        // 1. Fetch campaigns dropdown
-        const campaignsRes = await fetch('/api/campaigns', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const campaignsRes = await campaignService.list();
         if (campaignsRes.ok) {
           const data = await campaignsRes.json();
           setCampaigns(data.campaigns || []);
         }
 
         // 2. Fetch specific Review QR details
-        const qrRes = await fetch(`/api/qrs/${id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const qrRes = await qrService.get(id);
         if (!qrRes.ok) throw new Error('Failed to load campaign settings.');
         const qrData = await qrRes.json();
         
@@ -133,8 +127,6 @@ export default function EditReviewQrPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error('Unauthenticated user.');
 
-      const token = await currentUser.getIdToken();
-
       const destination = {
         businessName,
         logoUrl: logoUrl.trim() || undefined,
@@ -147,22 +139,15 @@ export default function EditReviewQrPage() {
         language
       };
 
-      const res = await fetch(`/api/qrs/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name,
-          destination,
-          fgColor,
-          bgColor,
-          utmSource: utmSource || null,
-          utmMedium: utmMedium || null,
-          utmCampaign: utmCampaign || null,
-          campaignId: campaignId ? parseInt(campaignId, 10) : null,
-        }),
+      const res = await qrService.update(id, {
+        name,
+        destination,
+        fgColor,
+        bgColor,
+        utmSource: utmSource || null,
+        utmMedium: utmMedium || null,
+        utmCampaign: utmCampaign || null,
+        campaignId: campaignId ? parseInt(campaignId, 10) : null,
       });
 
       if (!res.ok) {

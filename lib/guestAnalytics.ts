@@ -1,3 +1,5 @@
+import { publicService } from "@/lib/api";
+
 const COOKIE_NAME = "qj_anon_id";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
@@ -66,10 +68,5 @@ export function trackGuestQrEvent(input: {
     sourcePath: window.location.pathname,
   };
 
-  void fetch("/api/public/qr-events", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-    keepalive: true,
-  }).catch(() => {});
+  void publicService.trackQrEvent(payload);
 }

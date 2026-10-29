@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Star, Send, Loader2, CheckCircle, ArrowRight, ArrowLeft, Check, Sparkles, MessageSquare } from 'lucide-react';
+import { qrService, reviewService } from '@/lib/api';
 import { toast } from 'react-toastify';
 
 // Tag selections depending on business review category
@@ -71,7 +72,7 @@ export default function ReviewLandingPage() {
   useEffect(() => {
     const fetchQR = async () => {
       try {
-        const res = await fetch(`/api/qrs/public/${shortCode}`);
+        const res = await qrService.publicByShortCode(shortCode);
         if (!res.ok) throw new Error('Not found');
         const data = await res.json();
         setQrCode(data.qrCode);
@@ -156,11 +157,7 @@ export default function ReviewLandingPage() {
         payload.id = submittedReviewId;
       }
 
-      const res = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const res = await reviewService.save(payload, { auth: false });
 
       if (res.ok) {
         const json = await res.json();
@@ -188,16 +185,12 @@ export default function ReviewLandingPage() {
       // Fetch AI generated review suggestions
       setSuggestionsLoading(true);
       try {
-        const res = await fetch('/api/reviews/generate-suggestions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            rating,
-            selectedTags,
-            businessName,
-            reviewCategory,
-            language: selectedLanguage
-          }),
+        const res = await reviewService.generateSuggestions({
+          rating,
+          selectedTags,
+          businessName,
+          reviewCategory,
+          language: selectedLanguage,
         });
 
         if (res.ok) {
@@ -243,11 +236,7 @@ export default function ReviewLandingPage() {
         payload.id = submittedReviewId;
       }
 
-      const res = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const res = await reviewService.save(payload, { auth: false });
 
       if (!res.ok) throw new Error('Submission failed');
 

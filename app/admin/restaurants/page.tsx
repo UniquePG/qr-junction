@@ -1,7 +1,8 @@
 "use client";
 
 import { AdminEmpty, AdminLink, AdminLoading, AdminPagination, AdminSearch, AdminTable } from "@/components/admin/AdminUI";
-import { adminFetch, formatDate } from "@/lib/adminClient";
+import { adminService } from "@/lib/api";
+import { formatDate } from "@/lib/adminClient";
 import React, { useEffect, useState } from "react";
 
 export default function AdminRestaurantsPage() {
@@ -16,7 +17,7 @@ export default function AdminRestaurantsPage() {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const data = await adminFetch(`/api/admin/restaurants?page=${page}&search=${encodeURIComponent(search)}`);
+        const data = await adminService.restaurants({ page, search });
         setRows(data.restaurants || []);
         setTotalPages(data.totalPages || 1);
         setTotal(data.total || 0);

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, Download, Save, Upload, X, Check, Trash2, Sparkles, Palette, Layout, QrCode } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { qrService, uploadService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { getQrUrl } from '@/utils/qrUrl';
 import CustomizableQRCode from './CustomizableQRCode';
@@ -105,10 +106,7 @@ export default function QRDesignModal({ isOpen, onClose, qrCode, onSave }: QRDes
     try {
       const uploadData = new FormData();
       uploadData.append('file', file);
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: uploadData,
-      });
+      const res = await uploadService.file(uploadData);
 
       if (!res.ok) throw new Error('Upload failed');
       const result = await res.json();
@@ -141,8 +139,6 @@ export default function QRDesignModal({ isOpen, onClose, qrCode, onSave }: QRDes
         return;
       }
 
-      const token = await currentUser.getIdToken();
-      
       const customDesignPayload = {
         frameId,
         frameText,
@@ -151,18 +147,11 @@ export default function QRDesignModal({ isOpen, onClose, qrCode, onSave }: QRDes
         logoPreset,
       };
 
-      const res = await fetch(`/api/qrs/${qrCode.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          fgColor,
-          bgColor,
-          logoUrl,
-          customDesign: customDesignPayload,
-        }),
+      const res = await qrService.update(qrCode.id, {
+        fgColor,
+        bgColor,
+        logoUrl,
+        customDesign: customDesignPayload,
       });
 
       if (!res.ok) {

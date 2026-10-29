@@ -1,7 +1,8 @@
 "use client";
 
 import { AdminCard, AdminLink, AdminLoading, AdminTable } from "@/components/admin/AdminUI";
-import { adminFetch, formatDate } from "@/lib/adminClient";
+import { adminService } from "@/lib/api";
+import { formatDate } from "@/lib/adminClient";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -11,7 +12,7 @@ export default function AdminUserDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    adminFetch(`/api/admin/users/${params.id}`)
+    adminService.user(params.id)
       .then(setData)
       .catch(() => setData(null))
       .finally(() => setLoading(false));

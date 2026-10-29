@@ -30,7 +30,7 @@ ADMIN_EMAILS=you@yourdomain.com
 5. One `git push` updates both sites.
 6. After the first deploy, set `role = OWNER` on your user if it is not already in `ADMIN_EMAILS`.
 
-`middleware.ts` only rewrites the admin host. Customer routes such as `/dashboard` and `/register` never render on `admin.qrjunction.in`.
+`proxy.ts` only rewrites the admin host. Customer routes such as `/dashboard` and `/register` never render on `admin.qrjunction.in`.
 
 ## Local check
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { authService } from "@/lib/api";
 import { useAuth } from "@/components/AuthContext";
 import { ArrowLeft, ArrowRight, Loader2, Mail } from "lucide-react";
 import Link from "next/link";
@@ -29,11 +30,7 @@ export default function ForgotPasswordPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/password/forgot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      const res = await authService.forgotPassword(email);
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { landingPageService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import Link from 'next/link';
@@ -55,12 +56,7 @@ export default function LandingPagesDirectory() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch('/api/landing-pages', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await landingPageService.list();
 
       if (!res.ok) throw new Error('Failed to retrieve landing pages list.');
       const data = await res.json();
@@ -103,13 +99,7 @@ export default function LandingPagesDirectory() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/landing-pages/${deletingPageId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await landingPageService.remove(deletingPageId);
 
       if (!res.ok) throw new Error('Failed to delete landing page.');
 

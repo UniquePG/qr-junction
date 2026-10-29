@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminCard, AdminLink, AdminLoading, AdminTable } from "@/components/admin/AdminUI";
-import { adminFetch } from "@/lib/adminClient";
+import { adminService } from "@/lib/api";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -11,7 +11,7 @@ export default function AdminRestaurantDetailPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    adminFetch(`/api/admin/restaurants/${params.id}`).then(setData).catch(() => setError("Restaurant not found."));
+    adminService.restaurant(params.id).then(setData).catch(() => setError("Restaurant not found."));
   }, [params.id]);
 
   if (error) return <p className="text-sm text-slate-500">{error}</p>;

@@ -1,5 +1,6 @@
 "use client";
 
+import { leadService, publicService } from "@/lib/api";
 import { Award, Check, Copy, Key, Send, ShieldCheck, Wifi } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
@@ -48,30 +49,25 @@ export default function WifiDetailsClient({
     setSubmitting(true);
     try {
       // 1. Submit lead
-      const leadRes = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const leadRes = await leadService.create(
+        {
           name,
           email,
           phone,
           qrCodeId,
           userId,
-        }),
-      });
+        },
+        { auth: false },
+      );
 
       if (!leadRes.ok) throw new Error("Failed to submit lead");
 
       // 2. Log conversion event
-      await fetch("/api/conversions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          qrCodeId,
-          eventType: "FORM_SUBMIT",
-          eventName: "wifi_lead_capture",
-          value: 10.0, // default conversion value
-        }),
+      await publicService.conversion({
+        qrCodeId,
+        eventType: "FORM_SUBMIT",
+        eventName: "wifi_lead_capture",
+        value: 10.0,
       });
 
       setLeadCaptured(true);

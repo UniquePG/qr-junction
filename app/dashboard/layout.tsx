@@ -22,6 +22,7 @@ import {
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
+import { dashboardService } from '@/lib/api';
 import { toast } from 'react-toastify';
 import Image from 'next/image';
 
@@ -45,7 +46,7 @@ export default function DashboardLayout({
   // Fetch local network IP in development mode
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      fetch('/api/dev-ip')
+      dashboardService.devIp()
         .then((res) => res.json())
         .then((data) => {
           if (data.ip) {
@@ -105,7 +106,7 @@ export default function DashboardLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex relative overflow-hidden">
+    <div className="h-dvh bg-slate-50 text-slate-800 flex relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-secondary/5 blur-[120px] pointer-events-none" />
@@ -238,9 +239,9 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 relative md:pl-64">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 relative md:pl-64">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 backdrop-blur-sm shadow-xs">
+        <header className="h-16 shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-6 backdrop-blur-sm shadow-xs">
           <div className="flex items-center gap-4">
             {/* Mobile Menu Button */}
             <button
@@ -288,7 +289,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Dynamic Inner Page */}
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl w-full mx-auto">
+        <main className="flex-1 min-h-0 p-6 md:p-8 overflow-y-auto max-w-7xl w-full mx-auto">
           {children}
         </main>
       </div>

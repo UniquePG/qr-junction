@@ -6,6 +6,7 @@ import {
   signOut, 
   User as FirebaseUser 
 } from 'firebase/auth';
+import { authService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 
 interface AuthUser {
@@ -62,16 +63,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     document.cookie = `qrj_token=${token}; path=/; max-age=3600; SameSite=Lax; Secure`;
 
-    const syncRes = await fetch('/api/auth/sync', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        password: tempPassword,
-        provider: firebaseUser.providerData[0]?.providerId || 'password',
-      }),
+    const syncRes = await authService.sync({
+      password: tempPassword,
+      provider: firebaseUser.providerData[0]?.providerId || 'password',
     });
 
     let emailVerified: boolean | undefined;

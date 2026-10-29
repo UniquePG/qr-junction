@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { qrService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { Loader2, Download, ExternalLink, Check, Save, QrCode } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -33,12 +34,7 @@ export default function LandingPageQRModal({ isOpen, onClose, page }: LandingPag
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch('/api/qrs', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const res = await qrService.list();
       if (!res.ok) throw new Error('Failed to load QR codes list.');
       const data = await res.json();
       
@@ -71,21 +67,13 @@ export default function LandingPageQRModal({ isOpen, onClose, page }: LandingPag
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch('/api/qrs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name: `QR - ${page.title}`,
-          type: 'LANDING_PAGE',
-          destination: { landingPageId: page.id },
-          landingPageId: page.id,
-          fgColor: '#000000',
-          bgColor: '#FFFFFF'
-        })
+      const res = await qrService.create({
+        name: `QR - ${page.title}`,
+        type: 'LANDING_PAGE',
+        destination: { landingPageId: page.id },
+        landingPageId: page.id,
+        fgColor: '#000000',
+        bgColor: '#FFFFFF',
       });
 
       if (!res.ok) throw new Error('Failed to create QR code.');
@@ -110,17 +98,9 @@ export default function LandingPageQRModal({ isOpen, onClose, page }: LandingPag
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/qrs/${qrCode.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          fgColor,
-          bgColor
-        })
+      const res = await qrService.update(qrCode.id, {
+        fgColor,
+        bgColor,
       });
 
       if (!res.ok) throw new Error('Failed to save design.');

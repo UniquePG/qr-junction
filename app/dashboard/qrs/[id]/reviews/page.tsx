@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { qrService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { Loader2, Star, MessageSquareWarning, BarChart, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -17,10 +18,7 @@ export default function ReviewAnalyticsPage() {
         const currentUser = auth.currentUser;
         if (!currentUser) return;
 
-        const token = await currentUser.getIdToken();
-        const res = await fetch(`/api/qrs/${id}/reviews`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await qrService.reviews(id);
         
         if (!res.ok) throw new Error('Failed to fetch analytics');
         const json = await res.json();

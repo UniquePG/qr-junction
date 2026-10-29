@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { leadService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { 
@@ -58,12 +59,7 @@ export default function LeadsPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch('/api/leads', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await leadService.list();
 
       if (!res.ok) throw new Error('Failed to load leads list.');
       const data = await res.json();
@@ -92,15 +88,7 @@ export default function LeadsPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/leads/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      const res = await leadService.update(id, { status: newStatus });
 
       if (!res.ok) throw new Error('Failed to update status.');
 
@@ -122,15 +110,7 @@ export default function LeadsPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/leads/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ notes: tempNotes }),
-      });
+      const res = await leadService.update(id, { notes: tempNotes });
 
       if (!res.ok) throw new Error('Failed to save notes.');
 
@@ -156,13 +136,7 @@ export default function LeadsPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const token = await currentUser.getIdToken();
-      const res = await fetch(`/api/leads/${deletingLeadId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await leadService.remove(deletingLeadId);
 
       if (!res.ok) throw new Error('Failed to delete lead.');
 

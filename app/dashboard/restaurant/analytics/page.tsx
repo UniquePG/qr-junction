@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { restaurantService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { 
@@ -38,25 +39,7 @@ export default function RestaurantAnalyticsPage() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
       
-      const token = await currentUser.getIdToken();
-      let url = '/api/restaurant/stats';
-      
-      const params = new URLSearchParams();
-      if (start === null && end === null) {
-        params.append('range', 'all');
-      } else {
-        if (start) params.append('startDate', start.toISOString());
-        if (end) params.append('endDate', end.toISOString());
-      }
-      
-      const queryString = params.toString();
-      if (queryString) {
-        url += `?${queryString}`;
-      }
-
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await restaurantService.stats(start, end);
 
       if (!res.ok) throw new Error();
       const json = await res.json();

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { restaurantService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
@@ -81,17 +82,8 @@ export default function TablesManagementPage() {
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
-      const token = await currentUser.getIdToken();
-      
-      // Fetch tables
-      const tablesRes = await fetch('/api/restaurant/tables', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Fetch menus
-      const menusRes = await fetch('/api/restaurant/menus', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const tablesRes = await restaurantService.listTables();
+      const menusRes = await restaurantService.listMenus();
 
       if (tablesRes.ok && menusRes.ok) {
         const tablesJson = await tablesRes.json();
@@ -119,18 +111,10 @@ export default function TablesManagementPage() {
 
     setAddingTable(true);
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch('/api/restaurant/tables', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          tableNumber: newTableNumber.trim(),
-          capacity: newCapacity ? Number(newCapacity) : 4,
-          menuId: selectedMenuId ? Number(selectedMenuId) : null
-        })
+      const res = await restaurantService.createTable({
+        tableNumber: newTableNumber.trim(),
+        capacity: newCapacity ? Number(newCapacity) : 4,
+        menuId: selectedMenuId ? Number(selectedMenuId) : null,
       });
       const json = await res.json();
       if (res.ok) {
@@ -160,19 +144,11 @@ export default function TablesManagementPage() {
     if (!editingTable || !editTableNumber.trim()) return;
     setSavingEdit(true);
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch('/api/restaurant/tables', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          id: editingTable.id,
-          tableNumber: editTableNumber.trim(),
-          capacity: editCapacity ? Number(editCapacity) : null,
-          menuId: editMenuId ? Number(editMenuId) : null,
-        })
+      const res = await restaurantService.updateTable({
+        id: editingTable.id,
+        tableNumber: editTableNumber.trim(),
+        capacity: editCapacity ? Number(editCapacity) : null,
+        menuId: editMenuId ? Number(editMenuId) : null,
       });
       const json = await res.json();
       if (res.ok) {
@@ -191,17 +167,9 @@ export default function TablesManagementPage() {
 
   const handleLinkMenu = async (tableId: number, menuId: string) => {
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch('/api/restaurant/tables', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          id: tableId, 
-          menuId: menuId ? Number(menuId) : null 
-        })
+      const res = await restaurantService.updateTable({
+        id: tableId,
+        menuId: menuId ? Number(menuId) : null,
       });
       const json = await res.json();
       if (res.ok) {
@@ -218,11 +186,7 @@ export default function TablesManagementPage() {
   const handleDeleteTable = async (id: number) => {
     if (!confirm('Are you sure you want to delete this table? The linked QR code and scan tracking will be permanently deleted.')) return;
     try {
-      const token = await auth.currentUser?.getIdToken();
-      const res = await fetch(`/api/restaurant/tables?id=${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await restaurantService.deleteTable(id);
       if (res.ok) {
         toast.success('Table deleted successfully');
         await fetchData();
