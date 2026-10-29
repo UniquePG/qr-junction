@@ -43,6 +43,47 @@ export default function QrPageKnowledge() {
         </p>
       </section>
 
+      <section id="custom-logo">
+        <h2 className="text-3xl md:text-4xl font-extrabold text-[#001B50] tracking-tight mb-5">
+          Custom QR code with logo
+        </h2>
+        <p className="text-[17px] leading-[1.75] text-slate-600 mb-4">
+          Create a custom QR code with logo on this maker: generate first, set error
+          correction to H, keep the mark small in the centre on a light plate. Cover
+          a finder square and cheap cameras shrug. The how-to with print tests is{" "}
+          <Link
+            href="/blog/how-to-create-a-custom-qr-code-with-logo"
+            className="text-primary font-semibold hover:underline"
+          >
+            custom QR code with logo
+          </Link>
+          . This page is the file.
+        </p>
+      </section>
+
+      <section id="branded-design">
+        <h2 className="text-3xl md:text-4xl font-extrabold text-[#001B50] tracking-tight mb-5">
+          Branded QR code design
+        </h2>
+        <p className="text-[17px] leading-[1.75] text-slate-600 mb-4">
+          Branded QR code design is still a scannable grid. Match brand navy, not
+          brand yellow on cream. Frames labelled Scan for menu or WiFi help humans.
+          They must sit outside the quiet zone. Pretty is a constraint, not the goal.
+        </p>
+      </section>
+
+      <section id="color-customization">
+        <h2 className="text-3xl md:text-4xl font-extrabold text-[#001B50] tracking-tight mb-5">
+          QR code color customization
+        </h2>
+        <p className="text-[17px] leading-[1.75] text-slate-600 mb-4">
+          QR code color customization here means dark modules on a light background.
+          Gradients muddy edges. Inverted (light-on-dark) codes fail on a surprising
+          number of Androids. Download SVG for print, PNG for stories, then scan a
+          proof — not only the laptop preview.
+        </p>
+      </section>
+
       <section id="qr-faq">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-blue-600 text-white mb-4">

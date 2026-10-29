@@ -124,12 +124,19 @@ export default function RegisterPage() {
           >
             QR Junction
           </Link>
-          <h2 className="text-2xl font-semibold text-[#001B50] mt-4">
-            Create your account
-          </h2>
-          <p className="text-slate-650 text-sm mt-1">
-            Start creating dynamic QR codes and tracking conversions
+          <h1 className="text-2xl font-semibold text-[#001B50] mt-4">
+            Create editable QR codes
+          </h1>
+          <p className="text-slate-600 text-sm mt-2 leading-relaxed">
+            A changeable QR code link you can update after print. Track QR code
+            scans from the dashboard. Static codes on the homepage still need no
+            signup — a PNG has no log.
           </p>
+          <ul className="text-left text-xs text-slate-500 mt-4 space-y-1.5 max-w-sm mx-auto">
+            <li>Editable QR codes — swap the destination without reprinting</li>
+            <li>Changeable QR code link — the paper stays, the URL moves</li>
+            <li>Track QR code scans — unique vs total, city, device. Not a static file.</li>
+          </ul>
         </div>
 
         {/* Google OAuth Login */}
@@ -240,6 +247,22 @@ export default function RegisterPage() {
             className="text-primary font-medium hover:underline"
           >
             Sign In
+          </Link>
+        </p>
+        <p className="text-center text-slate-500 text-xs mt-3">
+          New to this?{" "}
+          <Link
+            href="/blog/what-is-an-editable-qr-code"
+            className="text-primary font-medium hover:underline"
+          >
+            What is an editable QR code
+          </Link>
+          {" · "}
+          <Link
+            href="/blog/static-vs-dynamic-qr-codes-which-one-do-you-actually-need"
+            className="text-primary font-medium hover:underline"
+          >
+            Dynamic QR code vs static
           </Link>
         </p>
       </div>

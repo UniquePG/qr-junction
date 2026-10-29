@@ -176,17 +176,18 @@ export const FREE_GENERATOR_PAGES: Record<string, QRLandingContent> = {
     type: 'vcard',
     tabType: 'contact',
     displayName: 'vCard / Business Card',
-    title: 'Free vCard QR Code Generator | Digital Business Card QR for Contacts',
+    title: 'vCard QR Code Generator | Digital Business Card QR Code',
     description:
-      'Generate a free vCard QR code for a visiting card. One scan saves your name, phone, email, company, and website to iPhone or Android contacts. No app, no typing, no lost paper cards.',
+      'vCard QR code generator for a digital business card QR code. One scan saves name, phone, email, company, and website to iPhone or Android contacts. No app, no typing.',
     heroHeading: 'vCard QR Code Generator for Digital Business Cards',
     heroSubheading:
-      'Put a contact QR on your visiting card, badge, or email signature. When someone scans it, their phone offers to save you as a contact — name, number, email, address, and site in one tap.',
+      'Create a digital business card QR code that writes a vCard into Contacts. Put it on a visiting card, badge, or email signature. One scan saves name, number, email, and site.',
     fact:
       'Most paper visiting cards are lost or never typed in. A vCard QR (also searched as “QR code for business card” and “digital visiting card QR”) is how salespeople, brokers, and clinic staff actually end up in someone’s phonebook.',
     icon: ContactIcon,
     keywords: [
       'vcard qr code generator',
+      'digital business card qr code',
       'qr code for business card',
       'digital visiting card qr',
       'contact qr code',
@@ -194,6 +195,12 @@ export const FREE_GENERATOR_PAGES: Record<string, QRLandingContent> = {
       'mecard vs vcard',
     ],
     article: [
+      {
+        heading: 'Digital business card QR code',
+        paragraphs: [
+          'A digital business card QR code is this vCard QR code generator: the square stores a contact file, not a website. After the scan, iPhone and Android offer Add to Contacts. That is the job. A URL QR on a card only opens a page; a WhatsApp QR only starts a chat.',
+        ],
+      },
       {
         heading: 'What a vCard QR code puts on someone’s phone',
         paragraphs: [
@@ -241,7 +248,7 @@ export const FREE_GENERATOR_PAGES: Record<string, QRLandingContent> = {
       { title: 'Using a URL QR by mistake', desc: 'A website QR does not create a contact. Use this vCard generator when the goal is “save me”.' },
       { title: 'Printing under 2 cm', desc: 'Corners get clipped in cutting. Stay above 2 cm and leave a quiet zone.' },
     ],
-    howToTitle: 'How to generate a vCard QR for a business card',
+    howToTitle: 'How to generate a digital business card QR code',
     howToSteps: [
       { title: 'Enter the contact fields', desc: 'Name, mobile with country code, email, company, and website are enough for most cards.' },
       { title: 'Skip the extras you will never use', desc: 'Empty is better than a noisy QR. Add address only if people need to navigate to you.' },
@@ -277,6 +284,8 @@ export const FREE_GENERATOR_PAGES: Record<string, QRLandingContent> = {
     ],
     faq: [
       { q: 'What is a vCard QR code?', a: 'It is a QR that stores a contact file. Scanning it lets iPhone and Android save your name, number, email, and other fields without typing.' },
+      { q: 'What is a digital business card QR code?', a: 'A digital business card QR code is this vCard generator: one scan writes your contact into the phone. App “digital cards” that need a login are a different product.' },
+      { q: 'Can I use this as a QR code for a networking card?', a: 'Yes. Print the vCard QR on a visiting card or badge. For a richer follow-up, pair it with a landing page. The print-size rules live in the [business card QR guide](/blog/qr-codes-for-business-cards-the-complete-guide).' },
       { q: 'Is a vCard QR the same as a digital visiting card app?', a: 'No. App-based digital cards need the other person to open a link and often to sign up. A vCard QR writes straight into the native Contacts app.' },
       { q: 'Does it work on iPhone?', a: 'Yes. The Camera app recognises vCard payloads and offers to add the contact. Test once before a bulk print.' },
       { q: 'Do people need internet?', a: 'No. The details are inside the QR. Internet is only needed later if they tap the website field.' },
@@ -647,24 +656,39 @@ export const FREE_GENERATOR_PAGES: Record<string, QRLandingContent> = {
     type: 'wifi',
     tabType: 'wifi',
     displayName: 'Wi-Fi',
-    title: 'Free WiFi QR Code Generator | Connect to Wi-Fi Without Typing the Password',
+    title: 'WiFi QR Code Generator | Share WiFi Password QR, Guest Wi-Fi',
     description:
-      'Create a free Wi-Fi QR code for home, cafe, office, or Airbnb. Guests scan and join the network without typing a WPA password. Works with iPhone and Android camera apps.',
-    heroHeading: 'Wi-Fi QR Code Generator — Scan to Connect',
+      'WiFi QR code generator for home, cafe, office, or Airbnb. Share a WiFi password with a QR code. Guests scan a guest WiFi QR and join without typing a WPA password. iPhone and Android cameras.',
+    heroHeading: 'WiFi QR Code Generator — Share Password, Guest Wi-Fi',
     heroSubheading:
-      'Generate a Wi-Fi QR for your SSID and password. Put it on a table tent, fridge, reception desk, or guest-room card. Visitors join the network without you reading the password aloud.',
+      'Share a WiFi password with a QR code. Put a guest WiFi QR on a table tent, fridge, reception desk, or guest-room card. Visitors join without you reading the password aloud.',
     fact:
       '“WiFi QR code generator” is one of the most searched QR tools in the world because WPA2 passwords are long, case-sensitive, and miserable to type from a wall poster. A scan sends the same WIFI: payload iOS and Android already understand.',
     icon: Wifi,
     keywords: [
       'wifi qr code generator',
+      'share wifi password qr',
+      'guest wifi qr code',
+      'guest wifi qr',
       'qr code for wifi',
       'wifi qr code',
       'connect to wifi with qr',
       'wpa qr code',
-      'guest wifi qr',
     ],
     article: [
+      {
+        heading: 'Share a WiFi password with a QR code',
+        paragraphs: [
+          'This WiFi QR code generator encodes the SSID and password so a phone can Join without typing. Share a WiFi password with a QR code on a tent, fridge magnet, or reception card. The camera reads a WIFI: payload, not a website.',
+          'Copy the network name and password from the router. One wrong capital and Join fails. Generate here, forget the network on your own phone, then scan as a guest would.',
+        ],
+      },
+      {
+        heading: 'Guest WiFi QR code',
+        paragraphs: [
+          'A guest WiFi QR code should encode the visitor SSID, not the office VLAN or the owner’s IoT network. Cafes, PGs, clinics, and Airbnbs print a guest WiFi QR so staff stop spelling WPA keys. Rotate that guest password when contractors leave; a static Wi-Fi QR cannot be edited, so you reprint the one card.',
+        ],
+      },
       {
         heading: 'What a Wi-Fi QR actually sends to the phone',
         paragraphs: [
@@ -697,7 +721,7 @@ export const FREE_GENERATOR_PAGES: Record<string, QRLandingContent> = {
     useCases: [
       { title: 'Cafe and restaurant tables', desc: 'Guests connect before they open your menu QR. Two codes on one tent is a common, good setup.' },
       { title: 'Home and PG living rooms', desc: 'Stop dictating the password to every courier and relative.' },
-      { title: 'Office reception and meeting rooms', desc: 'A guest SSID QR on the front desk. Change the password on a schedule; reprint one card.' },
+      { title: 'Office reception and meeting rooms', desc: 'A guest WiFi QR on the front desk. Change the password on a schedule; reprint one card.' },
       { title: 'Hotels and Airbnbs', desc: 'Nightstand card plus a note in the listing: Wi-Fi is the QR, not a 16-character scream on WhatsApp.' },
     ],
     benefits: [
@@ -712,7 +736,7 @@ export const FREE_GENERATOR_PAGES: Record<string, QRLandingContent> = {
       { title: 'Printing the main office SSID', desc: 'Give visitors a guest VLAN. Isolation exists for a reason.' },
       { title: 'Tiny code on a dark wood table tent', desc: 'Light background, 4 cm, matte lamination.' },
     ],
-    howToTitle: 'How to generate a Wi-Fi QR code',
+    howToTitle: 'How to use this WiFi QR code generator',
     howToSteps: [
       { title: 'Read the SSID and password from the router', desc: 'Do not guess. Use the sticker or the admin page.' },
       { title: 'Fill the form above', desc: 'SSID, password, WPA/WPA2 in most homes and shops, hidden only if it truly is.' },
@@ -745,6 +769,8 @@ export const FREE_GENERATOR_PAGES: Record<string, QRLandingContent> = {
       { title: 'No password typing — scan', desc: 'Useful in Airbnbs for tired arrivals.' },
     ],
     faq: [
+      { q: 'How do I share a WiFi password with a QR code?', a: 'Use this WiFi QR code generator: enter SSID, password, and WPA/WPA2, download PNG or SVG, and scan-test. Guests tap Join. No website opens.' },
+      { q: 'What is a guest WiFi QR code?', a: 'A guest WiFi QR encodes the visitor network, not staff Wi-Fi. Print it on a tent or nightstand. Use client isolation on the router. Reprint if you rotate the password — a static Wi-Fi payload cannot be edited.' },
       { q: 'How do I create a QR code for Wi-Fi?', a: 'Enter the network name, password, and encryption (usually WPA) in the form on this page. Download the QR and test by forgetting the network on your phone, then scanning.' },
       { q: 'Does iPhone support Wi-Fi QR codes?', a: 'Yes, from iOS 11 onward the Camera app offers Join. Android’s default camera does the same on current versions.' },
       { q: 'Is it safe to put my Wi-Fi in a QR?', a: 'Anyone who can see the print can join, same as a written password. Use a guest network with isolation in shops and offices.' },

@@ -57,7 +57,11 @@ export const HOME_FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'What is the difference between a static and a dynamic QR code?',
-    a: 'Static codes bake the URL or Wi-Fi payload into the image. They work without our servers. Dynamic codes point at a short link you can retarget and measure. Use static for a stable page; use dynamic if the offer, menu, or number will change after print.',
+    a: 'Dynamic QR code vs static: static bakes the URL or Wi-Fi payload into the image and works without our servers. Dynamic points at a short link you can retarget and measure — that is also an editable QR code, a changeable QR code link after print. Use static for a stable page; use dynamic if the offer, menu, or number will change.',
+  },
+  {
+    q: 'What is an editable QR code?',
+    a: 'An editable QR code is a dynamic short link. The printed square stays; you change the destination later. You cannot edit a static PNG or a Wi-Fi payload after print. Create editable QR codes from the dashboard after you register.',
   },
   {
     q: 'Can I put a logo in the QR code?',

@@ -1,0 +1,221 @@
+
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+            <meta charset="utf-8">
+            <style>
+                table { border-collapse: collapse; font-family: Arial, sans-serif; }
+                th { background-color: #0afcdb; color: white; font-weight: bold; border: 1px solid #cbd5e1; padding: 10px; text-align: left; }
+                td { border: 1px solid #cbd5e1; padding: 8px; vertical-align: top; }
+                .title-row td { font-size: 20px; font-weight: bold; background-color: #1e293b; color: white; padding: 15px; text-align: center;}
+                .section-row td { background-color: #f1f5f9; font-weight: bold; font-size: 14px; color: #334155; padding-top: 15px; }
+                .pass { color: #10b981; font-weight: bold; }
+                .fail { color: #ef4444; font-weight: bold; }
+                .label { font-weight: bold; background-color: #f8fafc; }
+            </style>
+        </head>
+        <body>
+            <table>
+                <tr class="title-row">
+                    <td colspan="8">AI Website Assistant - SEO Analysis Report</td>
+                </tr>
+                <tr>
+                    <td class="label" colspan="2">Website URL</td>
+                    <td colspan="6"><a href="https://www.qrjunction.in/">https://www.qrjunction.in/</a></td>
+                </tr>
+                <tr>
+                    <td class="label" colspan="2">Page Title</td>
+                    <td colspan="6">Free QR Code Generator | Create Custom QR Codes - QR Junction</td>
+                </tr>
+                <tr>
+                    <td class="label" colspan="2">SEO Score</td>
+                    <td colspan="6"><b style="font-size:16px; color:#0afcdb;">83/100</b></td>
+                </tr>
+                <tr>
+                    <td class="label" colspan="2">Analyzed At</td>
+                    <td colspan="6">28/10/2026, 19:30:24</td>
+                </tr>
+                
+                <tr><td colspan="8"></td></tr>
+                
+                <tr class="section-row"><td colspan="8">TECHNICAL SEO CHECKS</td></tr>
+                <tr>
+                    <th colspan="2">Check</th>
+                    <th colspan="5">Result</th>
+                    <th>Status</th>
+                </tr>
+                <tr>
+                    <td class="label" colspan="2">Page Title</td>
+                    <td colspan="5">Present</td>
+                    <td class="pass">PASS</td>
+                </tr>
+                <tr>
+                    <td class="label" colspan="2">Meta Description</td>
+                    <td colspan="5">Present</td>
+                    <td class="pass">PASS</td>
+                </tr>
+                <tr>
+                    <td class="label" colspan="2">H1 Heading</td>
+                    <td colspan="5">Count: 1</td>
+                    <td class="pass">PASS</td>
+                </tr>
+                <tr>
+                    <td class="label" colspan="2">Image ALT Tags</td>
+                    <td colspan="5">0 missing ALT</td>
+                    <td class="pass">PASS</td>
+                </tr>
+                <tr>
+                    <td class="label" colspan="2">Canonical</td>
+                    <td colspan="5">Present</td>
+                    <td class="pass">PASS</td>
+                </tr>
+                <tr>
+                    <td class="label" colspan="2">HTTPS</td>
+                    <td colspan="5">Secure</td>
+                    <td class="pass">PASS</td>
+                </tr>
+
+                <tr><td colspan="8"></td></tr>
+
+                <tr class="section-row"><td colspan="8">PAGE METRICS</td></tr>
+                <tr><td class="label" colspan="2">Title Length</td><td colspan="6">61</td></tr>
+                <tr><td class="label" colspan="2">Meta Description Length</td><td colspan="6">150</td></tr>
+                <tr><td class="label" colspan="2">H1 Count</td><td colspan="6">1</td></tr>
+                <tr><td class="label" colspan="2">H2 Count</td><td colspan="6">5</td></tr>
+                <tr><td class="label" colspan="2">H3 Count</td><td colspan="6">26</td></tr>
+                <tr><td class="label" colspan="2">Word Count</td><td colspan="6">1223</td></tr>
+                <tr><td class="label" colspan="2">Image Count</td><td colspan="6">6</td></tr>
+                <tr><td class="label" colspan="2">Link Count</td><td colspan="6">50</td></tr>
+
+                <tr><td colspan="8"></td></tr>
+
+                <tr class="section-row"><td colspan="8">ACTION PLAN</td></tr>
+                <tr>
+                    <th width="50">No.</th>
+                    <th width="200">Issue Title</th>
+                    <th width="300">Issue Details</th>
+                    <th colspan="5">Fix Plan</th>
+                </tr>
+                
+            <tr>
+                <td valign="top" align="center"><b>1</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">Title tag (SEO)</td>
+                <td valign="top">Current state: 61 chars</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>2</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">Technical hygiene (SEO)</td>
+                <td valign="top">Current state: no robots.txt</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>3</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">FAQ section (AEO)</td>
+                <td valign="top">Current state: 2 questions</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>4</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">llms.txt (GEO)</td>
+                <td valign="top">Current state: Missing /llms.txt</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>5</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">Concise definitions (AEO)</td>
+                <td valign="top">Current state: No “X is a…”</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>6</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">Answer-first structure (AEO)</td>
+                <td valign="top">Current state: 0 direct answer(s)</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>7</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">Question headings (AEO)</td>
+                <td valign="top">Current state: 1 found</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>8</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">Expert authorship (GEO)</td>
+                <td valign="top">Current state: Missing: byline, About link</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>9</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">How-to content (AEO)</td>
+                <td valign="top">Current state: Missing</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>10</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">Conversational phrasing (AEO)</td>
+                <td valign="top">Current state: 1.4% “you” · 2 “?”</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>11</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">Entity clarity (AEO)</td>
+                <td valign="top">Current state: Unclear</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>12</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">People Also Ask (AEO)</td>
+                <td valign="top">Current state: 3 questions</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>13</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">Citations (GEO)</td>
+                <td valign="top">Current state: 0 external sources</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>14</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">Third-party mentions (GEO)</td>
+                <td valign="top">Current state: 0 found</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>15</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">Case studies (GEO)</td>
+                <td valign="top">Current state: None</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+            <tr>
+                <td valign="top" align="center"><b>16</b></td>
+                <td valign="top" style="color:#0891b2; font-weight:bold;">Freshness + changelog (GEO)</td>
+                <td valign="top">Current state: No changelog</td>
+                <td colspan="5" valign="top" style="color:#64748b; font-style:italic;">Included in Pro (extcafe.com): where to look, why it matters, what to do and an AI-ready prompt.</td>
+            </tr>
+        
+                
+                <tr><td colspan="8"></td></tr>
+                <tr><td colspan="8" style="background:#ecfeff; color:#155e75; padding:12px;">This file shows what is wrong. Pro adds where to fix it, what to change, ready-to-paste code and an AI-ready prompt for every issue. Start the 3-day trial at https://extcafe.com/login.html</td></tr>
+                
+                
+
+                
+            </table>
+        </body>
+        </html>
+    

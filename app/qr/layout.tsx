@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: QR_PAGE_TITLE,
   description: QR_PAGE_DESCRIPTION,
   keywords:
-    "QR code maker, QR code maker no signup, create QR code online, custom QR code, QR code with logo, free QR code generator",
+    "QR code maker, QR code maker no signup, custom QR code with logo, branded QR code design, QR code color customization, create QR code online, free QR code generator",
   openGraph: {
     title: QR_PAGE_TITLE,
     description: QR_PAGE_DESCRIPTION,

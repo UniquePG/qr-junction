@@ -1,6 +1,6 @@
 # QR Junction — future content & SEO actions
 
-**Updated:** 28 October 2026  
+**Updated:** 29 October 2026  
 **Research pack:** topic wheel + keyword table + domain coverage crawl (Covered **0** / Partial **10** / Uncovered **15**).  
 **Rule:** “Not covered” in that tool almost never means “you have no page.” It means the **exact search phrase is missing from title / H1 / H2**. Fix wording first. New URLs only when no page owns that job.
 
@@ -62,98 +62,96 @@ Shipped on `/` and `/qr`. No new blog. Request indexing in Search Console.
 **Owner URL:** `/` (and `/qr` for the designer).  
 **Do not** write a “how to create a QR code free” blog that competes with the homepage.
 
-### Cluster B — Dynamic vs static QR codes
+### Cluster B — Dynamic vs static QR codes — **DONE 29 Oct 2026**
+
+Two URLs, two jobs. Do not merge them.
+
+| Keyword                   | Opp.     | Vol      | Intent | Where it now lives |
+| ------------------------- | -------- | -------- | ------ | ------------------ |
+| dynamic qr code vs static | **High** | **730**  | I      | `/blog/static-vs-dynamic-qr-codes-which-one-do-you-actually-need` — title, H1, comparison H2, FAQ. Slug unchanged. |
+| editable qr code          | Low      | **1.1K** | I      | **NEW** `/blog/what-is-an-editable-qr-code` — title, H1, definition H2, FAQ. `/register` is the commercial CTA. |
+| changeable qr code link   | Low      | Niche    | N      | Editable blog H2 + `/register` H1/lead. Not a third URL. |
 
 
-| Keyword                   | Opp.     | Vol      | Intent | Coverage                             | You already have                                                                                                       | Action                                                                                                          |
-| ------------------------- | -------- | -------- | ------ | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| dynamic qr code vs static | **High** | **730**  | I      | Not covered                          | `/blog/static-vs-dynamic-qr-codes-which-one-do-you-actually-need` — title is “Static vs Dynamic…” (word order flipped) | **INJECT** SEO title: include `dynamic QR code vs static` first. Add H2 with that exact order.                  |
-| editable qr code          | Low      | **1.1K** | I      | Not covered                          | Same blog lists it only in hidden `keywords[]`                                                                         | **NEW blog** `what-is-an-editable-qr-code`. Highest informational volume. SERP is Canva/TangoQR “change later.” |
-| changeable qr code link   | Low      | Niche    | N      | Partial 59% → landing-page generator | No page says “changeable”                                                                                              | **INJECT** on editable blog + `/register` (“change the link after print”). Not a third URL.                     |
 
 
-
-
-### Cluster C — Best QR code generators compared
+### Cluster C — Best QR code generators compared — **INJECT DONE 29 Oct 2026** (hub still P1)
 
 
 | Keyword                       | Opp.     | Vol     | Intent | Coverage                             | You already have                                   | Action                                                                                                                              |
 | ----------------------------- | -------- | ------- | ------ | ------------------------------------ | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| best free qr code generator   | Medium   | **747** | C      | Not covered                          | `/blog/best-free-qr-code-generator-2026`           | **INJECT** H1 already matches. Coverage 0% = new/unindexed or images missing. Request indexing. Keep 2026 in title.                 |
-| qr code generator comparison  | **High** | Niche   | C      | Not covered                          | Seven comparison posts, no hub titled “comparison” | **NEW hub** `/blog` intro or a short post `qr-code-generator-comparison` that links the seven vs posts. One URL, commercial intent. |
-| qr junction vs qr code monkey | Low      | Niche   | I      | Partial 70% → Monkey vs dynamic post | `/blog/qrcode-monkey-vs-dynamic-qr-code-generator` | **INJECT** H2 “QR Junction vs QRCode Monkey.” Do not create a branded vanity URL yet.                                               |
+| best free qr code generator   | Medium   | **747** | C      | **DONE** title/H1/H2/FAQ 2026        | `/blog/best-free-qr-code-generator-2026`           | Request indexing in Search Console. Do not write a second homepage for this.                                                        |
+| qr code generator comparison  | **High** | Niche   | C      | Not covered                          | Seven comparison posts, no hub titled “comparison” | **P1 NEW hub** `qr-code-generator-comparison`. Not Days 1–7.                                                                        |
+| qr junction vs qr code monkey | Low      | Niche   | I      | **DONE** H2 + FAQ                    | `/blog/qrcode-monkey-vs-dynamic-qr-code-generator` | No vanity `/qr-junction-vs-monkey` URL.                                                                                             |
 
 
 
 
-### Cluster D — WiFi QR code for business
+### Cluster D — WiFi QR code for business — **DONE 29 Oct 2026**
 
 
 | Keyword                | Opp.   | Vol      | Intent | Coverage    | You already have                                                      | Action                                                                                                                                                                                                                          |
 | ---------------------- | ------ | -------- | ------ | ----------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| wifi qr code generator | Medium | **8.9K** | T      | Not covered | `/wifi-qr-code-generator` title already “Free WiFi QR Code Generator” | **INDEX this landing.** 8.9K transactional. If Search Console shows the blog ranking instead, add `rel`/canonical and push the landing. Blog slug is `how-to-make-a-wifi-qr-code` — keep it as the how-to, landing as the tool. |
-| share wifi password qr | Medium | Niche    | T      | Not covered | Wi-Fi blog/landing talk “join without typing”                         | **INJECT** H2 on landing + blog: “Share a WiFi password with a QR code.”                                                                                                                                                        |
-| guest wifi qr code     | Low    | Niche    | N      | Not covered | Placement section exists                                              | **INJECT** “guest WiFi QR” on cafe/office/homestay bullets.                                                                                                                                                                     |
+| wifi qr code generator | Medium | **8.9K** | T      | **DONE** title + H1                                                  | `/wifi-qr-code-generator`                                             | INDEX this landing. Blog slug `how-to-make-a-wifi-qr-code` stays the how-to.                                                                                                                                                    |
+| share wifi password qr | Medium | Niche    | T      | **DONE** H2 + FAQ on landing + blog                                  | Landing + Wi-Fi how-to                                                | Exact H2: “Share a WiFi password with a QR code.”                                                                                                                                                                               |
+| guest wifi qr code     | Low    | Niche    | N      | **DONE** H2 + cafe/office/homestay bullets                           | Landing + Wi-Fi how-to                                                | Guest SSID, not the office LAN.                                                                                                                                                                                                |
 
 
 
 
-### Cluster E — QR codes for restaurant menus
+### Cluster E — QR codes for restaurant menus — **DONE 29 Oct 2026**
 
 
 | Keyword                 | Opp.     | Vol   | Intent | Coverage    | You already have                                                                            | Action                                                                                                                  |
 | ----------------------- | -------- | ----- | ------ | ----------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| qr code for food menu   | **High** | Niche | T      | Not covered | Menu landing H1 is “Deploy Modern Touchless Digital Menus” — **zero keyword**               | **REWRITE landing H1** to “Restaurant / food menu QR code generator.” Highest-opportunity menu query.                   |
-| digital menu qr code    | Medium   | Niche | T      | Not covered | Blog + landing use “digital menu” weakly                                                    | **INJECT** exact phrase in landing title + menu blog H2.                                                                |
-| restaurant menu qr code | Medium   | Niche | N      | Not covered | Landing title “Free Restaurant Menu QR Code Generator”; blog “How to Create a QR Code Menu” | **INJECT** `restaurant menu QR code` in blog title/H1. Point crawl to `/menu-qr-code-generator` for T, blog for how-to. |
+| qr code for food menu   | **High** | Niche | T      | **DONE** landing H2 + FAQ                                           | `/menu-qr-code-generator` H1 is now **Restaurant Menu QR Code Generator**                   | Do not write a fourth menu article.                                                                                     |
+| digital menu qr code    | Medium   | Niche | T      | **DONE** landing title/H2 + menu blog H2                            | Landing + `/blog/how-to-create-a-qr-code-menu-for-your-restaurant`                          | T on landing, how-to on blog.                                                                                           |
+| restaurant menu qr code | Medium   | Niche | N      | **DONE** landing H1 + blog title/H1                                 | Same                                                                                        | Supporting mentions on India comparison + practical guide, with links to the owner URLs.                                |
 
 
 **Do not** write a third menu article. You already have the how-to, the India comparison, and the generator. Coverage is a **title problem**, especially the landing H1.
 
-### Cluster F — QR code analytics and tracking
+### Cluster F — QR code analytics and tracking — **DONE 29 Oct 2026**
 
 
 | Keyword                     | Opp.   | Vol   | Intent | Coverage                    | You already have                   | Action                                                                                                          |
 | --------------------------- | ------ | ----- | ------ | --------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| track qr code scans free    | Medium | Niche | T      | Not covered                 | `/blog/how-to-track-qr-code-scans` | **INJECT** “track QR code scans free” in H2 + FAQ (honest: static is not free tracking; dynamic needs account). |
-| qr code scan tracking       | Medium | Niche | I      | Not covered                 | Same blog                          | **INJECT** exact phrase in title or H2.                                                                         |
-| qr code analytics dashboard | Low    | Niche | N      | Partial 64% → tracking blog | Same blog                          | **INJECT** H2 “QR code analytics dashboard.” Screenshot alt text already helps.                                 |
+| track qr code scans free    | Medium | Niche | T      | **DONE** H2 + FAQ           | `/blog/how-to-track-qr-code-scans` | Honest: static PNG is not free tracking. `/register` now names the commercial CTA.                              |
+| qr code scan tracking       | Medium | Niche | I      | **DONE** title + H2         | Same blog                          | Informational owner.                                                                                            |
+| qr code analytics dashboard | Low    | Niche | N      | **DONE** H2                 | Same blog                          | Dashboard = log of the short link, not orders.                                                                  |
 
-
-**Optional later:** a `/register` or dashboard marketing URL that targets the **T** query “track qr code scans free” if the blog stays informational.
-
-### Cluster G — Digital business cards with QR
+### Cluster G — Digital business cards with QR — **DONE 29 Oct 2026**
 
 
 | Keyword                       | Opp.   | Vol     | Intent | Coverage                         | You already have                                                       | Action                                                                          |
 | ----------------------------- | ------ | ------- | ------ | -------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| vcard qr code generator       | Medium | **348** | N      | Not covered                      | `/vcard-qr-code-generator` title already exact                         | **INDEX the landing.** 348 is real. Blog is the card-print guide, not the tool. |
-| digital business card qr code | Medium | Niche   | T      | Not covered                      | vCard landing + `/blog/qr-codes-for-business-cards-the-complete-guide` | **INJECT** exact phrase in both titles/H2s.                                     |
-| qr code networking card       | Low    | Niche   | N      | Partial 60% → business card blog | Same blog                                                              | **INJECT** one H2 “QR code for a networking card.”                              |
+| vcard qr code generator       | Medium | **348** | N      | **DONE** title + H1              | `/vcard-qr-code-generator`                                             | INDEX the landing. Blog stays the print guide.                                  |
+| digital business card qr code | Medium | Niche   | T      | **DONE** landing H2 + blog H2    | Landing + `/blog/qr-codes-for-business-cards-the-complete-guide`       | LinkedIn landing points here for save-to-contacts (does not steal the H2).      |
+| qr code networking card       | Low    | Niche   | N      | **DONE** H2 “QR code for a networking card” | Same blog                                                       | One job per square: vCard vs LinkedIn vs landing page.                          |
 
 
 
 
-### Cluster H — Custom branded QR design
+### Cluster H — Custom branded QR design — **DONE 29 Oct 2026**
 
 
 | Keyword                     | Opp.   | Vol     | Intent | Coverage                | You already have                                         | Action                                                                                 |
 | --------------------------- | ------ | ------- | ------ | ----------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| custom qr code with logo    | Medium | **101** | T      | Not covered             | `/blog/how-to-create-a-custom-qr-code-with-logo` + `/qr` | **INJECT** on `/qr` H1/H2 (transactional). Blog stays the how-to. Title already close. |
-| branded qr code design      | Low    | Niche   | C      | Partial 65% → logo blog | Logo blog                                                | **INJECT** H2 “branded QR code design.”                                                |
-| qr code color customization | Low    | Niche   | I      | Partial 54% → logo blog | Logo blog                                                | **INJECT** H2 “QR code colour / color customization.”                                  |
+| custom qr code with logo    | Medium | **101** | T      | **DONE** `/qr` title/H1/H2 + blog H2 | `/qr` tool, blog how-to                          | Maker stays no-signup.                                                                 |
+| branded qr code design      | Low    | Niche   | C      | **DONE** H2 on `/qr` + logo blog     | Same                                             | Pretty is a constraint.                                                                |
+| qr code color customization | Low    | Niche   | I      | **DONE** H2 on `/qr` + logo blog     | Same                                             | Dark-on-light. US spelling in the H2 to match the research string.                     |
 
 
 
 
-### Cluster I — QR codes for print / offline marketing
+### Cluster I — QR codes for print / offline marketing — **INJECT DONE 29 Oct 2026** (flyers blog still P2)
 
 
 | Keyword                   | Opp. | Vol   | Intent | Coverage                           | You already have                                                | Action                                                                                                                                                             |
 | ------------------------- | ---- | ----- | ------ | ---------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| qr code for flyers        | Low  | Niche | I      | Not covered                        | Nowhere as a title                                              | **NEW blog** `qr-code-for-flyers-posters-print` OR a section on print-size post. Prefer **one print-marketing guide** covering flyers + trackable print + offline. |
-| trackable qr code print   | Low  | Niche | T      | Partial 59% → tracking blog        | Tracking blog                                                   | **INJECT** “trackable QR on print” H2.                                                                                                                             |
-| offline marketing qr code | Low  | Niche | I      | Partial 68% → small-business sales | `/blog/how-small-businesses-can-use-qr-codes-to-increase-sales` | **INJECT** H2 “offline marketing QR codes.”                                                                                                                        |
+| qr code for flyers        | Low  | Niche | I      | Not covered                        | Nowhere as a title                                              | **P2 NEW blog** — do not steal this onto the sales post.                                                                                                           |
+| trackable qr code print   | Low  | Niche | T      | **DONE** H2 on tracking blog       | `/blog/how-to-track-qr-code-scans`                              | Supporting mention on the practical guide, linking here.                                                                                                           |
+| offline marketing qr code | Low  | Niche | I      | **DONE** H2 on sales blog          | `/blog/how-small-businesses-can-use-qr-codes-to-increase-sales` | Exact H2. Flyers size-chart stays P2.                                                                                                                              |
 
 
 
@@ -234,38 +232,22 @@ Never put **29.7K** `create qr code online` on a blog. That query is the homepag
 Volume sitting on pages you already shipped.
 
 1. **Homepage** `/` — **done.** Title, H1, lead, H2s, FAQ, JSON-LD, `/qr` metadata split so `/qr` no longer inherits the homepage title.
-2. `/wifi-qr-code-generator`
-  - Confirm title stays `WiFi QR code generator`.  
-  - H2s: `share WiFi password QR`, `guest WiFi QR`.  
-  - Canonical this URL for the 8.9K tool query; blog remains “how to make.”  
-  - Target: 8.9K.
-3. `/menu-qr-code-generator`
-  - Replace H1 “Deploy Modern Touchless Digital Menus” with **Restaurant menu QR code generator** (food menu / digital menu in subtitle).  
-  - Target: High-opportunity menu cluster.
-4. **Static vs dynamic blog**
-  - SEO title lead with **Dynamic QR code vs static**.  
-  - H2 + FAQ: **editable QR code** (do not change the slug).
-5. **Best-free blog + tracking + logo + vCard landing + business-card blog**
-  - Request indexing.  
-  - Add the exact phrases from Cluster C/F/G/H as H2s.
-6. **Search Console**
-  - Inspect `/`, `/wifi-qr-code-generator`, `/menu-qr-code-generator`, `/vcard-qr-code-generator`, `/blog/best-free-qr-code-generator-2026`, `/blog/static-vs-dynamic-qr-codes-which-one-do-you-actually-need`.
+2. `/wifi-qr-code-generator` — **done 29 Oct.** Title/H1 `WiFi QR Code Generator`. H2s: Share a WiFi password with a QR code · Guest WiFi QR code. How-to blog kept as `how-to-make-a-wifi-qr-code`.
+3. `/menu-qr-code-generator` — **done 29 Oct.** H1 is **Restaurant Menu QR Code Generator**. Food menu + digital menu as H2s. Blog title/H1 now `restaurant menu QR code`.
+4. **Static vs dynamic blog** — **done.** Title/H1/H2 lead with `dynamic QR code vs static`. Editable definition on the new post.
+5. **Best-free + Monkey + tracking + logo + `/qr` + vCard + business-card + sales** — **done 29 Oct.** Exact Cluster C/F/G/H/I phrases in H2/FAQ. Comparison hub still P1. Flyers blog still P2.
+6. **Search Console** — copy is ready. You must click Inspect (this account cannot log into GSC). URL list in section 8.
 
 
 
 ### P1 — next (one new blog + one hub + one landing H1 already in P0)
 
-1. **NEW blog** `what-is-an-editable-qr-code`
-  - Primary: `editable qr code` (1.1K).  
-  - Secondaries: changeable QR code link, edit after printing.  
-  - H1: What Is an Editable QR Code and How Does It Work.  
-  - CTA `/register`. Sibling of static-vs-dynamic, not a duplicate table.
+1. **NEW blog** `what-is-an-editable-qr-code` — **done.** CTA `/register`. Sibling of static-vs-dynamic, not a duplicate table.
 2. **NEW short hub** `qr-code-generator-comparison`
   - Primary: `qr code generator comparison` (High, C).  
   - Body: who-wins table linking best-free, Monkey vs, Canva vs, TIGER alternative, Bitly vs, free vs paid.  
   - Do not recrawl competitor pricing; link the dated posts.
-3. `/register` **copy**
-  - “Editable QR codes” + “track QR code scans.”
+3. `/register` **copy** — **done** for Cluster B (`editable QR codes`, `changeable QR code link`) and Cluster F (`track QR code scans`).
 
 
 
@@ -374,17 +356,45 @@ Use the research string verbatim at least once in a heading.
 **Days 1–7 — P0 inject + index**
 
 - [x] Homepage phrases (29.7K / 15.1K) + `/qr` title split.  
-- [ ] Wi-Fi landing H2s (8.9K).  
-- [ ] Menu landing H1 rewrite.  
-- [ ] Static-vs-dynamic title + editable H2.  
-- [ ] Phrase inject on best-free, tracking, logo, vCard, business card, sales.  
-- [ ] Search Console inspect for those URLs.
+- [x] Wi-Fi landing H2s (8.9K) + how-to blog phrases.  
+- [x] Menu landing H1 rewrite + menu blog phrases.  
+- [x] Static-vs-dynamic title + editable H2.  
+- [x] Phrase inject on best-free, Monkey, tracking, logo, `/qr`, vCard, business card, sales.  
+- [x] Search Console inspect list prepared (you click Inspect in GSC — we cannot access the account).
+
+**GSC Inspect / Request indexing (paste these, one at a time)**
+
+1. `https://www.qrjunction.in/`
+2. `https://www.qrjunction.in/qr`
+3. `https://www.qrjunction.in/wifi-qr-code-generator`
+4. `https://www.qrjunction.in/menu-qr-code-generator`
+5. `https://www.qrjunction.in/vcard-qr-code-generator`
+6. `https://www.qrjunction.in/register`
+7. `https://www.qrjunction.in/blog/best-free-qr-code-generator-2026`
+8. `https://www.qrjunction.in/blog/static-vs-dynamic-qr-codes-which-one-do-you-actually-need`
+9. `https://www.qrjunction.in/blog/what-is-an-editable-qr-code`
+10. `https://www.qrjunction.in/blog/how-to-make-a-wifi-qr-code`
+11. `https://www.qrjunction.in/blog/how-to-create-a-qr-code-menu-for-your-restaurant`
+12. `https://www.qrjunction.in/blog/how-to-track-qr-code-scans`
+13. `https://www.qrjunction.in/blog/how-to-create-a-custom-qr-code-with-logo`
+14. `https://www.qrjunction.in/blog/qrcode-monkey-vs-dynamic-qr-code-generator`
+15. `https://www.qrjunction.in/blog/qr-codes-for-business-cards-the-complete-guide`
+16. `https://www.qrjunction.in/blog/how-small-businesses-can-use-qr-codes-to-increase-sales`
+
+**Extra injects (no new URLs, no cannibalization)**
+
+- Practical small-business guide: links to menu landing, Wi-Fi landing, tracking blog. Events section does **not** steal `qr code for event registration` (P2 owns that).
+- India restaurant comparison: supporting `restaurant menu QR code` with links to the landing + how-to.
+- Landing-page generator: `changeable QR code link` now points at the editable blog (was a weak wrong owner).
+- LinkedIn landing: save-to-contacts points at vCard, not a competing networking-card H2.
+- `/register`: commercial `track QR code scans` (static PNG has no log).
+- `public/llms.txt` updated for AEO.
 
 **Days 8–21 — P1 new URLs**
 
-- [ ] Publish editable-QR blog (1.1K).  
+- [x] Publish editable-QR blog (1.1K).  
 - [ ] Publish comparison hub.  
-- [ ] `/register` editable + tracking copy.
+- [x] `/register` editable + tracking copy.
 
 **Days 22–45 — P2 holes**
 

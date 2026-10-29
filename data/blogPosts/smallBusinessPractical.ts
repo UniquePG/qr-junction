@@ -21,7 +21,7 @@ export const smallBusinessPracticalBlog: BlogPost = {
     avatar: "/NewLogo/logo-192x192.png",
   },
   publishedAt: "2026-06-09",
-  updatedAt: "2026-10-22",
+  updatedAt: "2026-10-29",
   readTime: 10,
   hero: {
     title: "QR Codes for Small Businesses: 10 Uses That Actually Work",
@@ -76,7 +76,7 @@ export const smallBusinessPracticalBlog: BlogPost = {
       id: "use-2-digital-menu",
       heading: "2. Digital menus that you can edit at 4 pm",
       content: [
-        "HTML page, not a Drive PDF. Dynamic code. Optional per-table QRs. [QR code menu guide](/blog/how-to-create-a-qr-code-menu-for-your-restaurant).",
+        "A digital menu QR code is an HTML page, not a Drive PDF. Dynamic code. Optional per-table QRs. Tool: [restaurant menu QR code generator](/menu-qr-code-generator). How-to: [restaurant menu QR code](/blog/how-to-create-a-qr-code-menu-for-your-restaurant).",
       ],
       image: {
         src: "/assests/blogs/digital-menu-qr.png",
@@ -97,7 +97,7 @@ export const smallBusinessPracticalBlog: BlogPost = {
       id: "use-4-wifi",
       heading: "4. WiFi without spelling the password",
       content: [
-        "One of the few honest static jobs. [How to make a WiFi QR code](/blog/how-to-make-a-wifi-qr-code).",
+        "One of the few honest static jobs. Print a guest WiFi QR, not the office LAN. Tool: [WiFi QR code generator](/wifi-qr-code-generator). How-to: [share a WiFi password with a QR code](/blog/how-to-make-a-wifi-qr-code).",
       ],
     },
     {
@@ -139,14 +139,14 @@ export const smallBusinessPracticalBlog: BlogPost = {
       id: "use-9-events",
       heading: "9. Events and short campaigns",
       content: [
-        "Poster once. Dynamic destination. When the mela ends, point the same square at the next signup.",
+        "Poster once. Dynamic destination. When the mela ends, point the same square at the next signup. A dedicated event-registration guide is a later URL — this list is not that page.",
       ],
     },
     {
       id: "use-10-track-marketing",
       heading: "10. Track which print actually works",
       content: [
-        "Separate dynamic codes per window, table, pack, card. [How to track QR code scans](/blog/how-to-track-qr-code-scans).",
+        "A trackable QR code print means separate dynamic codes per window, table, pack, card. [QR code scan tracking](/blog/how-to-track-qr-code-scans).",
       ],
       image: {
         src: "/assests/blogs/multi-placement-qr-tracking.png",

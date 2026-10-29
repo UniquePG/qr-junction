@@ -559,11 +559,11 @@ const OTHER_GENERATOR_PAGES: Record<string, QRLandingContent> = {
   menu: {
     type: 'menu',
     tabType: 'url',
-    title: 'Free Restaurant Menu QR Code Generator | Digital Cafe & Hotel Menus',
-    description: 'Create a free restaurant menu QR code for cafes, bars, and hotels. Link a live digital menu or a PDF so guests scan the table tent instead of sharing a sticky paper card. Update items without reprinting.',
-    heroHeading: 'Deploy Modern Touchless Digital Menus',
-    heroSubheading: 'Rapidly modernize your restaurant\'s dining experience by allowing guests to easily scan and view your extensive menu instantly in high resolution directly on their personal smartphones.',
-    fact: 'Data confirms that modern restaurants actively utilizing digital QR code menus report up to a 15% increase in average order value. This is driven by easier browsing and the ability to display high-quality, mouth-watering imagery.',
+    title: 'Restaurant Menu QR Code Generator | Digital Menu & Food Menu QR',
+    description: 'Restaurant menu QR code generator for cafes, bars, and hotels. Create a digital menu QR code or a QR code for a food menu so guests scan a table tent instead of a sticky paper card. Update items without reprinting.',
+    heroHeading: 'Restaurant Menu QR Code Generator',
+    heroSubheading: 'Create a restaurant menu QR code, a digital menu QR code, or a QR code for a food menu. Guests scan the table tent and open today’s card on their phone. Live page if prices move; PDF if the menu is stable.',
+    fact: 'People search “QR code for food menu” and “digital menu QR code” when they are tired of sharing a laminated A3. The job is a phone-sized menu that you can update without a reprint — not a photograph of the paper card.',
     icon: Utensils,
     useCases: [
       { title: 'High-Traffic Table Tents', desc: 'Place highly durable codes firmly on every single table so guests can immediately begin browsing drinks and appetizers the second they sit down, completely eliminating waiter wait times.' },
@@ -576,9 +576,12 @@ const OTHER_GENERATOR_PAGES: Record<string, QRLandingContent> = {
       { title: 'Highly Dynamic Upselling', desc: 'Link the code directly to rich, interactive digital menus that aggressively highlight highly-profitable daily specials and high-margin add-ons with stunning photography.' }
     ],
     faq: [
-      { q: 'Do I absolutely need to use a special, proprietary menu format?', a: 'No, not at all! You can incredibly simply upload your existing, beautifully designed PDF menu to a public cloud drive and use that exact URL to generate your code instantly.' },
-      { q: 'Can I change or update the menu items daily or weekly?', a: 'Yes! If you actively use a dynamic link, or if you simply overwrite the file at the exact same cloud URL, the physical QR code printed on your tables will remain perfectly functional.' },
-      { q: 'Can my customers actually place orders and pay through it?', a: 'If you choose to link the QR code directly to your existing online ordering and POS system web URL rather than just a static PDF, then yes, they absolutely can!' }
+      { q: 'How do I create a restaurant menu QR code?', a: 'Publish a live menu page or a public PDF, paste that URL in the generator on this page, scan-test at table distance, then print 4–5 cm matte tents labelled Scan for menu.' },
+      { q: 'What is a digital menu QR code?', a: 'A digital menu QR code opens a phone-sized menu after the scan. Prefer a live HTML page if prices move. A PDF is fine if the card rarely changes. Do not encode a photograph of a laminated A3.' },
+      { q: 'Can I make a QR code for a food menu?', a: 'Yes. This page is the QR code for food menu tool: cafe, dhaba, hotel, or bar. One job per square — do not mix UPI and the menu on the same code.' },
+      { q: 'Do I need a special menu format?', a: 'No. A public PDF URL works. A live menu is better if dishes change. Private Google Drive links fail for guests.' },
+      { q: 'Can I update items after printing?', a: 'Yes if the printed square points at a URL you control. Overwrite the file at the same URL, or edit a hosted menu. The tent stays.' },
+      { q: 'Can guests order and pay through it?', a: 'Only if you link an ordering page you already have. This generator does not add a POS. We do not compete with GPay or PhonePe for UPI.' }
     ]
   },
   youtube: {

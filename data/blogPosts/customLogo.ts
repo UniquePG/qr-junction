@@ -7,9 +7,12 @@ export const customLogoBlog: BlogPost = {
     description:
       "Add a logo to a QR code without killing the scan. Error correction, quiet zone, contrast, SVG vs PNG, and a test you should run before any print run.",
     keywords: [
+      "custom QR code with logo",
       "custom QR code",
       "QR code with logo",
       "QR code generator with logo",
+      "branded QR code design",
+      "QR code color customization",
       "branded QR code",
       "color QR code",
       "does a logo break a QR code",
@@ -23,7 +26,7 @@ export const customLogoBlog: BlogPost = {
     avatar: "/NewLogo/logo-192x192.png",
   },
   publishedAt: "2026-10-22",
-  updatedAt: "2026-10-22",
+  updatedAt: "2026-10-29",
   readTime: 10,
   hero: {
     title: "How to Create a Custom QR Code with Your Logo (That Still Scans)",
@@ -89,6 +92,20 @@ export const customLogoBlog: BlogPost = {
       },
     },
     {
+      id: "custom-with-logo",
+      heading: "Custom QR code with logo",
+      content: [
+        "A custom QR code with logo is this recipe: short payload, error correction H, logo 15–20% in the centre on a light plate, finder squares left alone. The [QR code maker](/qr) is the file. This page is why the baker’s gold-on-kraft sleeve failed.",
+      ],
+    },
+    {
+      id: "branded-design",
+      heading: "Branded QR code design",
+      content: [
+        "Branded QR code design is still a machine-readable grid. Match brand navy. Do not match brand yellow on cream. Frames labelled Scan for menu or WiFi help humans more than cameras. Keep the frame outside the quiet zone. Pretty is a constraint, not the goal.",
+      ],
+    },
+    {
       id: "logo-size",
       heading: "Logo size vs error correction",
       content: [
@@ -99,9 +116,9 @@ export const customLogoBlog: BlogPost = {
     },
     {
       id: "colour",
-      heading: "Colour, gradients, and inverted codes",
+      heading: "QR code color customization",
       content: [
-        "Dark modules, light background. That is the whole colour theory. Deep navy on white is safer than brand yellow on cream. Gradients on the dots look nice in a Dribbble shot and muddy the edges cameras need.",
+        "QR code color customization is dark modules on a light background. That is the whole colour theory. Deep navy on white is safer than brand yellow on cream. Gradients on the dots look nice in a Dribbble shot and muddy the edges cameras need.",
         "Light modules on a dark background (inverted) fail on a surprising number of cheap Androids. If the campaign is black-on-black luxury, put the QR on a white sticker inside the dark design. Do not invert the code to match the poster and pray.",
         "Frames around the code — “Scan for menu”, “WiFi”, a coloured border — help humans more than machines. They also steal quiet zone if you draw them tight. Keep the frame outside the margin, not on top of it.",
       ],
@@ -162,6 +179,18 @@ export const customLogoBlog: BlogPost = {
     },
   ],
   faq: [
+    {
+      q: "How do I create a custom QR code with logo?",
+      a: "Generate on the [QR code maker](/qr), set error correction to H, keep the logo around 15–20% in the centre, leave finder squares clear, export SVG, scan a printed proof.",
+    },
+    {
+      q: "What is branded QR code design?",
+      a: "Branded QR code design is colour, logo, and a frame that still scans. Dark modules, light background. The maker is /qr. This page is the scan physics.",
+    },
+    {
+      q: "What is QR code color customization?",
+      a: "QR code color customization means dark-on-light modules. Gradients and inverted codes fail on cheap cameras. Navy on white is safer than brand yellow on cream.",
+    },
     {
       q: "Does a logo break a QR code?",
       a: "It can, if it is large, low-contrast, or sitting on a finder square. With error correction H and a small centre mark, most cameras still read the code. Always scan a printed proof.",

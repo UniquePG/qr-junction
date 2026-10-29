@@ -115,6 +115,7 @@ export const TOPIC_ARTICLES: Record<string, ArticleExtra> = {
         heading: 'Profile QR for humans, Company Page QR for brands',
         paragraphs: [
           'Recruiters scanning a CV want /in/yourname. A booth wants /company/yourco. LinkedIn’s in-app QR is a conference toy and a weak print file. Put an SVG from this page on the resume corner (2.5 cm) or the last slide of a talk, labelled Scan to connect on LinkedIn so it is not mistaken for a portfolio site.',
+          'Need a number saved to Contacts? That is a [digital business card QR code](/vcard-qr-code-generator) (vCard), not LinkedIn. Print-size rules for a visiting card: [QR codes for business cards](/blog/qr-codes-for-business-cards-the-complete-guide).',
         ],
       },
     ],
@@ -237,6 +238,7 @@ export const TOPIC_ARTICLES: Record<string, ArticleExtra> = {
         heading: 'A landing-page QR is for content you do not want to put on a full website',
         paragraphs: [
           'Menus with photos, a link-in-bio hub, a property one-pager, an event handout — hosted on a fast mobile page you can edit without reprinting the code. That is the opposite of a static URL burned onto a flyer. If you only have one stable https link, the URL generator is enough. If you will change blocks, images, and buttons every week, build the page here and print the dynamic code once.',
+          'Need a changeable QR code link after print? That job is an [editable QR code](/blog/what-is-an-editable-qr-code) — a dynamic short link, not a PNG you rewrite. This landing-page tool is one destination you can hang on that link.',
         ],
       },
     ],
@@ -251,13 +253,26 @@ export const TOPIC_ARTICLES: Record<string, ArticleExtra> = {
       { title: 'Print 4–5 cm table tents', desc: 'Matte stock, Scan for menu, plus a Wi-Fi QR if the photos need data.' },
     ],
     keywords: [
+      'restaurant menu qr code',
+      'digital menu qr code',
+      'qr code for food menu',
       'menu qr code generator',
       'restaurant qr code menu',
-      'digital menu qr',
-      'qr code for restaurant menu',
       'cafe qr menu',
     ],
     article: [
+      {
+        heading: 'QR code for food menu',
+        paragraphs: [
+          'A QR code for a food menu is a table tent that opens today’s card on a phone. This restaurant menu QR code generator is that tool. Paste a live menu URL or a public PDF. Guests should not pinch-zoom a photographed A3.',
+        ],
+      },
+      {
+        heading: 'Digital menu QR code',
+        paragraphs: [
+          'A digital menu QR code should load in a few seconds on 4G. Compress photos. Hide 86’d dishes the same evening. If the PDF never moves, a static code is honest. If prices move, point a dynamic square at a page you can edit — same print, new card.',
+        ],
+      },
       {
         heading: 'PDF menu vs a live digital menu QR',
         paragraphs: [

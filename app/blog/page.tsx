@@ -79,6 +79,7 @@ export default function BlogsPage() {
         blog.slug === "what-is-a-qr-code-and-why-everyone-is-using-it" ||
         blog.slug === "how-qr-codes-actually-work-explained-like-youre-10" ||
         blog.slug === "static-vs-dynamic-qr-codes-which-one-do-you-actually-need" ||
+        blog.slug === "what-is-an-editable-qr-code" ||
         blog.slug === "how-to-create-an-instagram-qr-code" ||
         blog.slug === "how-to-make-a-wifi-qr-code" ||
         blog.slug === "how-to-create-a-custom-qr-code-with-logo" ||

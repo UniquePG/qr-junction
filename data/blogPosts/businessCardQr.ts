@@ -9,6 +9,8 @@ export const businessCardQrBlog: BlogPost = {
     keywords: [
       "QR code for business card",
       "business card QR code",
+      "digital business card QR code",
+      "qr code networking card",
       "vCard QR code",
       "add QR code to business card",
       "digital business card QR",
@@ -22,7 +24,7 @@ export const businessCardQrBlog: BlogPost = {
     avatar: "/NewLogo/logo-192x192.png",
   },
   publishedAt: "2026-06-09",
-  updatedAt: "2026-10-22",
+  updatedAt: "2026-10-29",
   readTime: 9,
   hero: {
     title: "QR Codes for Business Cards: The Complete Guide",
@@ -57,8 +59,8 @@ export const businessCardQrBlog: BlogPost = {
     ],
   },
   relatedSlugs: [
+    "what-is-an-editable-qr-code",
     "how-to-create-a-custom-qr-code-with-logo",
-    "how-to-create-a-whatsapp-qr-code-for-business",
     "static-vs-dynamic-qr-codes-which-one-do-you-actually-need",
   ],
   sections: [
@@ -66,7 +68,21 @@ export const businessCardQrBlog: BlogPost = {
       id: "intro",
       content: [
         "Cards still get handed over. They also still die when you change roles. A QR on the back is how the paper keeps working: the card stays, the destination moves.",
-        "Generate the contact type on the [vCard QR generator](/vcard-qr-code-generator) or a dynamic URL to a [landing page](/dashboard/pages/new).",
+        "Generate the contact type on the [vCard QR code generator](/vcard-qr-code-generator) or a dynamic URL to a [landing page](/dashboard/pages/new).",
+      ],
+    },
+    {
+      id: "digital-bc",
+      heading: "Digital business card QR code",
+      content: [
+        "A digital business card QR code is a vCard payload: one scan writes name, number, email, and site into Contacts. The tool is the [vCard QR code generator](/vcard-qr-code-generator). This page is the print guide — 2 cm, SVG, dynamic if the job might change. App “digital cards” that need the other person to sign up are a different product.",
+      ],
+    },
+    {
+      id: "networking-card",
+      heading: "QR code for a networking card",
+      content: [
+        "A QR code for a networking card should do one job. vCard if you want a phone number in their contacts. LinkedIn if you want a connection request. A landing-page hub if you want photo, calendar, and WhatsApp on one screen. Mixing all three on a 2 cm square makes a dense mush. Label the square: Scan to save contact.",
       ],
     },
     {
@@ -140,7 +156,7 @@ export const businessCardQrBlog: BlogPost = {
     },
     {
       id: "digital-business-cards",
-      heading: "Physical card + digital card",
+      heading: "Physical card plus digital business card QR code",
       content: [
         "Minimal paper. Mobile page with photo, links, save contact. QR is the bridge. QR Junction landing pages are built for that hub.",
       ],
@@ -161,6 +177,14 @@ export const businessCardQrBlog: BlogPost = {
     },
   ],
   faq: [
+    {
+      q: "What is a digital business card QR code?",
+      a: "A digital business card QR code is a vCard square that saves the contact on scan. Generate it at the [vCard QR code generator](/vcard-qr-code-generator). Keep photos off the static payload or the code gets too dense for a 2 cm card.",
+    },
+    {
+      q: "How do I add a QR code to a networking card?",
+      a: "Print 2 cm minimum, matte stock, quiet zone, one CTA. vCard for save-to-phone. LinkedIn or a landing page if you want a richer follow-up. Make it dynamic if the role might change.",
+    },
     {
       q: "What is the best QR code for a business card?",
       a: "vCard if you want save-to-phone. LinkedIn or a digital card page if you want a richer follow-up. Always dynamic.",

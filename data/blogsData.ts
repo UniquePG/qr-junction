@@ -4,6 +4,7 @@ import { bitlyVsQrTigerBlog } from "@/data/blogPosts/bitlyVsQrTiger";
 import { businessCardQrBlog } from "@/data/blogPosts/businessCardQr";
 import { canvaQrVsDedicatedBlog } from "@/data/blogPosts/canvaQrVsDedicated";
 import { customLogoBlog } from "@/data/blogPosts/customLogo";
+import { editableQrBlog } from "@/data/blogPosts/editableQr";
 import { freeVsPaidQrGeneratorBlog } from "@/data/blogPosts/freeVsPaidQrGenerator";
 import { googleReviewQrBlog } from "@/data/blogPosts/googleReviewQr";
 import { howQrWorksBlog } from "@/data/blogPosts/howQrWorks";
@@ -29,6 +30,7 @@ const allPosts: BlogPost[] = [
   smallBusinessSalesBlog,
   qrSafetyBlog,
   staticVsDynamicBlog,
+  editableQrBlog,
   instagramQrBlog,
   googleReviewQrBlog,
   businessCardQrBlog,

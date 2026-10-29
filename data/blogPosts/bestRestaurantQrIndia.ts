@@ -22,7 +22,7 @@ export const bestRestaurantQrIndiaBlog: BlogPost = {
     avatar: "/NewLogo/logo-192x192.png",
   },
   publishedAt: "2026-10-26",
-  updatedAt: "2026-10-26",
+  updatedAt: "2026-10-29",
   readTime: 11,
   hero: {
     title: "Best QR Code Generator for Restaurants in India (It Is Not a PDF)",
@@ -63,7 +63,7 @@ export const bestRestaurantQrIndiaBlog: BlogPost = {
       id: "intro",
       content: [
         "Ask a cafe owner in Indiranagar for their QR menu. Half the time it is a Canva PDF on Drive. A quarter of the time it is a Swiggy listing. The rest bought a “QR ordering system” and still take orders on paper because the kitchen never opened the tablet. Google “best QR code generator for restaurants India” and every vendor pretends those three are the same SKU.",
-        "They are not. This page names the three products, says who should buy which, and puts QR Junction in the middle on purpose: we generate the restaurant QR and host a phone menu you can edit. We do not run your KOT. Print sizes, HTML vs PDF, and per-table codes are already in the [how-to](/blog/how-to-create-a-qr-code-menu-for-your-restaurant). We will not repeat that physics here.",
+        "They are not. This page names the three products, says who should buy which, and puts QR Junction in the middle on purpose: we generate the restaurant menu QR code and host a phone menu you can edit. We do not run your KOT. The tool is the [restaurant menu QR code generator](/menu-qr-code-generator). Print sizes, HTML vs PDF, and per-table codes are already in the [how-to](/blog/how-to-create-a-qr-code-menu-for-your-restaurant). We will not repeat that physics here.",
       ],
     },
     {

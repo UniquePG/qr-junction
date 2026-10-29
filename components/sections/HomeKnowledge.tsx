@@ -233,9 +233,23 @@ export default function HomeKnowledge() {
           swap the landing page after print and see scan counts in the dashboard.
         </p>
         <p className="text-[17px] leading-[1.75] text-slate-600">
-          If your Diwali offer URL will die in November, do not burn it into 5,000 flyers as a
-          static code. If you are encoding a stable homepage, Wi-Fi password, or vCard, static
-          is enough and you can generate it here without an account.
+          The full comparison is{" "}
+          <Link
+            href="/blog/static-vs-dynamic-qr-codes-which-one-do-you-actually-need"
+            className="text-primary font-semibold hover:underline"
+          >
+            dynamic QR code vs static
+          </Link>
+          . If you need to change the link after print, that is an{" "}
+          <Link
+            href="/blog/what-is-an-editable-qr-code"
+            className="text-primary font-semibold hover:underline"
+          >
+            editable QR code
+          </Link>
+          {" "}
+          — a changeable QR code link, not a PNG you rewrite. Home Wi-Fi and a stable page can
+          stay static here without an account.
         </p>
       </section>
 

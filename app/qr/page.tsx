@@ -30,10 +30,10 @@ export default function QRPage() {
             QR code maker · No signup
           </p>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[#001B50] tracking-tight leading-tight mb-3">
-            QR Code Maker — Custom Design, No Signup
+            QR Code Maker — Custom QR Code with Logo, No Signup
           </h1>
           <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
-            Create a QR code online, then add colours, a logo, and frames. This QR
+            Create a custom QR code with logo, then set colours and frames. This QR
             code maker needs no signup for static codes. Download PNG or SVG and
             scan-test before you print.
           </p>

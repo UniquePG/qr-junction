@@ -55,6 +55,7 @@ export const freeVsPaidQrGeneratorBlog: BlogPost = {
   },
   relatedSlugs: [
     "best-free-qr-code-generator-2026",
+    "what-is-an-editable-qr-code",
     "static-vs-dynamic-qr-codes-which-one-do-you-actually-need",
     "qr-tiger-alternative",
   ],

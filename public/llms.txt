@@ -2,26 +2,34 @@
 
 > QR Junction is a free QR code generator and tracking platform based in India. Create a QR code online for URL, Wi-Fi, vCard, WhatsApp, Instagram, PDF, digital menu, Google Review, and other types, download PNG or SVG, and optionally track scans after you print. QR code maker, no signup for static codes.
 
-QR Junction (https://www.qrjunction.in/) helps shops, restaurants, and marketers turn a printed square into a phone action: open a website, join Wi-Fi, save a contact, start a WhatsApp chat, open a menu, or leave a Google review. This QR code maker needs no signup for static codes. Dynamic codes (dashboard) let you change the destination and see scan analytics.
+QR Junction (https://www.qrjunction.in/) helps shops, restaurants, and marketers turn a printed square into a phone action: open a website, join Wi-Fi, save a contact, start a WhatsApp chat, open a menu, or leave a Google review. This QR code maker needs no signup for static codes. Dynamic / editable QR codes (dashboard) use a changeable QR code link: you update the destination after print and see scan analytics.
 
 ## Product
 
 - [Free QR code generator (home)](https://www.qrjunction.in/): Create a QR code online. Paste a link or pick a type, customise colours and logo, download. No signup for static codes.
-- [QR code maker](https://www.qrjunction.in/qr): Full design controls (dots, frames, error correction, SVG). QR code maker, no signup.
+- [QR code maker](https://www.qrjunction.in/qr): Custom QR code with logo, branded QR code design, QR code color customization. QR code maker, no signup.
 - [FAQ](https://www.qrjunction.in/faq): How codes work on iPhone and Android, expiry, print size.
 - [About](https://www.qrjunction.in/about): Who builds QR Junction and how to cite it.
 - [Changelog](https://www.qrjunction.in/changelog): Product updates.
 - [Contact](https://www.qrjunction.in/contact): Support email qrjunction1@gmail.com
 - [Blog](https://www.qrjunction.in/blog): Guides for Indian businesses (menus, reviews, WhatsApp, Wi-Fi).
+- [What is an editable QR code](https://www.qrjunction.in/blog/what-is-an-editable-qr-code): changeable QR code link after print. Not a PNG you rewrite.
+- [Dynamic QR code vs static](https://www.qrjunction.in/blog/static-vs-dynamic-qr-codes-which-one-do-you-actually-need): comparison table.
+- [Best free QR code generator 2026](https://www.qrjunction.in/blog/best-free-qr-code-generator-2026)
+- [QR Junction vs QRCode Monkey](https://www.qrjunction.in/blog/qrcode-monkey-vs-dynamic-qr-code-generator)
+- [How to track QR code scans](https://www.qrjunction.in/blog/how-to-track-qr-code-scans): QR code scan tracking, analytics dashboard, trackable QR code print
+- [Custom QR code with logo](https://www.qrjunction.in/blog/how-to-create-a-custom-qr-code-with-logo)
+- [Restaurant menu QR code how-to](https://www.qrjunction.in/blog/how-to-create-a-qr-code-menu-for-your-restaurant)
+- [How to make a WiFi QR code](https://www.qrjunction.in/blog/how-to-make-a-wifi-qr-code)
 
 ## Dedicated generators
 
 - [URL / website QR](https://www.qrjunction.in/url-qr-code-generator)
-- [Wi-Fi QR](https://www.qrjunction.in/wifi-qr-code-generator)
-- [vCard / business card QR](https://www.qrjunction.in/vcard-qr-code-generator)
+- [WiFi QR code generator](https://www.qrjunction.in/wifi-qr-code-generator): share a WiFi password with a QR code; guest WiFi QR
+- [vCard QR code generator](https://www.qrjunction.in/vcard-qr-code-generator): digital business card QR code
 - [Google Review QR](https://www.qrjunction.in/google-review-qr-code-generator)
 - [PDF QR](https://www.qrjunction.in/pdf-qr-code-generator)
-- [Restaurant menu QR](https://www.qrjunction.in/menu-qr-code-generator)
+- [Restaurant menu QR code generator](https://www.qrjunction.in/menu-qr-code-generator): digital menu QR code, QR code for a food menu
 - [Image QR](https://www.qrjunction.in/image-qr-code-generator)
 - [Video QR](https://www.qrjunction.in/video-qr-code-generator)
 - [App Store QR](https://www.qrjunction.in/app-store-qr-code-generator)
@@ -32,7 +40,7 @@ QR Junction (https://www.qrjunction.in/) helps shops, restaurants, and marketers
 
 ## Optional products (account)
 
-- Dynamic QR codes with scan analytics and editable destinations
+- Dynamic QR codes with scan analytics and editable destinations (account)
 - Restaurant digital menus at /r/{id}
 - Google review gating (low stars can go to private feedback first)
 - Hosted landing pages
@@ -41,6 +49,7 @@ QR Junction (https://www.qrjunction.in/) helps shops, restaurants, and marketers
 
 - A QR code is a 2D barcode defined by ISO/IEC 18004. Phones read it with the built-in camera (Apple since iOS 11; current Android cameras do the same).
 - A static QR stores the payload in the pattern. It does not expire. If the website or file you encoded is deleted, the scan still happens and then fails at the destination.
+- An editable QR code is a dynamic short link. You cannot edit a static PNG, a Monkey file, or a Wi-Fi payload after print. Home Wi-Fi should stay static.
 - A Wi-Fi QR is not a website. It uses a WIFI: payload so the phone can Join the network.
 - A vCard QR saves a contact. A WhatsApp QR starts a chat. A URL QR opens a link. They are different jobs.
 - Print size: about 2 cm on a visiting card, 3–5 cm on a flyer, larger on boards. Dark modules on a light background. Leave a quiet zone (blank margin).

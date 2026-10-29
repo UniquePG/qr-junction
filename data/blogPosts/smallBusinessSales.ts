@@ -8,6 +8,7 @@ export const smallBusinessSalesBlog: BlogPost = {
       "Five QR code plays that actually move sales: Google reviews, repeat-purchase offers, lead capture, digital catalogues, and social follow-through — with dynamic codes so you can edit after print.",
     keywords: [
       "increase sales with QR code",
+      "offline marketing QR code",
       "QR code marketing",
       "QR code for shop",
       "QR codes for small business sales",
@@ -22,7 +23,7 @@ export const smallBusinessSalesBlog: BlogPost = {
     avatar: "/NewLogo/logo-192x192.png",
   },
   publishedAt: "2026-02-15",
-  updatedAt: "2026-10-22",
+  updatedAt: "2026-10-29",
   readTime: 9,
   hero: {
     title: "How Small Businesses Can Use QR Codes to Increase Sales",
@@ -67,6 +68,13 @@ export const smallBusinessSalesBlog: BlogPost = {
       content: [
         "The shop next door sells the same thing. Ads are expensive. A QR code is cheap only if you use it for a job that makes money — not as decoration on the shutter.",
         "This is the sales-focused version. If you want the long menu of ten operational uses (WiFi, payments, events), use the [practical small-business QR guide](/blog/qr-codes-for-small-businesses-the-practical-guide). Here we stay on five plays that feed reviews, repeats, and a list.",
+      ],
+    },
+    {
+      id: "offline-marketing",
+      heading: "Offline marketing QR codes",
+      content: [
+        "Offline marketing QR codes are the square on a bag, a window, a bill, a table tent — not an Instagram bio. The paper has no analytics until the code is dynamic and unique per placement. Flyers, posters, and size charts get their own print guide later. This page is the sales job: reviews, offers, leads, catalogue, follow.",
       ],
     },
     {
@@ -134,6 +142,10 @@ export const smallBusinessSalesBlog: BlogPost = {
     },
   ],
   faq: [
+    {
+      q: "What are offline marketing QR codes?",
+      a: "Offline marketing QR codes sit on print: bills, bags, windows, tents. Dynamic if the offer will move. One code per placement if you want to know which object sold. A static PNG on a flyer cannot grow a dashboard later.",
+    },
     {
       q: "Can QR codes really increase sales for a small shop?",
       a: "Indirectly, yes: more Google reviews, easier reorders on WhatsApp, a list you can message, and offers you can change without reprinting. The square does not sell. The destination does.",

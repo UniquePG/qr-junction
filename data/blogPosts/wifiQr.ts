@@ -9,6 +9,8 @@ export const wifiQrBlog: BlogPost = {
     keywords: [
       "wifi QR code",
       "how to make a WiFi QR code",
+      "share wifi password qr",
+      "guest wifi qr code",
       "QR code for WiFi password",
       "connect to WiFi with QR code",
       "WiFi QR code iPhone",
@@ -23,7 +25,7 @@ export const wifiQrBlog: BlogPost = {
     avatar: "/NewLogo/logo-192x192.png",
   },
   publishedAt: "2026-10-22",
-  updatedAt: "2026-10-22",
+  updatedAt: "2026-10-29",
   readTime: 9,
   hero: {
     title: "How to Make a WiFi QR Code So Guests Connect Without Asking",
@@ -69,6 +71,20 @@ export const wifiQrBlog: BlogPost = {
       content: [
         "Every salon, clinic waiting room, and cafe hears the same sentence: “What’s the WiFi?” Then someone shouts a password with three capital letters and a hash, and a guest types it wrong twice. A WiFi QR code ends that conversation. Scan, join, done.",
         "You do not need an app to make one. You do need the real network name, the real password, and a print that cameras can see. Use the [WiFi QR code generator](/wifi-qr-code-generator) if you want that in the browser in under a minute.",
+      ],
+    },
+    {
+      id: "share-password",
+      heading: "Share a WiFi password with a QR code",
+      content: [
+        "Share a WiFi password with a QR code by encoding SSID + WPA key in a WIFI: payload — not a webpage that displays the password in 48 pt type. Guests scan, tap Join, and stop asking the counter. The generator for that file is the [WiFi QR code generator](/wifi-qr-code-generator). This page is the how-to: fields, iPhone vs Android, and when a static square is enough.",
+      ],
+    },
+    {
+      id: "guest-wifi",
+      heading: "Guest WiFi QR code",
+      content: [
+        "A guest WiFi QR code should encode the visitor SSID, not the office LAN or the owner’s IoT network. Cafes, PGs, clinics, and Airbnbs print a guest WiFi QR so staff stop spelling WPA keys. Client isolation on the router. Rotate that guest password when contractors leave. A static Wi-Fi QR cannot be edited — you reprint the one card.",
       ],
     },
     {
@@ -142,9 +158,9 @@ export const wifiQrBlog: BlogPost = {
         "Put it where people already have their phones out and want the network: tables, the waiting-room side table, the Airbnb nightstand, the reception clip. Write “Scan to join WiFi” so it is not mistaken for a payment code. Mixing UPI and WiFi on one standee is how someone pays the wrong person.",
       ],
       list: [
-        "Cafe / restaurant — table tent, 4 cm+, away from the [menu QR](/blog/how-to-create-a-qr-code-menu-for-your-restaurant) so jobs stay separate.",
+        "Cafe / restaurant — guest WiFi QR on a table tent, 4 cm+, away from the [menu QR](/blog/how-to-create-a-qr-code-menu-for-your-restaurant) so jobs stay separate.",
         "Salon or clinic — counter and each bay. Repeat guests will still ask once, then never again.",
-        "Office visitor network — reception, not the all-hands Slack. Use a guest SSID, not the corporate one.",
+        "Office visitor network — a guest WiFi QR at reception, not the all-hands Slack. Guest SSID, not the corporate one.",
         "Homestay — card next to the kettle. Static code. Change it when you change the key.",
       ],
     },
@@ -167,6 +183,14 @@ export const wifiQrBlog: BlogPost = {
     },
   ],
   faq: [
+    {
+      q: "How do I share a WiFi password with a QR code?",
+      a: "Enter SSID, password, and WPA in the [WiFi QR code generator](/wifi-qr-code-generator). Download, scan-test from a phone that is not already on the network, then print. The camera offers Join. No website opens.",
+    },
+    {
+      q: "What is a guest WiFi QR code?",
+      a: "A guest WiFi QR encodes the visitor network, not staff Wi-Fi. Print it on a tent or nightstand. Use client isolation. Reprint if you rotate the password — a static Wi-Fi payload cannot be edited.",
+    },
     {
       q: "Does a WiFi QR code work on iPhone?",
       a: "Yes. Open Camera, point at the code, tap the join banner. You do not need the WhatsApp QR scanner or a third-party app.",

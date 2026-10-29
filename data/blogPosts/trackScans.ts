@@ -3,13 +3,17 @@ import type { BlogPost } from "@/data/blogTypes";
 export const trackScansBlog: BlogPost = {
   slug: "how-to-track-qr-code-scans",
   seo: {
-    title: "How to Track QR Code Scans: Analytics, UTMs & Unique Scans",
+    title: "QR Code Scan Tracking: How to Track QR Code Scans (Analytics Dashboard)",
     description:
-      "Learn how QR code tracking works, why static codes vanish in GA4 as Direct traffic, and how to measure scans, unique visitors, and which poster actually performed.",
+      "QR code scan tracking: how to track QR code scans, what a QR code analytics dashboard actually logs, when you can track QR code scans free, and how to print a trackable QR code.",
     keywords: [
+      "qr code scan tracking",
+      "track QR code scans",
+      "track qr code scans free",
+      "qr code analytics dashboard",
+      "trackable qr code print",
       "qr code tracking",
       "qr code analytics",
-      "track QR code scans",
       "QR code UTM",
       "can QR codes be tracked",
       "dynamic QR code tracking",
@@ -23,10 +27,10 @@ export const trackScansBlog: BlogPost = {
     avatar: "/NewLogo/logo-192x192.png",
   },
   publishedAt: "2026-10-22",
-  updatedAt: "2026-10-22",
+  updatedAt: "2026-10-29",
   readTime: 10,
   hero: {
-    title: "How to Track QR Code Scans (And Stop Guessing Which Poster Worked)",
+    title: "QR Code Scan Tracking: How to Track QR Code Scans (And Stop Guessing Which Poster Worked)",
     subtitle:
       "If the code encodes the website itself, Google Analytics will call every scan Direct. Tracking only exists when the square hits a short link you control first.",
     image: "/assests/blogs/qr-tracking-hero.png",
@@ -59,9 +63,9 @@ export const trackScansBlog: BlogPost = {
     ],
   },
   relatedSlugs: [
+    "what-is-an-editable-qr-code",
     "static-vs-dynamic-qr-codes-which-one-do-you-actually-need",
     "bitly-vs-qr-tiger",
-    "qr-codes-for-small-businesses-the-practical-guide",
   ],
   sections: [
     {
@@ -70,6 +74,20 @@ export const trackScansBlog: BlogPost = {
         "A salon in Andheri ran three posters for the same offer: one in the lift, one on the glass door, one inside a Diwali flyer. At the month-end meeting someone asked which poster worked. Nobody knew. The QR on all three was the same static image from a free generator. GA4 showed a bump in Direct. That was the entire report.",
         "QR code tracking is not a mystery feature. It is a redirect with a log. The phone hits your short link, you record device, city, time, and a visitor cookie, then you send the person to the real page. If you skip the short link, there is nothing to count except whatever the destination site happens to see — usually “Direct / none”.",
         "This is how to track QR code scans without lying to yourself about the numbers.",
+      ],
+    },
+    {
+      id: "scan-tracking",
+      heading: "QR code scan tracking",
+      content: [
+        "QR code scan tracking only exists when the square hits a short link you control first. The phone opens qrjunction.in/q/…, we log the hit, then we send the person to the real page. If the PNG encodes the website itself, there is no scan tracking — only whatever the destination site files as Direct.",
+      ],
+    },
+    {
+      id: "track-free",
+      heading: "Track QR code scans free",
+      content: [
+        "Track QR code scans free only if the code is dynamic and the free tier includes analytics. A no-account static PNG from any generator — including ours — leaves no log. That is not a missing button. Static files have nowhere to write. Sign in, create a dynamic QR, then the dashboard starts counting. “Free tracking on a downloaded JPEG” is a pitch, not a product.",
       ],
     },
     {
@@ -83,9 +101,9 @@ export const trackScansBlog: BlogPost = {
     },
     {
       id: "what-gets-logged",
-      heading: "What QR code analytics actually record",
+      heading: "QR code analytics dashboard",
       content: [
-        "On QR Junction a scan stores: time, a visitor id in a cookie, device type, browser, OS, approximate city from IP, and UTM fields. Unique scans increment when we have not seen that cookie before. Total scans increment every time.",
+        "A QR code analytics dashboard is the log of that short link. On QR Junction a scan stores: time, a visitor id in a cookie, device type, browser, OS, approximate city from IP, and UTM fields. Unique scans increment when we have not seen that cookie before. Total scans increment every time.",
       ],
       table: {
         headers: ["Metric", "What it means", "What it does not mean"],
@@ -116,9 +134,9 @@ export const trackScansBlog: BlogPost = {
     },
     {
       id: "one-per-placement",
-      heading: "One destination, many codes",
+      heading: "Trackable QR code print",
       content: [
-        "This is the only tactic that makes QR code tracking worth doing. Same offer page. Separate dynamic codes named Window, Flyer, Packaging, Visiting card.",
+        "A trackable QR code print is one dynamic square per physical object: window, flyer, packaging, visiting card. Same offer page. Separate short links. That is the only tactic that makes QR code tracking worth doing.",
         "After two weeks you will usually find one placement is theatre. The flyer nobody took home will sit at zero. The billing counter will carry the campaign. That is the report the Andheri salon did not have.",
       ],
       image: {
@@ -177,6 +195,18 @@ export const trackScansBlog: BlogPost = {
     },
   ],
   faq: [
+    {
+      q: "Can I track QR code scans free?",
+      a: "Only on a dynamic code whose plan includes analytics. Static PNGs from no-account tools leave no log. QR Junction static downloads are free and untracked. Dashboard tracking needs an account. Details: [create a dynamic QR](/register).",
+    },
+    {
+      q: "What is a QR code analytics dashboard?",
+      a: "A QR code analytics dashboard is the log of the short link: time, unique vs total scans, device, approximate city, UTMs. It is not orders or footfall unless you wire those events.",
+    },
+    {
+      q: "What is a trackable QR code print?",
+      a: "Print a different dynamic QR for each placement. One shared image cannot tell you which poster worked. Same destination, separate codes.",
+    },
     {
       q: "Can QR codes be tracked?",
       a: "Dynamic ones can, because they open a short link you control. Static ones encode the final URL and leave no scan log. Details are in our [static vs dynamic guide](/blog/static-vs-dynamic-qr-codes-which-one-do-you-actually-need).",

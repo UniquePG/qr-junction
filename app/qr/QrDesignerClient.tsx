@@ -12,7 +12,7 @@ function QRGeneratorWrapper() {
   return (
     <QRGenerator
       initialUrl={urlParam}
-      heading="Customise colours, logo, and frames"
+      heading="Custom QR code with logo, colours, and frames"
       subheading="QR code maker with no signup for static codes. Download PNG or SVG."
     />
   );

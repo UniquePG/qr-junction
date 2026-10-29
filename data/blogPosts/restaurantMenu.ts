@@ -3,14 +3,16 @@ import type { BlogPost } from "@/data/blogTypes";
 export const restaurantMenuBlog: BlogPost = {
   slug: "how-to-create-a-qr-code-menu-for-your-restaurant",
   seo: {
-    title: "How to Create a QR Code Menu for Your Restaurant (2026 Guide)",
+    title: "How to Create a Restaurant Menu QR Code (2026 Guide)",
     description:
-      "Build a restaurant QR code menu that loads on phones, updates without reprinting, and tracks which tables actually get scanned. Step-by-step for cafes, dhabas, and hotels.",
+      "How to create a restaurant menu QR code, a digital menu QR code, or a QR code for a food menu that loads on phones, updates without reprinting, and tracks which tables scan. Cafes, dhabas, hotels.",
     keywords: [
+      "restaurant menu QR code",
+      "digital menu QR code",
+      "qr code for food menu",
       "qr code menu",
       "restaurant qr code",
       "how to make a QR code for a menu",
-      "digital menu QR code",
       "QR code menu generator",
       "QR code menu vs PDF menu",
       "table tent QR code",
@@ -23,10 +25,10 @@ export const restaurantMenuBlog: BlogPost = {
     avatar: "/NewLogo/logo-192x192.png",
   },
   publishedAt: "2026-10-22",
-  updatedAt: "2026-10-22",
+  updatedAt: "2026-10-29",
   readTime: 11,
   hero: {
-    title: "How to Create a QR Code Menu for Your Restaurant (Without Reprinting Every Week)",
+    title: "How to Create a Restaurant Menu QR Code (Without Reprinting Every Week)",
     subtitle:
       "A QR code menu is not a photo of your laminated card. It is a live page on a phone, tied to a printed square that you can keep using after the dal makhani price changes.",
     image: "/assests/blogs/restaurant-qr-menu-hero.png",
@@ -34,7 +36,7 @@ export const restaurantMenuBlog: BlogPost = {
       "Restaurant table tent with a QR code menu being scanned, digital menu open on a smartphone",
   },
   howTo: {
-    name: "How to create a QR code menu for a restaurant",
+    name: "How to create a restaurant menu QR code",
     steps: [
       {
         title: "Turn the paper menu into structured items",
@@ -69,7 +71,21 @@ export const restaurantMenuBlog: BlogPost = {
       content: [
         "Last monsoon a cafe in Koregaon Park reprinted forty table tents because someone typed the wrong Google Drive link. The PDF still opened. The biryani price on it was from March. Guests kept asking waiters what actually cost what. That is the usual QR code menu story, and it has almost nothing to do with QR codes.",
         "A restaurant QR code is only a printed shortcut. What matters is the page it opens, whether you can change that page after the print run, and whether you can see which tables even bother scanning.",
-        "This guide is the setup we tell kitchen owners to follow: a real digital menu, a [QR code menu](/menu-qr-code-generator) that points at it, print sizes that scan from a seated distance, and a split between one house QR and per-table codes if you care about numbers.",
+        "This guide is the setup we tell kitchen owners to follow: a real digital menu, a [restaurant menu QR code](/menu-qr-code-generator) that points at it, print sizes that scan from a seated distance, and a split between one house QR and per-table codes if you care about numbers.",
+      ],
+    },
+    {
+      id: "food-menu",
+      heading: "QR code for food menu",
+      content: [
+        "A QR code for a food menu is a table tent that opens today’s card on a phone. Do not encode a photograph of a laminated A3. Use the [restaurant menu QR code generator](/menu-qr-code-generator) for the square. This page is the how-to: HTML vs PDF, print size, and why Instagram is not a menu.",
+      ],
+    },
+    {
+      id: "digital-menu",
+      heading: "Digital menu QR code",
+      content: [
+        "A digital menu QR code should load in a few seconds on 4G. Compress photos. Hide 86’d dishes the same evening. If the PDF never moves, a static code is honest. If prices move, point a dynamic square at a page you can edit — same print, new card.",
       ],
     },
     {
@@ -193,6 +209,14 @@ export const restaurantMenuBlog: BlogPost = {
     },
   ],
   faq: [
+    {
+      q: "How do I create a restaurant menu QR code?",
+      a: "Publish a live menu or a public PDF, paste that URL in the [restaurant menu QR code generator](/menu-qr-code-generator), scan-test at table distance, then print 4–5 cm matte tents labelled Scan for menu.",
+    },
+    {
+      q: "What is a digital menu QR code?",
+      a: "A digital menu QR code opens a phone-sized menu after the scan. Prefer a live HTML page if prices move. A PDF is a stopgap. Do not encode a photograph of the paper card.",
+    },
     {
       q: "Is a QR code menu free to create?",
       a: "You can generate a [menu QR code](/menu-qr-code-generator) without paying for the image itself. Hosting a proper digital menu, editing it, and tracking scans is what the restaurant dashboard is for. A Drive PDF is “free” until you reprint because the link broke.",

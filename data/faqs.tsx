@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import React from 'react';
 
 export interface FAQ {
@@ -115,7 +116,22 @@ export const faqs: FAQ[] = [
   {
     question: 'Can I edit a QR code after generating it?',
     answer: (
-      <p>QR codes cannot be edited after generation. If you need to change the content, simply generate a new QR code with the updated information. The process is quick and free, so you can create as many QR codes as you need.</p>
+      <>
+        <p className="mb-3">
+          A static QR cannot be edited. The destination is baked into the image. Generate a new file and replace the print.
+        </p>
+        <p>
+          An{" "}
+          <Link href="/blog/what-is-an-editable-qr-code" className="text-primary font-semibold hover:underline">
+            editable QR code
+          </Link>{" "}
+          is a changeable QR code link: the printed square stays, you swap the destination in the dashboard. Create those after you{" "}
+          <Link href="/register" className="text-primary font-semibold hover:underline">
+            register
+          </Link>
+          . Home Wi-Fi should stay static.
+        </p>
+      </>
     ),
   },
   {
