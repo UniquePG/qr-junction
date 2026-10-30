@@ -99,9 +99,12 @@ interface FeedbackResponse {
   createdAt: string;
 }
 
-export default function ReviewSuiteDirectory() {
+export default function ReviewSuiteView({
+  section,
+}: {
+  section: "home" | "campaigns" | "inbox" | "insights";
+}) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'campaigns' | 'inbox' | 'insights'>('campaigns');
   
   // Data State
   const [qrs, setQrs] = useState<ReviewCampaign[]>([]);
@@ -193,10 +196,10 @@ export default function ReviewSuiteDirectory() {
 
   // Refetch insights whenever the global filter or tab changes
   useEffect(() => {
-    if (activeTab === 'insights') {
+    if (section === "insights") {
       fetchWeeklyInsights(selectedQrFilter);
     }
-  }, [selectedQrFilter, activeTab]);
+  }, [selectedQrFilter, section]);
 
   const handleCopyLink = (id: string, shortCode: string) => {
     const fullUrl = getQrUrl(shortCode);
@@ -438,88 +441,84 @@ ${business}`;
   return (
     <div className="space-y-8 animate-fade-in pb-12">
       
-      {/* Top Banner and Quick Creator Link */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-        <div>
-          <h2 className="text-xl font-bold text-[#001B50]">Smart Review QR Suite ⭐️</h2>
-          <p className="text-slate-500 text-xs mt-1">Collect feedback, suggest reviews using AI, isolate negative ratings, and generate business improvement insights.</p>
+      {section === "home" ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-white border border-slate-200 rounded-2xl p-4">
+              <p className="text-[11px] uppercase tracking-wide text-slate-500">Average rating</p>
+              <p className="mt-2 text-2xl font-semibold text-[#001B50] flex items-center gap-2">
+                <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+                {stats.averageRating > 0 ? stats.averageRating : "0.0"}
+              </p>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-2xl p-4">
+              <p className="text-[11px] uppercase tracking-wide text-slate-500">Feedback</p>
+              <p className="mt-2 text-2xl font-semibold text-[#001B50]">{stats.totalRatings}</p>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-2xl p-4">
+              <p className="text-[11px] uppercase tracking-wide text-slate-500">Needs attention</p>
+              <p className="mt-2 text-2xl font-semibold text-[#001B50]">{urgentCount}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Link href="/dashboard/reviews/campaigns" className="bg-white border border-slate-200 rounded-2xl p-4 no-underline">
+              <p className="font-semibold text-[#001B50]">Campaigns</p>
+              <p className="text-xs text-slate-500 mt-1">{qrs.length} review QR codes</p>
+            </Link>
+            <Link href="/dashboard/reviews/inbox" className="bg-white border border-slate-200 rounded-2xl p-4 no-underline">
+              <p className="font-semibold text-[#001B50]">Inbox</p>
+              <p className="text-xs text-slate-500 mt-1">{reviews.length} responses</p>
+            </Link>
+            <Link href="/dashboard/reviews/insights" className="bg-white border border-slate-200 rounded-2xl p-4 no-underline">
+              <p className="font-semibold text-[#001B50]">Insights</p>
+              <p className="text-xs text-slate-500 mt-1">Weekly AI summary</p>
+            </Link>
+          </div>
+          <Link
+            href="/dashboard/reviews/new"
+            className="inline-flex items-center gap-2 bg-primary text-white py-2.5 px-4 rounded-xl text-sm font-semibold no-underline"
+          >
+            <Plus className="w-4 h-4" />
+            New Review QR
+          </Link>
         </div>
-        
-        {/* Persistent QR Selector & Add QR */}
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs text-slate-700 min-w-[200px] flex-grow md:flex-grow-0">
-            <Filter className="w-3.5 h-3.5 text-slate-450" />
+      ) : (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-2 rounded-xl text-xs text-slate-700 min-w-[200px]">
+            <Filter className="w-3.5 h-3.5 text-slate-400" />
             <select
               value={selectedQrFilter}
               onChange={(e) => setSelectedQrFilter(e.target.value)}
               className="bg-transparent border-none outline-none w-full cursor-pointer font-medium text-slate-700"
             >
               <option value="all">All Review QR Codes</option>
-              {qrs.map(q => (
+              {qrs.map((q) => (
                 <option key={q.id} value={q.id}>{q.name}</option>
               ))}
             </select>
           </div>
-
           <Link
             href="/dashboard/reviews/new"
-            className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white py-2.5 px-4 rounded-xl text-xs font-bold transition-all shadow-primary border-none whitespace-nowrap"
+            className="inline-flex items-center justify-center gap-2 bg-primary text-white py-2.5 px-4 rounded-xl text-xs font-bold no-underline"
           >
             <Plus className="w-4 h-4" />
-            <span>New Review QR</span>
+            New Review QR
           </Link>
         </div>
-      </div>
+      )}
 
-      {/* Tabs navigation */}
-      <div className="border-b border-slate-200 flex gap-6 text-sm font-semibold">
-        <button
-          onClick={() => setActiveTab('campaigns')}
-          className={`pb-3 px-1 transition-all relative border-none cursor-pointer bg-transparent ${
-            activeTab === 'campaigns' ? 'text-primary border-b-2 border-primary font-bold' : 'text-slate-500 hover:text-[#001B50]'
-          }`}
-        >
-          QR Campaigns & Setup
-        </button>
-        <button
-          onClick={() => setActiveTab('inbox')}
-          className={`pb-3 px-1 transition-all relative border-none cursor-pointer bg-transparent flex items-center gap-2 ${
-            activeTab === 'inbox' ? 'text-primary border-b-2 border-primary font-bold' : 'text-slate-500 hover:text-[#001B50]'
-          }`}
-        >
-          <span>Feedback Inbox</span>
-          {filteredReviews.length > 0 && (
-            <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
-              {filteredReviews.length}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('insights')}
-          className={`pb-3 px-1 transition-all relative border-none cursor-pointer bg-transparent flex items-center gap-2 ${
-            activeTab === 'insights' ? 'text-primary border-b-2 border-primary font-bold' : 'text-slate-500 hover:text-[#001B50]'
-          }`}
-        >
-          <span>Weekly AI Insights</span>
-          <span className="bg-amber-500/10 text-amber-600 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5">
-            <Sparkles className="w-2.5 h-2.5 fill-current" /> AI
-          </span>
-        </button>
-      </div>
-
-      {/* Urgency warning alert banner */}
-      {urgentCount > 0 && activeTab !== 'campaigns' && (
+      {urgentCount > 0 && section !== "campaigns" && (
         <div className="bg-red-50 border border-red-200 text-red-750 p-4 rounded-xl flex items-start gap-3 animate-pulse">
           <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
           <div className="text-xs">
             <h4 className="font-bold">⚠️ Urgent Attention Required!</h4>
-            <p className="mt-0.5">There are <strong>{urgentCount} unresolved High Urgency</strong> negative complaints. Use the Recovery Workflow tool in the Inbox tab to contact these customers immediately and protect your reputation.</p>
+            <p className="mt-0.5">There are <strong>{urgentCount} unresolved High Urgency</strong> complaints. Open Inbox to contact these customers.</p>
           </div>
         </div>
       )}
 
       {/* TAB 1: Campaigns Directory */}
-      {activeTab === 'campaigns' && (
+      {section === 'campaigns' && (
         <div className="space-y-6">
           {filteredQrsList.length === 0 ? (
             <div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-2xl p-8 space-y-4">
@@ -643,6 +642,13 @@ ${business}`;
                     
                     <div className="flex items-center gap-1">
                       <Link
+                        href={`/dashboard/reviews/campaigns/${qr.id}`}
+                        className="p-1.5 text-slate-500 hover:text-[#001B50] transition-colors flex items-center gap-1"
+                      >
+                        <BarChart3 className="w-3.5 h-3.5" />
+                        <span>Stats</span>
+                      </Link>
+                      <Link
                         href={`/dashboard/reviews/edit/${qr.id}`}
                         className="p-1.5 text-slate-500 hover:text-[#001B50] transition-colors flex items-center gap-1"
                       >
@@ -666,7 +672,7 @@ ${business}`;
       )}
 
       {/* TAB 2: Feedback Inbox */}
-      {activeTab === 'inbox' && (
+      {section === 'inbox' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Inbox Feed & Filters */}
@@ -939,7 +945,7 @@ ${business}`;
       )}
 
       {/* TAB 3: AI Weekly Insights Dashboard */}
-      {activeTab === 'insights' && (
+      {section === 'insights' && (
         <div className="space-y-6">
           
           {/* Charts Row */}

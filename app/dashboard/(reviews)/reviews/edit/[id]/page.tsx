@@ -98,7 +98,7 @@ export default function EditReviewQrPage() {
       } catch (error: any) {
         console.error(error);
         toast.error(error.message || 'Could not load campaign data.');
-        router.push('/dashboard/reviews');
+        router.push('/dashboard/reviews/campaigns');
       } finally {
         setLoading(false);
       }
@@ -156,7 +156,7 @@ export default function EditReviewQrPage() {
       }
 
       toast.success('Review campaign updated successfully!');
-      router.push('/dashboard/reviews');
+      router.push('/dashboard/reviews/campaigns');
     } catch (error: any) {
       console.error(error);
       toast.error(error.message || 'Failed to save campaign settings.');
@@ -179,7 +179,7 @@ export default function EditReviewQrPage() {
       {/* Header bar */}
       <div className="flex items-center gap-3">
         <Link 
-          href="/dashboard/reviews" 
+          href="/dashboard/reviews/campaigns" 
           className="p-2 bg-slate-55 border border-slate-200 hover:bg-slate-100 text-slate-500 hover:text-[#001B50] rounded-xl transition-all"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -471,7 +471,7 @@ export default function EditReviewQrPage() {
               )}
             </button>
             <Link
-              href="/dashboard/reviews"
+              href="/dashboard/reviews/campaigns"
               className="flex-grow border border-slate-200 hover:bg-slate-100 text-slate-655 py-3 px-4 rounded-xl text-sm font-semibold text-center transition-all cursor-pointer bg-white"
             >
               Cancel

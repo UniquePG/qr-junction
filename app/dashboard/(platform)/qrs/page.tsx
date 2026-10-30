@@ -399,7 +399,7 @@ export default function QrListPage() {
                 <div className="flex items-center gap-1">
                   {qr.type === 'REVIEW' && (
                     <Link
-                      href={`/dashboard/qrs/${qr.id}/reviews`}
+                      href={`/dashboard/reviews/campaigns/${qr.id}`}
                       className="p-1.5 text-slate-500 hover:text-primary transition-colors flex items-center gap-1"
                       title="View Analytics"
                     >

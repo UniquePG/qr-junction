@@ -188,3 +188,29 @@
   color: rgba(255, 255, 255, 1);
   opacity: 1;
 }
+
+@media print {
+  .suite-chrome,
+  .no-print,
+  .Toastify {
+    display: none !important;
+  }
+
+  .suite-shell,
+  .suite-shell-main {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: #fff !important;
+    padding: 0 !important;
+  }
+
+  .table-print-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  body[data-print-scope="one"] .table-print-card:not(.is-printing) {
+    display: none !important;
+  }
+}

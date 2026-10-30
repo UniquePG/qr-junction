@@ -1,5 +1,8 @@
 # QR Junction — future content & SEO actions
 
+**Living tracker (source of truth):** [`QR_Junction_SEO_Master.xlsx`](./QR_Junction_SEO_Master.xlsx) — what is live on the site vs what still has to ship.  
+New keywords, competitors, GSC data, and titles get filed there first (`15_Data_Inbox` → matching sheet). This markdown is the strategy narrative for the Oct 2026 research pack.
+
 **Updated:** 29 October 2026  
 **Research pack:** topic wheel + keyword table + domain coverage crawl (Covered **0** / Partial **10** / Uncovered **15**).  
 **Rule:** “Not covered” in that tool almost never means “you have no page.” It means the **exact search phrase is missing from title / H1 / H2**. Fix wording first. New URLs only when no page owns that job.

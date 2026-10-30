@@ -1,17 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { restaurantService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
-import { QRCodeSVG } from 'qrcode.react';
 import { 
   Plus, 
   Trash2, 
   Download, 
   Copy, 
   Check, 
-  Printer, 
+  Printer,
+  ChevronDown,
   Loader2, 
   Info,
   ExternalLink,
@@ -26,6 +26,7 @@ import { toast } from 'react-toastify';
 import { getQrUrl } from '@/utils/qrUrl';
 import CustomizableQRCode from '@/components/CustomizableQRCode';
 import QRDesignModal from '@/components/QRDesignModal';
+import { useSuiteBack } from '@/components/suites/SuiteBack';
 
 interface Menu {
   id: number;
@@ -77,6 +78,11 @@ export default function TablesManagementPage() {
 
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [printMode, setPrintMode] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [printingId, setPrintingId] = useState<number | "all" | null>(null);
+  const [downloadingAll, setDownloadingAll] = useState(false);
+  const leavePrint = useCallback(() => setPrintMode(false), []);
+  useSuiteBack(printMode ? leavePrint : null);
 
   const fetchData = async () => {
     try {
@@ -104,6 +110,15 @@ export default function TablesManagementPage() {
       fetchData();
     }
   }, [user]);
+
+  useEffect(() => {
+    const finishPrint = () => {
+      delete document.body.dataset.printScope;
+      setPrintingId(null);
+    };
+    window.addEventListener("afterprint", finishPrint);
+    return () => window.removeEventListener("afterprint", finishPrint);
+  }, []);
 
   const handleAddTable = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -206,46 +221,99 @@ export default function TablesManagementPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const downloadQR = (qr: QRCodeData, tableName: string) => {
-    const svg = document.getElementById(`table-qr-${qr.shortCode}`);
-    if (!svg) return;
-    const design = (qr.customDesign as any) || {};
-    const hasFrame = design.frameId && design.frameId !== 'no_frame';
+  const saveFile = (href: string, filename: string) => {
+    const downloadLink = document.createElement('a');
+    downloadLink.href = href;
+    downloadLink.download = filename;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  };
 
+  const downloadQR = (qr: QRCodeData, tableName: string, silent = false) => {
+    return new Promise<boolean>((resolve) => {
+      const svg = document.getElementById(`table-qr-${qr.shortCode}`);
+      const safeName = tableName.toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'table';
+      if (!svg) {
+        if (!silent) toast.error('Could not find this QR code.');
+        resolve(false);
+        return;
+      }
+
+      const design = (qr.customDesign as any) || {};
+      const hasFrame = design.frameId && design.frameId !== 'no_frame';
+
+      try {
+        const svgXml = new XMLSerializer().serializeToString(svg);
+        const blob = new Blob([svgXml], { type: 'image/svg+xml;charset=utf-8' });
+        const svgUrl = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = hasFrame ? 1050 : 1000;
+            canvas.height = hasFrame ? 1260 : 1000;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error('Canvas unavailable');
+            ctx.fillStyle = qr.bgColor || '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            saveFile(canvas.toDataURL('image/png'), `qr-${safeName}.png`);
+            if (!silent) toast.success('QR code downloaded.');
+            URL.revokeObjectURL(svgUrl);
+            resolve(true);
+          } catch (err) {
+            console.error(err);
+            saveFile(svgUrl, `qr-${safeName}.svg`);
+            if (!silent) toast.success('QR code downloaded.');
+            resolve(true);
+          }
+        };
+        img.onerror = () => {
+          saveFile(svgUrl, `qr-${safeName}.svg`);
+          if (!silent) toast.success('QR code downloaded.');
+          resolve(true);
+        };
+        img.src = svgUrl;
+      } catch (err) {
+        console.error(err);
+        if (!silent) toast.error('Failed to download QR code');
+        resolve(false);
+      }
+    });
+  };
+
+  const printCards = (tableId?: number) => {
+    if (tableId) {
+      document.body.dataset.printScope = 'one';
+      setPrintingId(tableId);
+    } else {
+      delete document.body.dataset.printScope;
+      setPrintingId('all');
+    }
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => window.print());
+    });
+  };
+
+  const downloadAllCards = async () => {
+    const cards = tables.filter((table) => table.qrCode);
+    if (cards.length === 0) {
+      toast.error('Add a table before downloading.');
+      return;
+    }
+    setDownloadingAll(true);
     try {
-      const svgXml = new XMLSerializer().serializeToString(svg);
-      const svgBase64 = btoa(unescape(encodeURIComponent(svgXml)));
-      
-      const img = new Image();
-      img.src = `data:image/svg+xml;base64,${svgBase64}`;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        if (hasFrame) {
-          canvas.width = 1050; // Aspect ratio 350:420 -> width 1050, height 1260
-          canvas.height = 1260;
-        } else {
-          canvas.width = 1000;
-          canvas.height = 1000;
-        }
-        
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.fillStyle = qr.bgColor || '#FFFFFF';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          const pngUrl = canvas.toDataURL('image/png');
-          const downloadLink = document.createElement('a');
-          downloadLink.href = pngUrl;
-          downloadLink.download = `qr-${tableName.toLowerCase().replace(/\s+/g, '-')}.png`;
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
-          toast.success('QR Code downloaded!');
-        }
-      };
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to download QR code');
+      let saved = 0;
+      for (const table of cards) {
+        const ok = await downloadQR(table.qrCode!, table.tableNumber, true);
+        if (ok) saved += 1;
+        await new Promise((resolve) => window.setTimeout(resolve, 300));
+      }
+      if (saved === 0) toast.error('Could not download the table cards.');
+      else toast.success(saved === 1 ? 'QR code downloaded.' : `${saved} QR codes downloaded.`);
+    } finally {
+      setDownloadingAll(false);
     }
   };
 
@@ -258,68 +326,108 @@ export default function TablesManagementPage() {
   }
 
   if (printMode) {
+    const cards = tables.filter((table) => table.qrCode);
     return (
-      <div className="bg-white min-h-screen p-8 print:p-0 animate-fade-in">
-        <div className="mb-8 p-4 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center print:hidden">
-          <div className="text-sm text-slate-655">
-            <span className="font-bold text-[#001B50]">Print Preview Mode:</span> Cut-out cards for your restaurant tables.
+      <div className="table-print-sheet -mx-4 bg-[#F6F1EA] md:-mx-8">
+        <div className="no-print sticky -top-4 z-20 border-b border-[#E7DDD2] bg-[#F6F1EA] px-4 pt-6 pb-2.5 md:-top-8 md:px-8 md:pt-11 md:pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          <button
+            type="button"
+            onClick={() => setActionsOpen((open) => !open)}
+            aria-expanded={actionsOpen}
+            className="flex w-full items-center justify-between gap-3 rounded-xl bg-transparent py-1 text-left cursor-pointer border-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C4622D] md:w-auto md:pointer-events-none"
+          >
+            <span className="min-w-0">
+              <span className="block text-base font-semibold leading-tight text-[#2A211C]">Table cards</span>
+              <span className="block text-xs text-[#6B5A50]">
+                {cards.length === 0 ? 'No cards yet' : `${cards.length} ${cards.length === 1 ? 'card' : 'cards'} ready`}
+              </span>
+            </span>
+            <ChevronDown className={`h-5 w-5 shrink-0 text-[#8A7568] transition-transform md:hidden ${actionsOpen ? 'rotate-180' : ''}`} />
+          </button>
+          <div className={`w-full gap-2 md:flex md:w-auto ${actionsOpen ? 'flex' : 'hidden'}`}>
+            <button
+              type="button"
+              onClick={() => printCards()}
+              disabled={cards.length === 0}
+              className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#C4622D] px-3 text-sm font-semibold text-white cursor-pointer border-none hover:bg-[#A85224] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C4622D] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none sm:px-4"
+            >
+              <Printer className="h-4 w-4" />
+              Print all
+            </button>
+            <button
+              type="button"
+              onClick={() => void downloadAllCards()}
+              disabled={cards.length === 0 || downloadingAll}
+              className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full border border-[#E7DDD2] bg-white px-3 text-sm font-semibold text-[#2A211C] cursor-pointer hover:bg-[#FBF8F4] focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[#C4622D] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none sm:px-4"
+            >
+              {downloadingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Download all
+            </button>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => window.print()}
-              className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-[#001b50] text-white font-semibold rounded-lg text-xs transition-colors cursor-pointer border-none"
-            >
-              <Printer className="w-4 h-4" />
-              Print Now
-            </button>
-            <button
-              onClick={() => setPrintMode(false)}
-              className="px-4 py-2 bg-slate-200 hover:bg-slate-350 text-slate-700 font-semibold rounded-lg text-xs transition-colors cursor-pointer"
-            >
-              Close Print Mode
-            </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 p-4 bg-white print:gap-12">
-          {tables.map((table) => {
-            if (!table.qrCode) return null;
-            return (
-              <div 
-                key={table.id} 
-                className="border-2 border-slate-200 p-8 rounded-2xl flex flex-col items-center justify-center text-center space-y-4 page-break-inside-avoid shadow-sm max-w-[320px] mx-auto bg-white"
+        <div className="px-4 pb-4 pt-4 md:px-8 md:pb-8 md:pt-5">
+          {cards.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-[#E7DDD2] bg-white px-6 py-16 text-center">
+              <QrCode className="mx-auto h-8 w-8 text-[#C4622D]" />
+              <p className="mt-3 font-semibold text-[#2A211C]">No table cards yet</p>
+              <button
+                type="button"
+                onClick={() => setPrintMode(false)}
+                className="mt-4 rounded-xl bg-[#C4622D] px-4 py-2.5 text-sm font-semibold text-white cursor-pointer border-none"
               >
-                <div className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent tracking-wider">
-                  SCAN MENU
-                </div>
-                <div className="bg-white p-2 rounded-xl border border-slate-200 max-w-[200px] max-h-[240px] flex items-center justify-center overflow-hidden">
-                  <CustomizableQRCode
-                    value={getQrUrl(table.qrCode.shortCode)}
-                    fgColor={table.qrCode.fgColor || '#000000'}
-                    bgColor={table.qrCode.bgColor || '#FFFFFF'}
-                    logoUrl={table.qrCode.logoUrl}
-                    logoPreset={table.qrCode.customDesign?.logoPreset || 'none'}
-                    frameId={table.qrCode.customDesign?.frameId || 'no_frame'}
-                    frameText={table.qrCode.customDesign?.frameText || ''}
-                    frameColor={table.qrCode.customDesign?.frameColor || '#001b50'}
-                    frameTextColor={table.qrCode.customDesign?.frameTextColor || '#ffffff'}
-                    size={180}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <div className="font-semibold text-slate-700 text-sm">Table Number</div>
-                  <div className="font-black text-slate-900 text-2xl">{table.tableNumber}</div>
-                  {table.capacity && (
-                    <div className="text-xs text-slate-400">Capacity: {table.capacity} persons</div>
-                  )}
-                  {table.menu && (
-                    <div className="text-xs text-primary font-bold">({table.menu.name})</div>
-                  )}
-                </div>
-                <div className="text-[10px] text-slate-400">Powered by QR Junction</div>
-              </div>
-            );
-          })}
+                Back to tables
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 print:grid-cols-2 print:gap-6">
+              {cards.map((table) => (
+                <article
+                  key={table.id}
+                  className={`table-print-card flex flex-col items-center rounded-2xl border border-[#E7DDD2] bg-white px-4 py-4 text-center shadow-sm print:px-5 print:py-6 print:shadow-none ${printingId === table.id ? 'is-printing' : ''}`}
+                >
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#C4622D]">Scan menu</p>
+                  <div className="my-2 w-[168px] max-w-full [&_svg]:h-auto [&_svg]:max-w-full [&_svg]:w-full print:my-4 print:w-[200px]">
+                    <CustomizableQRCode
+                      id={`table-qr-${table.qrCode!.shortCode}`}
+                      value={getQrUrl(table.qrCode!.shortCode)}
+                      fgColor={table.qrCode!.fgColor || '#000000'}
+                      bgColor={table.qrCode!.bgColor || '#FFFFFF'}
+                      logoUrl={table.qrCode!.logoUrl}
+                      logoPreset={table.qrCode!.customDesign?.logoPreset || 'none'}
+                      frameId={table.qrCode!.customDesign?.frameId || 'no_frame'}
+                      frameText={table.qrCode!.customDesign?.frameText || ''}
+                      frameColor={table.qrCode!.customDesign?.frameColor || '#001b50'}
+                      frameTextColor={table.qrCode!.customDesign?.frameTextColor || '#ffffff'}
+                      size={168}
+                    />
+                  </div>
+                  <p className="max-w-full break-words text-lg font-semibold leading-tight text-[#2A211C]">{table.tableNumber}</p>
+                  {table.menu ? <p className="mt-1 text-xs text-[#6B5A50]">{table.menu.name}</p> : null}
+                  <div className="no-print mt-3 grid w-full grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void downloadQR(table.qrCode!, table.tableNumber)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#E7DDD2] bg-white px-3 py-2.5 text-sm font-semibold text-[#2A211C] cursor-pointer hover:bg-[#FBF8F4] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C4622D] active:scale-[0.98]"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => printCards(table.id)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#C4622D] px-3 py-2.5 text-sm font-semibold text-white cursor-pointer border-none hover:bg-[#A85224] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C4622D] active:scale-[0.98]"
+                    >
+                      <Printer className="h-4 w-4" />
+                      Print
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -335,7 +443,10 @@ export default function TablesManagementPage() {
         </div>
         {tables.length > 0 && (
           <button
-            onClick={() => setPrintMode(true)}
+            onClick={() => {
+              setActionsOpen(false);
+              setPrintMode(true);
+            }}
             className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-sm border border-slate-200 cursor-pointer"
           >
             <Printer className="w-4.5 h-4.5" />
