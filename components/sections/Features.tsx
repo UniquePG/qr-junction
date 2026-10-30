@@ -56,8 +56,8 @@ function FeatureSimulation({ index }: { index: number }) {
           <div className="w-3.5 h-10 bg-slate-200 rounded-xs" />
 
           {/* Floating counter */}
-          <div className="absolute top-0 right-1 bg-[#001B50] text-white text-[8px] font-black py-0.5 px-2 rounded shadow-sm animate-bounce">
-            +412 Scans
+          <div className="absolute top-0 right-1 bg-[#001B50] text-white text-[8px] font-black py-0.5 px-2 rounded shadow-sm">
+            New scan
           </div>
         </div>
       );
@@ -171,43 +171,43 @@ export default function Features() {
   const features = [
     {
       icon: Zap,
-      title: 'Instant Generation',
-      description: 'Generate dynamic QR codes instantly without any delays or wait times.',
+      title: 'Ready in the browser',
+      description: 'A website, Wi-Fi, or visiting-card QR downloads without an account. The restaurant menu and review inbox open after a free signup.',
       colorGradient: 'from-amber-400 to-orange-500',
       bgColor: 'bg-amber-50 border-amber-100 text-amber-600',
     },
     {
       icon: Shield,
-      title: '100% Secure',
-      description: 'Enterprise-grade encryption and Firebase security keep your data protected.',
+      title: 'Your account, your menu',
+      description: 'Sign-in uses Firebase. Menus, orders, and review notes stay in the account that printed the code.',
       colorGradient: 'from-indigo-500 to-blue-650',
       bgColor: 'bg-indigo-50 border-indigo-100 text-indigo-650',
     },
     {
       icon: InfinityIcon,
-      title: 'Unlimited QR Tracking',
-      description: 'Create and monitor as many dynamic campaigns as your growth requires.',
+      title: 'See the scans',
+      description: 'Dynamic codes show scans in the dashboard, including each poster inside a campaign.',
       colorGradient: 'from-purple-500 to-pink-650',
       bgColor: 'bg-purple-50 border-purple-100 text-purple-650',
     },
     {
       icon: Download,
-      title: 'Vector Downloads',
-      description: 'Download QR codes in high-resolution PNG or SVG vector formats instantly.',
+      title: 'PNG or SVG',
+      description: 'PNG is fine for WhatsApp. SVG is the file you send a printer so the pattern does not blur on a card or tent.',
       colorGradient: 'from-emerald-400 to-teal-600',
       bgColor: 'bg-emerald-50 border-emerald-100 text-emerald-650',
     },
     {
       icon: Palette,
-      title: 'Fully Customizable',
-      description: 'Adjust corner dots, eye framing shapes, preset colors, and embed logos.',
+      title: 'Colours and a logo',
+      description: 'Match the code to the menu or the stand. Keep dark dots on a light ground so a phone can still read it.',
       colorGradient: 'from-rose-500 to-red-650',
       bgColor: 'bg-rose-50 border-rose-100 text-rose-650',
     },
     {
       icon: RefreshCw,
-      title: 'Dynamic Redirection',
-      description: 'Scan on mobile, update routing destinations instantly from your dashboard.',
+      title: 'Same print, new page',
+      description: 'Change a menu price, a campaign offer, or a review link after the QR is already printed. Leads stay tied to that code.',
       colorGradient: 'from-cyan-400 to-blue-500',
       bgColor: 'bg-cyan-50 border-cyan-100 text-cyan-600',
     },
@@ -245,10 +245,10 @@ export default function Features() {
               Core Capabilities
             </span>
             <h2 className="text-3.5xl font-extrabold text-[#001B50] mt-3">
-              Everything You Need to Power Offline Campaigns
+              What you get with the menu, the review QR, and a plain code
             </h2>
             <p className="text-slate-600 text-sm mt-1.5">
-              A premium dynamic engine built to establish seamless offline-to-online engagement pathways.
+              The restaurant and review suites live in an account. A simple square still downloads with no signup.
             </p>
           </div>
 
@@ -315,10 +315,10 @@ export default function Features() {
             Core Capabilities
           </span>
           <h2 className="text-2.5xl font-extrabold text-[#001B50] mt-3">
-            Everything You Need to Power Offline Campaigns
+            What you get with the menu, the review QR, and a plain code
           </h2>
           <p className="text-slate-600 text-xs mt-2 max-w-md mx-auto">
-            From high-fidelity designer elements to dynamic geo-tracking redirection systems.
+            The restaurant and review suites live in an account. A simple square still downloads with no signup.
           </p>
         </div>
 

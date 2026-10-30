@@ -1,5 +1,6 @@
 import { DietMark, VariantPills, formatMoney } from "../shared";
 import type { ThemeViewProps } from "../types";
+import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
 export default function EditorialTheme({ categories, currencySymbol, onSelectItem }: ThemeViewProps) {
   const hero =
@@ -10,8 +11,7 @@ export default function EditorialTheme({ categories, currencySymbol, onSelectIte
   return (
     <div className="space-y-10 overflow-x-clip">
       {hero && (
-        <button
-          type="button"
+        <div role="button" tabIndex={0}
           onClick={() => onSelectItem(hero)}
           className="w-full text-left bg-[#faf6ee] border border-[#d8cfc0] overflow-hidden"
         >
@@ -28,7 +28,8 @@ export default function EditorialTheme({ categories, currencySymbol, onSelectIte
               <p className="mt-2 text-sm font-semibold">{formatMoney(currencySymbol, hero.variants?.[0]?.price ?? hero.price)}</p>
             </div>
           </div>
-        </button>
+<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={hero} /></div>
+</div>
       )}
 
       {categories.map((cat) => (
@@ -38,9 +39,8 @@ export default function EditorialTheme({ categories, currencySymbol, onSelectIte
           </div>
           <div className="divide-y divide-[#d8cfc0]">
             {cat.items.map((item) => (
-              <button
+              <div role="button" tabIndex={0}
                 key={item.id}
-                type="button"
                 onClick={() => onSelectItem(item)}
                 className="w-full text-left py-4 flex gap-3 min-w-0 bg-transparent border-none cursor-pointer"
               >
@@ -66,7 +66,8 @@ export default function EditorialTheme({ categories, currencySymbol, onSelectIte
                     className="mt-2 text-[10px] border border-[#2b241c] px-2 py-0.5"
                   />
                 </div>
-              </button>
+<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
+</div>
             ))}
           </div>
         </section>

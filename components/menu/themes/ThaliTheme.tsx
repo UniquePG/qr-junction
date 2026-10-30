@@ -1,5 +1,6 @@
 import { DietMark, VariantPills, formatMoney } from "../shared";
 import type { ThemeViewProps } from "../types";
+import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
 function BrassFork({ className }: { className?: string }) {
   return (
@@ -54,9 +55,8 @@ export default function ThaliTheme({ categories, currencySymbol, onSelectItem }:
             <div className="min-w-0 rounded-[2rem] border-[3px] border-[#d4a017] bg-[#fff8ee] shadow-[inset_0_0_0_6px_#f6ead8] px-2.5 py-4 sm:px-4 sm:py-5">
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {cat.items.map((item) => (
-                  <button
+                  <div role="button" tabIndex={0}
                     key={item.id}
-                    type="button"
                     onClick={() => onSelectItem(item)}
                     className="min-w-0 text-left bg-transparent border-none p-1 cursor-pointer"
                   >
@@ -84,7 +84,8 @@ export default function ThaliTheme({ categories, currencySymbol, onSelectItem }:
                         <p className="text-[9px] uppercase tracking-widest text-[#8b3d12]">House favourite</p>
                       )}
                     </div>
-                  </button>
+<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
+</div>
                 ))}
               </div>
             </div>

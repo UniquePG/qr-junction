@@ -1,5 +1,6 @@
 "use client";
 
+import { OrderAlertsProvider } from "@/components/orders/OrderAlerts";
 import { SuiteShell, type SuiteNavItem, type SuiteTheme } from "@/components/suites/SuiteShell";
 import {
   BarChart3,
@@ -28,7 +29,7 @@ const items: SuiteNavItem[] = [
   { name: "Home", href: "/dashboard/restaurant", icon: LayoutDashboard, mobile: true },
   { name: "Menus", href: "/dashboard/restaurant/menu", icon: UtensilsCrossed, mobile: true },
   { name: "Tables", href: "/dashboard/restaurant/tables", icon: QrCode, mobile: true },
-  { name: "Orders", href: "/dashboard/restaurant/orders", icon: ClipboardList, mobile: true, soon: true, center: true },
+  { name: "Orders", href: "/dashboard/restaurant/orders", icon: ClipboardList, mobile: true, center: true },
   { name: "Profile", href: "/dashboard/restaurant/profile", icon: Store },
   { name: "Scanner", href: "/dashboard/restaurant/scanner", icon: ScanLine },
   { name: "Analytics", href: "/dashboard/restaurant/analytics", icon: BarChart3 },
@@ -36,8 +37,10 @@ const items: SuiteNavItem[] = [
 
 export default function RestaurantSuiteLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SuiteShell theme={theme} items={items}>
-      {children}
-    </SuiteShell>
+    <OrderAlertsProvider>
+      <SuiteShell theme={theme} items={items}>
+        {children}
+      </SuiteShell>
+    </OrderAlertsProvider>
   );
 }

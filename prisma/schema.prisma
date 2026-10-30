@@ -375,6 +375,8 @@ model Restaurant {
   currency     String          @default("INR")
   taxRate      Decimal         @default(0.00) @db.Decimal(5, 2) @map("tax_rate")
   taxName      String          @default("GST") @map("tax_name")
+  orderingEnabled Boolean      @default(false) @map("ordering_enabled")
+  prepMinutes     Int          @default(12) @map("prep_minutes")
   
   createdAt    DateTime        @default(now()) @map("created_at")
   updatedAt    DateTime        @updatedAt @map("updated_at")
@@ -384,6 +386,7 @@ model Restaurant {
   categories   MenuCategory[]
   tables       RestaurantTable[]
   qrCodes      QRCode[]
+  orders       MenuOrder[]
 
   @@index([createdAt])
   @@map("restaurants")
@@ -403,6 +406,7 @@ model Menu {
   restaurant   Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   categories   MenuCategory[]
   tables       RestaurantTable[]
+  orders       MenuOrder[]
 
   @@map("menus")
 }
@@ -481,4 +485,87 @@ model GuestQrEvent {
   @@index([event, createdAt])
   @@index([qrType])
   @@map("guest_qr_events")
+}
+
+enum MenuOrderStatus {
+  PLACED
+  ACCEPTED
+  PREPARING
+  READY
+  SERVED
+  REJECTED
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  publicId  String   @unique @map("public_id")
+  phone     String   @unique
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  orders    MenuOrder[]
+
+  @@map("customers")
+}
+
+model MenuOrder {
+  id             Int             @id @default(autoincrement())
+  publicId       String          @unique @map("public_id")
+  publicToken    String          @unique @map("public_token")
+  idempotencyKey String          @map("idempotency_key")
+  restaurantId   Int             @map("restaurant_id")
+  menuId         Int             @map("menu_id")
+  customerId     Int             @map("customer_id")
+  tableNumber    String?         @map("table_number")
+  status         MenuOrderStatus @default(PLACED)
+  subtotal       Decimal         @db.Decimal(10, 2)
+  tax            Decimal         @db.Decimal(10, 2)
+  total          Decimal         @db.Decimal(10, 2)
+  currency       String          @default("INR")
+  rejectReason   String?         @map("reject_reason") @db.Text
+  expectedReadyAt DateTime?      @map("expected_ready_at")
+  stageDueAt     DateTime?       @map("stage_due_at")
+  paidAt         DateTime?       @map("paid_at")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  restaurant Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menu       Menu             @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  customer   Customer         @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  items      MenuOrderItem[]
+  events     MenuOrderEvent[]
+
+  @@unique([restaurantId, idempotencyKey])
+  @@index([restaurantId, status, createdAt])
+  @@index([customerId, restaurantId])
+  @@map("menu_orders")
+}
+
+model MenuOrderItem {
+  id           Int      @id @default(autoincrement())
+  orderId      Int      @map("order_id")
+  menuItemId   Int?     @map("menu_item_id")
+  name         String
+  variantLabel String?  @map("variant_label")
+  unitPrice    Decimal  @db.Decimal(10, 2) @map("unit_price")
+  quantity     Int
+
+  order        MenuOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("menu_order_items")
+}
+
+model MenuOrderEvent {
+  id        Int             @id @default(autoincrement())
+  orderId   Int             @map("order_id")
+  status    MenuOrderStatus
+  note      String?         @db.Text
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  order     MenuOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("menu_order_events")
 }

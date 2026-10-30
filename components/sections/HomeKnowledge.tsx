@@ -18,10 +18,13 @@ export default function HomeKnowledge() {
           What is QR Junction?
         </h2>
         <p className="text-[17px] leading-[1.75] text-slate-700 mb-4">
-          QR Junction is a free QR code generator. You create a QR code online for a website,
-          Wi-Fi, vCard, WhatsApp, PDF, restaurant menu, or Google Review, scan-test it on your
-          phone, and download PNG or SVG. This QR code maker needs no signup for a static code.
-          Indian shops use it when the print has to scan the first time.
+          QR Junction is a free QR code generator built for owners. The restaurant suite turns a
+          photo of your paper menu into a phone menu in under a minute, so guests scan a table QR
+          and see today’s dishes and prices. The review suite puts one QR on the counter: the guest
+          rates the visit and can use a short draft, then edit it, before it reaches Google. Dynamic
+          codes can change after print. Several of them can sit in one campaign, and a scan can
+          collect a name and email tagged to that code. A website, Wi-Fi, WhatsApp, or visiting-card
+          code still downloads with no signup.
         </p>
         <p className="text-[17px] leading-[1.75] text-slate-600 mb-4">
           A QR code is a two-dimensional barcode specified in{" "}
@@ -45,18 +48,6 @@ export default function HomeKnowledge() {
           is a clear public overview. Apple’s Camera app has read QR codes since iOS 11; current
           Android cameras do the same, which is why you should not tell customers to install a
           scanner app.
-        </p>
-        <p className="text-sm text-slate-500">
-          Written by the{" "}
-          <Link href="/about" className="text-primary font-semibold hover:underline">
-            QR Junction team
-          </Link>
-          {" · "}
-          India{" · "}
-          Updated 28 October 2026{" · "}
-          <Link href="/changelog" className="hover:underline">
-            Changelog
-          </Link>
         </p>
       </section>
 
@@ -115,11 +106,11 @@ export default function HomeKnowledge() {
           Which QR code type should you use?
         </h2>
         <p className="text-[17px] leading-[1.75] text-slate-600 mb-4">
-          You should match the code to the job. A website QR opens a page. A Wi-Fi QR joins a
-          network (it is not a link). A vCard QR saves your name and number into Contacts. A
-          WhatsApp QR starts a chat with a pre-filled line. A PDF or menu QR opens a document
-          or live menu. A Google Review QR should open your Maps write-review link, not a
-          generic search for your shop name.
+          Match the code to the job. A restaurant menu QR should open a phone menu you can edit,
+          not a photo or a PDF of last month’s card. A review QR should open your own Google
+          review page, not a search that lists every shop with a similar name. A vCard QR saves
+          your name and number into Contacts. A website QR opens a page. A Wi-Fi QR joins a
+          network — it is not a link. A WhatsApp QR starts a chat with a pre-filled line.
         </p>
         <p className="text-[17px] leading-[1.75] text-slate-600">
           If you are unsure, start with a{" "}
@@ -171,52 +162,73 @@ export default function HomeKnowledge() {
             Example workflows
           </div>
           <h2 className="text-3xl md:text-4xl font-extrabold text-[#001B50] tracking-tight mb-4">
-            How do Indian shops use QR codes?
+            How do restaurants and shops use these QR codes?
           </h2>
           <p className="text-slate-600 text-[17px] leading-relaxed">
-            These are product workflows we built for, not invented testimonials. You can copy
-            the same setup today with the free generators and, if you need scan counts, a
-            dashboard account.
+            These are the setups the product is built for. They are workflows, not customer
+            stories. A restaurant starts from the paper menu. A shop starts from the review
+            stand. A campaign is how you tell a window poster from a flyer, and how a name and email
+            get saved against the right code. Anyone who still hands out visiting cards can put one QR
+            on the card.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <article className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Cafe / restaurant</p>
-            <h3 className="text-lg font-bold text-[#001B50] mb-3">Table-tent menu plus Wi-Fi</h3>
+            <p className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Restaurant suite</p>
+            <h3 className="text-lg font-bold text-[#001B50] mb-3">Paper menu to phone menu</h3>
             <p className="text-sm text-slate-600 leading-relaxed mb-3">
-              You print a 4–5 cm menu QR on a matte tent so guests open today’s card on their
-              phone instead of sharing a sticky paper menu. A second Wi-Fi QR on the same tent
-              joins the guest network without you spelling the password. If dishes change at
-              8 pm, you update the hosted menu or PDF at the same URL; the printed square stays.
+              You photograph the menu already on the counter, or upload the PDF. Dish names,
+              prices, and veg marks come back as a list you can fix. Most menus are ready to
+              check in under a minute. Guests then scan a 4–5 cm code on the table tent and
+              see today’s card, not a pinch-to-zoom file. At 8 pm you hide a sold-out dish or
+              change a price. The printed square stays. When you want it, guests can send the
+              order from that same phone menu.
             </p>
-            <Link href="/menu-qr-code-generator" className="text-sm font-semibold text-primary hover:underline">
-              Menu QR generator →
+            <Link href="/register" className="text-sm font-semibold text-primary hover:underline">
+              Start a restaurant menu →
             </Link>
           </article>
           <article className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Retail / clinic</p>
-            <h3 className="text-lg font-bold text-[#001B50] mb-3">Google review at the counter</h3>
+            <p className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Review suite</p>
+            <h3 className="text-lg font-bold text-[#001B50] mb-3">A review QR after the bill</h3>
             <p className="text-sm text-slate-600 leading-relaxed mb-3">
-              You place a Google Review QR next to UPI after the bill is paid — the phone is
-              already out. The code must open your Business Profile write-review link, not a
-              Maps search that lists similarly named shops. Ask when the visit went well. One
-              listing per outlet; do not reuse a mall code at a second branch.
+              You place one code next to UPI once the bill is paid — the phone is already out.
+              The guest picks stars. If they want help, a short draft appears and they can
+              change any word before it is posted. The code opens your own Google review page,
+              not a search full of similarly named shops. You still see every rating and
+              comment in one inbox. One listing per outlet. Do not reuse a mall code at a
+              second branch.
             </p>
-            <Link href="/google-review-qr-code-generator" className="text-sm font-semibold text-primary hover:underline">
-              Google Review QR →
+            <Link href="/register" className="text-sm font-semibold text-primary hover:underline">
+              Set up a review QR →
             </Link>
           </article>
           <article className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Local services</p>
-            <h3 className="text-lg font-bold text-[#001B50] mb-3">WhatsApp orders from a flyer</h3>
+            <p className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Any owner</p>
+            <h3 className="text-lg font-bold text-[#001B50] mb-3">Visiting card that stays current</h3>
             <p className="text-sm text-slate-600 leading-relaxed mb-3">
-              You print a WhatsApp QR with country code 91 and a pre-filled line such as “Hi, I
-              want to order from the MG Road flyer.” The guest does not save your number first.
-              Your inbox stays sortable because every scan arrives with the same source text.
-              A phone-call QR is a different tool — only use it if you actually want a voice call.
+              You print one QR on the card you already hand out. The other person scans it and
+              saves your name, phone, and email into their contacts. No one types a number
+              wrong. If you change your mobile, you update it once and the cards already in
+              wallets still work. The same idea fits a clinic desk, a salon, or a shop counter.
             </p>
-            <Link href="/whatsapp-qr-code-generator" className="text-sm font-semibold text-primary hover:underline">
-              WhatsApp QR →
+            <Link href="/vcard-qr-code-generator" className="text-sm font-semibold text-primary hover:underline">
+              Make a digital card →
+            </Link>
+          </article>
+          <article className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Campaigns</p>
+            <h3 className="text-lg font-bold text-[#001B50] mb-3">Different codes, one campaign, real leads</h3>
+            <p className="text-sm text-slate-600 leading-relaxed mb-3">
+              You print a dynamic QR on the shop window, another on the MG Road flyer, and a third
+              on the counter. They belong to one campaign, such as Diwali week. Next week the offer
+              changes, so you point the codes at the new page. The printed squares stay. When
+              someone scans and leaves a name, email, and phone, that lead is saved with the
+              campaign and the exact code they used. You can add a note and move the lead from new
+              to contacted.
+            </p>
+            <Link href="/register" className="text-sm font-semibold text-primary hover:underline">
+              Start a campaign →
             </Link>
           </article>
         </div>
@@ -230,7 +242,9 @@ export default function HomeKnowledge() {
           A static QR encodes the destination in the black-and-white pattern. Nobody can change
           it without printing a new image. That is why it never “expires” and why it still works
           if our website is down. A dynamic QR encodes a short redirect you control. You can
-          swap the landing page after print and see scan counts in the dashboard.
+          swap the landing page after print and see scan counts in the dashboard. Put a different
+          dynamic code on the window, the flyer, and the counter, then group them as one campaign.
+          If the page asks for a name and email, that person is saved as a lead on the code they scanned.
         </p>
         <p className="text-[17px] leading-[1.75] text-slate-600">
           The full comparison is{" "}
@@ -334,10 +348,6 @@ export default function HomeKnowledge() {
           <p className="text-sm text-slate-500">
             <Link href="/about" className="font-semibold text-primary hover:underline">
               About the team
-            </Link>
-            {" · "}
-            <Link href="/changelog" className="hover:underline">
-              Product changelog
             </Link>
             {" · "}
             <Link href="/contact" className="hover:underline">

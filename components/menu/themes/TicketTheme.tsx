@@ -1,5 +1,6 @@
 import { DietMark, formatMoney } from "../shared";
 import type { ThemeViewProps } from "../types";
+import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
 export default function TicketTheme({ categories, currencySymbol, onSelectItem }: ThemeViewProps) {
   return (
@@ -15,9 +16,8 @@ export default function TicketTheme({ categories, currencySymbol, onSelectItem }
             <h3 className="font-mono text-[11px] uppercase tracking-[0.2em] mb-2 wrap-anywhere">{cat.name}</h3>
             <div className="space-y-2">
               {cat.items.map((item) => (
-                <button
+                <div role="button" tabIndex={0}
                   key={item.id}
-                  type="button"
                   onClick={() => onSelectItem(item)}
                   className="w-full text-left bg-transparent border-none cursor-pointer min-w-0"
                 >
@@ -41,7 +41,8 @@ export default function TicketTheme({ categories, currencySymbol, onSelectItem }
                       House pick
                     </span>
                   )}
-                </button>
+<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
+</div>
               ))}
             </div>
           </section>

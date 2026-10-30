@@ -106,4 +106,49 @@ export const restaurantService = {
   importMenu(body: unknown) {
     return apiRequest({ method: "POST", url: endpoints.restaurant.importMenu, data: body });
   },
+
+  listOrders() {
+    return apiRequest<{ orders: any[]; placedCount: number; unpaidCount: number; finishedCount: number; orderingEnabled: boolean; prepMinutes: number }>({
+      method: "GET",
+      url: endpoints.restaurant.orders,
+    });
+  },
+
+  listFinishedOrders(params: { q?: string; from?: string; to?: string; status?: string; place?: string; page?: number; pageSize?: number }) {
+    return apiRequest<{
+      orders: any[];
+      page: number;
+      pageSize: number;
+      total: number;
+      unpaidTotal: number;
+      counts: { unpaid: number; paid: number; rejected: number; all: number };
+    }>({
+      method: "GET",
+      url: endpoints.restaurant.orders,
+      params: { view: "finished", ...params },
+    });
+  },
+
+  updatePrep(prepMinutes: number) {
+    return apiRequest<{ prepMinutes: number }>({
+      method: "PATCH",
+      url: endpoints.restaurant.orders,
+      data: { prepMinutes },
+    });
+  },
+
+  getOrder(id: string) {
+    return apiRequest<{ order: any }>({
+      method: "GET",
+      url: endpoints.restaurant.order(id),
+    });
+  },
+
+  updateOrder(id: string, body: { status?: string; reason?: string; readyInMinutes?: number; stageMinutes?: number; paid?: boolean }) {
+    return apiRequest<{ order: any; changed: boolean }>({
+      method: "PATCH",
+      url: endpoints.restaurant.order(id),
+      data: body,
+    });
+  },
 };

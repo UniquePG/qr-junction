@@ -60,11 +60,11 @@ export default function PlatformExplanation() {
           </div>
           
           <h2 className="text-3.5xl md:text-4.5xl font-extrabold text-[#001B50] tracking-tight leading-tight">
-            Why Choose QR Junction?
+            Why owners use QR Junction
           </h2>
           
           <p className="text-slate-600 text-base md:text-lg leading-relaxed">
-            A premium, feature-rich dynamic QR platform engineered to give you absolute control, sub-second routing, conversion tracking, and styling freedom.
+            Print the square once. Later you can change the menu, the review page, the campaign offer, or the number on a visiting card. Guests keep scanning the same code.
           </p>
         </div>
 
@@ -143,15 +143,15 @@ export default function PlatformExplanation() {
                 <g className="group-hover:translate-x-1 transition-transform duration-500">
                   {/* Dest 1 (URL) */}
                   <rect x="234" y="28" width="50" height="24" rx="6" fill="#ffffff" stroke="#e2e8f0" strokeWidth="1.5" className="group-hover:stroke-primary/50 transition-colors" />
-                  <text x="259" y="43" textAnchor="middle" fill="#001B50" fontSize="9" fontWeight="bold" fontFamily="sans-serif">URL</text>
+                  <text x="259" y="43" textAnchor="middle" fill="#001B50" fontSize="9" fontWeight="bold" fontFamily="sans-serif">Menu</text>
 
                   {/* Dest 2 (WiFi) */}
                   <rect x="234" y="68" width="50" height="24" rx="6" fill="#ffffff" stroke="#e2e8f0" strokeWidth="1.5" className="group-hover:stroke-primary/50 transition-colors" />
-                  <text x="259" y="83" textAnchor="middle" fill="#001B50" fontSize="9" fontWeight="bold" fontFamily="sans-serif">Wi-Fi</text>
+                  <text x="259" y="83" textAnchor="middle" fill="#001B50" fontSize="8" fontWeight="bold" fontFamily="sans-serif">Review</text>
 
                   {/* Dest 3 (Lead Form) */}
                   <rect x="234" y="108" width="50" height="24" rx="6" fill="#ffffff" stroke="#e2e8f0" strokeWidth="1.5" className="group-hover:stroke-primary/50 transition-colors" />
-                  <text x="259" y="123" textAnchor="middle" fill="#001B50" fontSize="9" fontWeight="bold" fontFamily="sans-serif">Leads</text>
+                  <text x="259" y="123" textAnchor="middle" fill="#001B50" fontSize="9" fontWeight="bold" fontFamily="sans-serif">Card</text>
                 </g>
               </svg>
 
@@ -162,11 +162,11 @@ export default function PlatformExplanation() {
             <div className="space-y-3">
               <h3 className="text-xl font-bold text-[#001B50] flex items-center gap-2 group-hover:text-primary transition-colors">
                 <Cpu className="w-5 h-5 text-primary" />
-                <span>Dynamic Redirect Routing</span>
+                <span>Change it after you print</span>
               </h3>
               
               <p className="text-slate-600 text-sm leading-relaxed">
-                Change your QR destination URL, WiFi network, email parameters, or digital product files anytime without re-printing. Maintain routing consistency with 99.9% uptime.
+                The table tent, the campaign poster, and the visiting card stay. You update the menu, the offer, the Google review link, or the phone number from your account.
               </p>
             </div>
           </div>
@@ -217,11 +217,11 @@ export default function PlatformExplanation() {
             <div className="space-y-3">
               <h3 className="text-xl font-bold text-[#001B50] flex items-center gap-2 group-hover:text-primary transition-colors">
                 <Settings className="w-5 h-5 text-primary" />
-                <span>Premium Styling Customizer</span>
+                <span>A code that still looks like your place</span>
               </h3>
               
               <p className="text-slate-600 text-sm leading-relaxed">
-                Brand your assets with custom corner elements, custom shapes, and gradients. Smoothly insert logos inside the QR pattern using automatic high error correction keys.
+                Pick colours, corner shapes, and a logo that still scans. Dark dots on a light background. Test it with your own phone before the printer runs.
               </p>
             </div>
           </div>
@@ -263,7 +263,7 @@ export default function PlatformExplanation() {
                 {/* Tooltip Overlay */}
                 <div className="absolute top-2 right-12 bg-[#001B50] text-white text-[9px] font-bold py-1 px-2.5 rounded-lg shadow-md group-hover:-translate-y-1 transition-transform duration-500 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3 text-emerald-400" />
-                  <span>+412 Scans</span>
+                  <span>Menu scans</span>
                 </div>
               </div>
 
@@ -274,11 +274,11 @@ export default function PlatformExplanation() {
             <div className="space-y-3">
               <h3 className="text-xl font-bold text-[#001B50] flex items-center gap-2 group-hover:text-primary transition-colors">
                 <BarChart2 className="w-5 h-5 text-primary" />
-                <span>Sub-Second Scan Analytics</span>
+                <span>See which codes get used</span>
               </h3>
               
               <p className="text-slate-600 text-sm leading-relaxed">
-                Log real-time campaign referrals, device system logs, browser configurations, geographic scan metrics, unique reader metrics, and client-collected leads in one dashboard.
+                Dynamic codes show scans in the dashboard, including each code inside a campaign. Leads from those scans keep the campaign name. A static download does not need an account.
               </p>
             </div>
           </div>
@@ -290,7 +290,7 @@ export default function PlatformExplanation() {
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         } delay-400`}>
           <p className="text-slate-500 text-sm leading-relaxed max-w-3xl mx-auto">
-            QR Junction enables you to deploy professional vector assets instantly. Whether launching print marketing campaigns, collecting lead subscribers, managing guest office Wi-Fi, or sharing business portfolios, enjoy complete reliability, sub-second latency routing, and high-fidelity output.
+            Start with the restaurant menu or the review QR if that is the job. A website, Wi-Fi, or visiting-card code is still free to download on this page when you only need the square.
           </p>
         </div>
       </div>

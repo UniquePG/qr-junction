@@ -1,5 +1,6 @@
 import { DietMark, VariantPills, formatMoney } from "../shared";
 import type { ThemeViewProps } from "../types";
+import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
 export default function PolaroidTheme({ categories, currencySymbol, onSelectItem }: ThemeViewProps) {
   return (
@@ -13,9 +14,8 @@ export default function PolaroidTheme({ categories, currencySymbol, onSelectItem
           </div>
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {cat.items.map((item, index) => (
-              <button
+              <div role="button" tabIndex={0}
                 key={item.id}
-                type="button"
                 onClick={() => onSelectItem(item)}
                 className={`min-w-0 text-left bg-white border border-[#efe7d8] p-2 pb-3 cursor-pointer shadow-sm ${
                   index % 2 === 0 ? "rotate-[-1.5deg]" : "rotate-[1.5deg]"
@@ -42,7 +42,8 @@ export default function PolaroidTheme({ categories, currencySymbol, onSelectItem
                     className="mt-1 text-[9px] bg-[#3d2a1a] text-white px-1.5 py-0.5"
                   />
                 </div>
-              </button>
+<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
+</div>
             ))}
           </div>
         </section>

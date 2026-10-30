@@ -9,6 +9,7 @@ export default function AdminRestaurantDetailPage() {
   const params = useParams<{ id: string }>();
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     adminService.restaurant(params.id).then(setData).catch(() => setError("Restaurant not found."));
@@ -28,6 +29,33 @@ export default function AdminRestaurantDetailPage() {
         </p>
         {restaurant.description ? <p className="text-sm text-slate-600 mt-2">{restaurant.description}</p> : null}
       </div>
+
+      <AdminCard title="Table ordering">
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-sm text-slate-600">
+            {restaurant.orderingEnabled
+              ? "Customers can add dishes and send a plate from this menu."
+              : "This restaurant is a digital menu only. Add buttons stay hidden."}
+          </p>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => {
+              setSaving(true);
+              adminService.setOrdering(params.id, !restaurant.orderingEnabled)
+                .then((next) => setData((current: any) => ({
+                  ...current,
+                  restaurant: { ...current.restaurant, orderingEnabled: next.restaurant.orderingEnabled },
+                })))
+                .catch(() => setError("Could not update ordering."))
+                .finally(() => setSaving(false));
+            }}
+            className={`h-10 shrink-0 cursor-pointer rounded-xl border-none px-4 text-sm font-semibold text-white ${restaurant.orderingEnabled ? "bg-slate-700" : "bg-[#001B50]"}`}
+          >
+            {saving ? "Saving…" : restaurant.orderingEnabled ? "Turn ordering off" : "Turn ordering on"}
+          </button>
+        </div>
+      </AdminCard>
 
       {restaurant.menus.map((menu: any) => (
         <AdminCard key={menu.id} title={`Menu: ${menu.name}`}>

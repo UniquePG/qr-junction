@@ -1,5 +1,6 @@
 import { DietMark, VariantPills, formatMoney } from "../shared";
 import type { ThemeViewProps } from "../types";
+import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
 export default function StampTheme({ categories, currencySymbol, onSelectItem }: ThemeViewProps) {
   return (
@@ -12,9 +13,8 @@ export default function StampTheme({ categories, currencySymbol, onSelectItem }:
           </div>
           <div className="grid grid-cols-2 gap-3">
             {cat.items.map((item) => (
-              <button
+              <div role="button" tabIndex={0}
                 key={item.id}
-                type="button"
                 onClick={() => onSelectItem(item)}
                 className="relative min-w-0 text-left bg-[#fffdf8] p-2 cursor-pointer"
                 style={{
@@ -43,7 +43,8 @@ export default function StampTheme({ categories, currencySymbol, onSelectItem }:
                     className="mt-1 text-[9px] border border-[#1d3557] px-1.5 py-0.5"
                   />
                 </div>
-              </button>
+<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
+</div>
             ))}
           </div>
         </section>

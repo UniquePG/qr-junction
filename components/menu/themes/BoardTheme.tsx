@@ -1,5 +1,6 @@
 import { DietMark, formatMoney } from "../shared";
 import type { ThemeViewProps } from "../types";
+import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
 export default function BoardTheme({ categories, currencySymbol, onSelectItem }: ThemeViewProps) {
   return (
@@ -14,9 +15,8 @@ export default function BoardTheme({ categories, currencySymbol, onSelectItem }:
           </div>
           <div className="divide-y divide-amber-900/20 border border-amber-900/30 border-t-0">
             {cat.items.map((item) => (
-              <button
+              <div role="button" tabIndex={0}
                 key={item.id}
-                type="button"
                 onClick={() => onSelectItem(item)}
                 className="w-full text-left bg-[#0b0c0f] px-3 py-2.5 cursor-pointer min-w-0"
               >
@@ -40,7 +40,8 @@ export default function BoardTheme({ categories, currencySymbol, onSelectItem }:
                     Express
                   </span>
                 )}
-              </button>
+<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
+</div>
             ))}
           </div>
         </section>

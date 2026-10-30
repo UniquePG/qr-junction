@@ -1,5 +1,6 @@
 import { DietMark, formatMoney } from "../shared";
 import type { ThemeViewProps } from "../types";
+import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
 export default function PlaybillTheme({ categories, currencySymbol, onSelectItem }: ThemeViewProps) {
   return (
@@ -13,9 +14,8 @@ export default function PlaybillTheme({ categories, currencySymbol, onSelectItem
           </div>
           <div className="space-y-3">
             {cat.items.map((item) => (
-              <button
+              <div role="button" tabIndex={0}
                 key={item.id}
-                type="button"
                 onClick={() => onSelectItem(item)}
                 className="w-full text-center bg-transparent border-none cursor-pointer min-w-0 py-1"
               >
@@ -34,7 +34,8 @@ export default function PlaybillTheme({ categories, currencySymbol, onSelectItem
                 {item.isPopular && (
                   <p className="mt-1 text-[9px] uppercase tracking-[0.28em] text-[#e8c39e]">Encore</p>
                 )}
-              </button>
+<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
+</div>
             ))}
           </div>
         </section>

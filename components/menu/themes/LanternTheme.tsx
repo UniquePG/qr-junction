@@ -1,5 +1,6 @@
 import { DietMark, VariantPills, formatMoney } from "../shared";
 import type { ThemeViewProps } from "../types";
+import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
 export default function LanternTheme({ categories, currencySymbol, onSelectItem }: ThemeViewProps) {
   return (
@@ -13,9 +14,8 @@ export default function LanternTheme({ categories, currencySymbol, onSelectItem 
           </div>
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {cat.items.map((item) => (
-              <button
+              <div role="button" tabIndex={0}
                 key={item.id}
-                type="button"
                 onClick={() => onSelectItem(item)}
                 className="min-w-0 text-left bg-transparent border-none cursor-pointer"
               >
@@ -41,7 +41,8 @@ export default function LanternTheme({ categories, currencySymbol, onSelectItem 
                     className="mt-1 text-[9px] bg-[#f3c97a] text-[#3a1012] px-1.5 py-0.5 rounded-full"
                   />
                 </div>
-              </button>
+<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
+</div>
             ))}
           </div>
         </section>

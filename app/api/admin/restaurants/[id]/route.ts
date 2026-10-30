@@ -69,3 +69,33 @@ export async function GET(
     },
   });
 }
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const admin = await requireAdmin(request);
+  if (!admin) return forbidden();
+
+  const { id } = await params;
+  const restaurantId = Number(id);
+  if (!restaurantId) {
+    return NextResponse.json({ error: "Invalid restaurant id." }, { status: 400 });
+  }
+
+  const body = await request.json().catch(() => ({}));
+  if (typeof body.orderingEnabled !== "boolean") {
+    return NextResponse.json({ error: "orderingEnabled must be true or false." }, { status: 400 });
+  }
+
+  try {
+    const restaurant = await prisma.restaurant.update({
+      where: { id: restaurantId },
+      data: { orderingEnabled: body.orderingEnabled },
+      select: { id: true, name: true, orderingEnabled: true },
+    });
+    return NextResponse.json({ success: true, restaurant });
+  } catch {
+    return NextResponse.json({ error: "Restaurant not found." }, { status: 404 });
+  }
+}

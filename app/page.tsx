@@ -59,22 +59,12 @@ export default function Home() {
               </h1>
 
               <p className="text-slate-700 text-base sm:text-lg leading-[28px] max-w-2xl mx-auto lg:mx-0">
-                QR Junction is a free QR code generator. Create a QR code online for
-                a website, Wi-Fi password, WhatsApp number, or menu, then download
-                PNG or SVG. This QR code maker needs no signup for static codes.
-                iPhone and Android cameras scan it — no extra app. Tracking lives in
-                the dashboard if you want it.
-              </p>
-
-              <p className="text-sm text-slate-500">
-                By the{" "}
-                <Link href="/about" className="text-primary font-semibold hover:underline">
-                  QR Junction team
-                </Link>
-                {" · "}
-                <Link href="/changelog" className="hover:underline">
-                  Updated 28 Oct 2026
-                </Link>
+                QR Junction is a free QR code generator for owners. The restaurant
+                suite turns a photo of your paper menu into a phone menu in under a
+                minute. The review suite helps a guest write a Google review. Dynamic
+                campaign codes let you print a different square for a window, a flyer,
+                and a counter, change the link later, and collect a name and email.
+                A website, Wi-Fi, or visiting-card code still downloads with no signup.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
@@ -92,6 +82,24 @@ export default function Home() {
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
+
+              <p className="text-sm text-slate-600">
+                <a href="#usecases" className="font-semibold text-[#001B50] hover:underline">
+                  Restaurant menu QR
+                </a>
+                <span className="mx-2 text-slate-300">·</span>
+                <a href="#usecases" className="font-semibold text-[#001B50] hover:underline">
+                  AI review QR
+                </a>
+                <span className="mx-2 text-slate-300">·</span>
+                <a href="#usecases" className="font-semibold text-[#001B50] hover:underline">
+                  Campaign QR
+                </a>
+                <span className="mx-2 text-slate-300">·</span>
+                <Link href="/vcard-qr-code-generator" className="font-semibold text-[#001B50] hover:underline">
+                  Digital visiting card
+                </Link>
+              </p>
             </div>
 
             <div className="lg:col-span-5 flex justify-center lg:justify-end">

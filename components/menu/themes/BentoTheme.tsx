@@ -1,5 +1,6 @@
 import { DietMark, VariantPills, formatMoney } from "../shared";
 import type { MenuItem, ThemeViewProps } from "../types";
+import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
 function Cell({
   item,
@@ -13,8 +14,7 @@ function Cell({
   featured?: boolean;
 }) {
   return (
-    <button
-      type="button"
+    <div role="button" tabIndex={0}
       onClick={() => onSelectItem(item)}
       className={`min-w-0 text-left bg-[#fffaf1] border border-[#2b2118] cursor-pointer p-2.5 ${
         featured ? "col-span-2 flex gap-3 items-center" : ""
@@ -46,7 +46,8 @@ function Cell({
         />
         {item.isPopular && <p className="text-[9px] uppercase tracking-widest text-[#b42318]">Chef pick</p>}
       </div>
-    </button>
+<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
+</div>
   );
 }
 

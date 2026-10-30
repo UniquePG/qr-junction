@@ -1,6 +1,7 @@
 import { Flame } from "lucide-react";
 import { DietMark, VariantPills, formatMoney } from "../shared";
 import type { ThemeViewProps } from "../types";
+import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
 export default function NeonTheme({ categories, currencySymbol, onSelectItem }: ThemeViewProps) {
   return (
@@ -13,9 +14,8 @@ export default function NeonTheme({ categories, currencySymbol, onSelectItem }: 
           </div>
           <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 scrollbar-none">
             {cat.items.map((item) => (
-              <button
+              <div role="button" tabIndex={0}
                 key={item.id}
-                type="button"
                 onClick={() => onSelectItem(item)}
                 className="snap-start shrink-0 w-[78%] max-w-[320px] text-left bg-[#140c22] border border-[#3a1d55] rounded-3xl overflow-hidden cursor-pointer"
               >
@@ -48,7 +48,8 @@ export default function NeonTheme({ categories, currencySymbol, onSelectItem }: 
                     className="text-[10px] font-bold text-[#0a0612] bg-[#2de2e6] px-2 py-0.5 rounded-full"
                   />
                 </div>
-              </button>
+<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
+</div>
             ))}
           </div>
         </section>

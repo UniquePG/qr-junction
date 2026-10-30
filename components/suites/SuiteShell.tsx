@@ -4,6 +4,7 @@ import { useAuth } from "@/components/AuthContext";
 import { SuiteBackProvider, useSuiteBackAction } from "@/components/suites/SuiteBack";
 import { ArrowLeft, LayoutDashboard, LogOut, MoreHorizontal, X } from "lucide-react";
 import Link from "next/link";
+import { useOrderAlerts } from "@/components/orders/OrderAlerts";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
@@ -107,6 +108,7 @@ function MobileDock({
   onMore: () => void;
   onNavigate: () => void;
 }) {
+  const alerts = useOrderAlerts();
   const { center, left, right } = splitDock(items);
   const CenterIcon = center?.icon;
   const centerActive = center ? isActive(center) : false;
@@ -149,7 +151,11 @@ function MobileDock({
                 }}
               >
                 <CenterIcon className="h-7 w-7" strokeWidth={2.1} />
-                {center.soon ? (
+                {center.href.endsWith("/orders") && alerts.placedCount > 0 ? (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-[#C4622D] shadow-sm">
+                    {alerts.placedCount}
+                  </span>
+                ) : center.soon ? (
                   <span
                     className="absolute -right-2 -top-1 rounded-full bg-white px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wide shadow-sm"
                     style={{ color: theme.accent }}
@@ -223,6 +229,7 @@ function SuiteShellFrame({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const alerts = useOrderAlerts();
   const { user, logout } = useAuth();
   const [moreOpen, setMoreOpen] = useState(false);
   const suiteBack = useSuiteBackAction();
@@ -265,7 +272,9 @@ function SuiteShellFrame({
       >
         <Icon className="w-4 h-4" />
         <span className="truncate">{item.name}</span>
-        {item.soon ? (
+        {item.href.endsWith("/orders") && alerts.placedCount > 0 ? (
+          <span className="ml-auto min-w-5 rounded-full bg-white px-1.5 text-center text-[10px] font-bold text-[#C4622D]">{alerts.placedCount}</span>
+        ) : item.soon ? (
           <span className="ml-auto text-[10px] uppercase tracking-wide opacity-70">Soon</span>
         ) : null}
       </Link>

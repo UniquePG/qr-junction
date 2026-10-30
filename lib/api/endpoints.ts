@@ -52,6 +52,8 @@ export const endpoints = {
     stats: "/api/restaurant/stats",
     scanMenu: "/api/restaurant/scan-menu",
     importMenu: "/api/restaurant/import-menu",
+    orders: "/api/restaurant/orders",
+    order: (id: string) => `/api/restaurant/orders/${id}`,
   },
   admin: {
     me: "/api/admin/me",

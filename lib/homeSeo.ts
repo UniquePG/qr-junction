@@ -2,15 +2,15 @@ export const HOME_TITLE =
   'Free QR Code Generator | Create QR Code Online - QR Junction';
 
 export const HOME_DESCRIPTION =
-  'Create a QR code online with QR Junction, a free QR code generator. QR code maker, no signup: websites, Wi-Fi, vCards, WhatsApp, PDFs, and restaurant menus. Scan-test, then download PNG or SVG.';
+  'Free QR code generator for a restaurant menu, Google review QR, digital visiting card, and dynamic campaign QR codes. Change the link after print and collect leads. No signup for a website, Wi-Fi, or vCard.';
 
 export const HOME_KEYWORDS =
-  'free QR code generator, create QR code online, create a QR code online, QR code maker, QR code maker no signup, no signup QR code, custom QR codes, URL QR code, WiFi QR code, vCard QR code, QR Junction';
+  'free QR code generator, restaurant QR code menu, Google review QR code, dynamic QR code, QR code campaign, QR lead capture, digital business card QR, create QR code online, QR Junction';
 
 export const HOME_HOW_TO = [
   {
     title: 'Pick what the scan should do',
-    text: 'Choose a website URL, Wi-Fi network, contact card, WhatsApp chat, PDF, menu, or Google review. One job per code works better than stuffing everything into one square.',
+    text: 'A restaurant usually wants a live menu. A shop usually wants a Google review QR, a visiting card, or a dynamic code for a campaign. A website or Wi-Fi code is a separate job. One job per square works better than stuffing everything into one code.',
   },
   {
     title: 'Enter the live destination',
@@ -73,6 +73,22 @@ export const HOME_FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'Which QR code should a restaurant or shop use?',
-    a: 'Menus: a menu QR or a PDF QR if the card rarely changes. Reviews: a Google Review QR at the counter after payment. Guest internet: a Wi-Fi QR on the table. Orders on chat: a WhatsApp QR with a pre-filled message. Do not print one mystery square for all four jobs.',
+    a: 'Restaurants: photograph the paper menu in the restaurant suite and print one QR per table. The phone opens today’s dishes and prices, not a PDF. Reviews: one review QR at the counter after payment, so the guest can write a Google review with optional wording help. Other owners: a vCard QR on the visiting card. Do not print one mystery square for all three jobs.',
+  },
+  {
+    q: 'How do I turn a paper menu into a QR menu?',
+    a: 'Photograph the menu, or upload the PDF, in the restaurant suite. We read dish names and prices and show you the list before guests see it. Most menus are ready to check in under a minute. Print one QR for the table. When a price changes, edit the menu. The printed square stays.',
+  },
+  {
+    q: 'What is a dynamic QR code?',
+    a: 'A dynamic QR code is a short link you can change after the square is printed. The poster stays. You point it at a new page and see scans in your account. Put a different code on the window, the flyer, and the counter, then group them in one campaign. A static code cannot be edited and needs no signup.',
+  },
+  {
+    q: 'Can one campaign have several QR codes and collect leads?',
+    a: 'Yes. A campaign is a named group of dynamic QR codes, with optional start and end dates. Each code keeps its own scans, so you can tell the window from the flyer. A landing page can ask for a name, email, and phone. That lead is saved with the campaign and the code that was scanned. You can add a note and a status in the lead list.',
+  },
+  {
+    q: 'What is an AI review QR code?',
+    a: 'A guest scans the code, picks a star rating, and can use a short draft written for that visit. They edit every word, or ignore the draft and write their own. You read the notes in an inbox, and the code can open your real Google review page.',
   },
 ];

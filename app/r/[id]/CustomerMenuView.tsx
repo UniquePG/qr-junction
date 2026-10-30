@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   Search, 
   Sparkles, 
@@ -24,6 +24,8 @@ import LanternTheme from '@/components/menu/themes/LanternTheme';
 import StampTheme from '@/components/menu/themes/StampTheme';
 import BentoTheme from '@/components/menu/themes/BentoTheme';
 import PlaybillTheme from '@/components/menu/themes/PlaybillTheme';
+import { PlateProvider } from '@/components/menu/ordering/PlateContext';
+import { DishOrderActions, PlateSlot } from '@/components/menu/ordering/PlateControl';
 
 interface MenuItem {
   id: number;
@@ -54,6 +56,7 @@ interface Restaurant {
   currency: string;
   taxRate: any; // Decimal type
   taxName: string;
+  orderingEnabled?: boolean;
 }
 
 interface Menu {
@@ -76,6 +79,12 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
   const [dietFilter, setDietFilter] = useState<'ALL' | 'VEG' | 'NON_VEG'>('ALL');
   const [popularFilter, setPopularFilter] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
+  const orderingEnabled = !layoutPreview && Boolean(restaurant.orderingEnabled);
+
+  useEffect(() => {
+    setSelectedVariant(selectedItem?.variants?.[0]?.label ?? null);
+  }, [selectedItem]);
 
   const currencySymbol = useMemo(() => {
     switch (restaurant.currency) {
@@ -190,6 +199,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                       </span>
                     )}
                   </div>
+                  <div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
                 </div>
 
                 {item.image && (
@@ -270,6 +280,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                     ★ chef's recommendation
                   </div>
                 )}
+                <div onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
               </div>
             ))}
           </div>
@@ -346,6 +357,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                       </span>
                     )}
                   </div>
+                  <div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
                 </div>
               </div>
             ))}
@@ -415,6 +427,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                     <span className="text-slate-400">Available</span>
                   )}
                 </div>
+                <div onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
               </div>
             ))}
           </div>
@@ -493,6 +506,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                       <span className="text-slate-500">Available</span>
                     )}
                   </div>
+                  <div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
                 </div>
               </div>
             ))}
@@ -584,6 +598,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                       <span className="text-slate-400">Available</span>
                     )}
                   </div>
+                  <div onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
                 </div>
               </div>
             ))}
@@ -594,6 +609,18 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
   );
 
   return (
+    <PlateProvider
+      enabled={orderingEnabled}
+      theme={theme}
+      restaurantId={restaurant.id}
+      menuId={menu.id}
+      tableNumber={tableNumber}
+      currencySymbol={currencySymbol}
+      onOpenItem={(item) => {
+        setSelectedVariant(item.variants?.[0]?.label ?? null);
+        setSelectedItem(item);
+      }}
+    >
     <div className={`min-h-screen overflow-x-clip transition-colors duration-300 relative font-sans ${chrome.page}`}>
       {layoutPreview && (
         <div className="sticky top-0 z-40 px-3 py-2 text-center text-[11px] font-bold leading-snug bg-[#001B50] text-white wrap-anywhere">
@@ -872,10 +899,17 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                   <p className="text-sm leading-relaxed font-sans">{selectedItem.description}</p>
                 </div>
               )}
+              <DishOrderActions
+                item={selectedItem}
+                variantLabel={selectedVariant}
+                onVariant={setSelectedVariant}
+                currencySymbol={currencySymbol}
+              />
             </div>
           </div>
         </div>
       )}
     </div>
+    </PlateProvider>
   );
 }

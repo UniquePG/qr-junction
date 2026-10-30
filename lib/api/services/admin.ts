@@ -61,6 +61,15 @@ export const adminService = {
     return apiData<T>({ method: "GET", url: endpoints.admin.restaurant(id), requireAuth: true });
   },
 
+  setOrdering<T = any>(id: string | number, orderingEnabled: boolean) {
+    return apiData<T>({
+      method: "PATCH",
+      url: endpoints.admin.restaurant(id),
+      data: { orderingEnabled },
+      requireAuth: true,
+    });
+  },
+
   pages<T = any>(query?: Query) {
     return list(endpoints.admin.pages, query) as Promise<T>;
   },

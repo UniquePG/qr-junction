@@ -50,9 +50,6 @@ export default function Footer() {
               <li>
                 <Link href="/about" className="text-slate-600 hover:text-primary transition-colors no-underline">About</Link>
               </li>
-              <li>
-                <Link href="/changelog" className="text-slate-600 hover:text-primary transition-colors no-underline">Changelog</Link>
-              </li>
             </ul>
 
             <h4 className="text-[#001B50] text-sm font-bold uppercase tracking-wider mb-5 mt-10">Legal</h4>

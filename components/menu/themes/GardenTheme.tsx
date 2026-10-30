@@ -1,6 +1,7 @@
 import { Leaf } from "lucide-react";
 import { DietMark, VariantPills, formatMoney } from "../shared";
 import type { ThemeViewProps } from "../types";
+import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
 export default function GardenTheme({ categories, currencySymbol, onSelectItem }: ThemeViewProps) {
   return (
@@ -14,9 +15,8 @@ export default function GardenTheme({ categories, currencySymbol, onSelectItem }
           </div>
           <div className="space-y-3">
             {cat.items.map((item) => (
-              <button
+              <div role="button" tabIndex={0}
                 key={item.id}
-                type="button"
                 onClick={() => onSelectItem(item)}
                 className="w-full text-left bg-[#f7fbf4] border border-[#c5d4bf] rounded-2xl p-3 flex gap-3 min-w-0 cursor-pointer"
               >
@@ -44,7 +44,8 @@ export default function GardenTheme({ categories, currencySymbol, onSelectItem }
                     className="mt-2 text-[10px] border border-[#2f5d3a]/30 px-2 py-0.5 rounded-full"
                   />
                 </div>
-              </button>
+<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
+</div>
             ))}
           </div>
         </section>

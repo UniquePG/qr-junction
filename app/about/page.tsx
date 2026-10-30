@@ -59,8 +59,7 @@ export default function AboutPage() {
             <Link href="/blog" className="text-primary font-semibold hover:underline">
               blog
             </Link>{" "}
-            are written by the QR Junction team — people who ship the product, not a rented
-            byline. When we cite a standard we link it:{" "}
+            explain the product in plain language. When we cite a standard we link it:{" "}
             <a
               href="https://www.iso.org/standard/62021.html"
               className="text-primary hover:underline"
@@ -77,13 +76,6 @@ export default function AboutPage() {
             <li>No watermark on free static downloads.</li>
             <li>Instructions that name the generator type (Wi-Fi is not a website).</li>
             <li>
-              Public{" "}
-              <Link href="/changelog" className="text-primary font-semibold hover:underline">
-                changelog
-              </Link>{" "}
-              when the product changes.
-            </li>
-            <li>
               Support via{" "}
               <Link href="/contact" className="text-primary font-semibold hover:underline">
                 contact
@@ -92,7 +84,6 @@ export default function AboutPage() {
             </li>
           </ul>
           <p className="text-sm text-slate-500">
-            Last updated 28 October 2026.{" "}
             <Link href="/privacy-policy" className="hover:underline">
               Privacy
             </Link>
