@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Loader2, Download, Save, Upload, X, Check, Trash2, Sparkles, Palette, Layout, QrCode } from 'lucide-react';
+import { Loader2, Download, Save, Upload, X, Check, Trash2, Sparkles, Palette, Layout, QrCode, ChevronDown } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { qrService, uploadService } from '@/lib/api';
 import { auth } from '@/lib/firebase';
@@ -73,6 +73,7 @@ export default function QRDesignModal({ isOpen, onClose, qrCode, onSave }: QRDes
 
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize values when qrCode changes
@@ -90,6 +91,19 @@ export default function QRDesignModal({ isOpen, onClose, qrCode, onSave }: QRDes
       setLogoPreset(design.logoPreset || 'none');
     }
   }, [qrCode, isOpen]);
+
+  useEffect(() => {
+    if (isOpen) setPreviewOpen(false);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !saving && !uploadingLogo) onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, saving, uploadingLogo, onClose]);
 
   if (!isOpen || !qrCode) return null;
 
@@ -220,25 +234,56 @@ export default function QRDesignModal({ isOpen, onClose, qrCode, onSave }: QRDes
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-      {/* Universal Container */}
-      <div className="bg-white border border-slate-200 rounded-3xl max-w-4xl w-full h-[90vh] md:h-[80vh] flex flex-col md:flex-row overflow-hidden animate-scale-in relative shadow-2xl">
-        
-        {/* Left Side: Live Preview Panel */}
-        <div className="md:w-5/12 bg-slate-50 border-r border-slate-100 flex flex-col items-center justify-between p-6 md:p-8 shrink-0">
-          
-          {/* Top Info */}
-          <div className="w-full text-center space-y-1 mb-4 md:mb-0">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-bold tracking-wider uppercase">
-              <Sparkles className="w-3 h-3" /> Live Design Preview
-            </span>
-            <h4 className="text-sm font-bold text-slate-800 truncate px-2">{qrCode.name}</h4>
-          </div>
+  const closeCustomizer = () => {
+    if (saving || uploadingLogo) return;
+    onClose();
+  };
 
-          {/* QR Render Window */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-md flex items-center justify-center w-[230px] h-[230px] md:w-[260px] md:h-[260px]">
-            <div className="w-full h-full flex items-center justify-center">
+  return (
+    <div className="fixed inset-0 z-[80]" role="dialog" aria-modal="true" aria-labelledby="qr-customizer-title">
+      <button
+        type="button"
+        aria-label="Close customizer"
+        className="absolute inset-0 cursor-pointer border-none bg-[#1C1410]/40"
+        onClick={closeCustomizer}
+      />
+      <aside className="absolute inset-y-0 right-0 flex h-full w-full max-w-[960px] flex-col bg-white shadow-2xl">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-4 sm:px-5">
+          <div className="min-w-0">
+            <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-slate-400">QR design</p>
+            <h2 id="qr-customizer-title" className="truncate text-base font-bold text-[#001B50] sm:text-lg">Customize QR code</h2>
+          </div>
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={closeCustomizer}
+            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-slate-100 text-slate-600 hover:bg-slate-200"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </header>
+
+        <div className="flex min-h-0 flex-1 flex-col lg:flex-row lg:overflow-hidden">
+          <button
+            type="button"
+            aria-expanded={previewOpen}
+            onClick={() => setPreviewOpen((open) => !open)}
+            className="flex h-12 w-full shrink-0 cursor-pointer items-center justify-between border-b border-slate-200 bg-slate-50 px-4 text-left lg:hidden"
+          >
+            <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#001B50]">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Live preview
+            </span>
+            <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform ${previewOpen ? 'rotate-180' : ''}`} />
+          </button>
+          <div className={`${previewOpen ? 'block' : 'hidden'} max-h-[52dvh] shrink-0 overflow-y-auto border-b border-slate-200 bg-slate-50 px-4 py-4 lg:block lg:max-h-none lg:w-[300px] lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r lg:px-5 lg:py-6`}>
+            <div className="text-center">
+              <span className="hidden items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary lg:inline-flex">
+                <Sparkles className="h-3 w-3" /> Live preview
+              </span>
+              <p className="truncate text-sm font-semibold text-slate-800 lg:mt-2">{qrCode.name}</p>
+            </div>
+            <div className={`mx-auto mt-4 flex w-full max-w-[200px] items-center justify-center rounded-2xl border border-slate-200 bg-white p-3 shadow-sm lg:max-w-[220px] lg:p-4 ${frameId === 'no_frame' ? 'aspect-square' : 'aspect-[350/420]'}`}>
               <CustomizableQRCode
                 id="custom-qr-preview-svg"
                 value={getQrUrl(qrCode.shortCode)}
@@ -253,295 +298,225 @@ export default function QRDesignModal({ isOpen, onClose, qrCode, onSave }: QRDes
                 size={180}
               />
             </div>
-          </div>
-
-          {/* Bottom Actions */}
-          <div className="w-full space-y-3 mt-4 md:mt-0">
             <button
+              type="button"
               onClick={handleDownload}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 rounded-2xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+              className="mt-4 inline-flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
-              <Download className="w-4 h-4 text-slate-500" />
-              Download High-Res PNG
+              <Download className="h-4 w-4" />
+              Download PNG
             </button>
-            <div className="text-[10px] text-center text-slate-400 font-mono">
-              Redirects to: <span className="font-semibold text-slate-600">/q/{qrCode.shortCode}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Side: Options Scroll Pane */}
-        <div className="md:w-7/12 flex flex-col h-full overflow-hidden">
-          
-          {/* Header */}
-          <div className="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-white">
-            <div className="space-y-1">
-              <h3 className="text-lg font-extrabold text-[#001B50]">QR Code Customizer</h3>
-              <p className="text-xs text-slate-500">Tailor styling, colors, logo overlay, and themed frames.</p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-50 cursor-pointer border border-slate-100 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <p className="mt-2 text-center text-[11px] text-slate-400">
+              Opens <span className="font-semibold text-slate-600">/q/{qrCode.shortCode}</span>
+            </p>
           </div>
 
-          {/* Settings Tabs */}
-          <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 bg-white">
-            
-            {/* 1. Select Theme Frame */}
-            <div className="space-y-4">
-              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <Layout className="w-4 h-4 text-primary" /> 1. Frame Style
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {FRAME_PRESETS.map((frame) => (
-                  <button
-                    key={frame.id}
-                    onClick={() => {
-                      setFrameId(frame.id);
-                      if (frame.id !== 'no_frame' && frameText === 'SCAN ME') {
-                        setFrameText('SCAN MENU');
-                      }
-                    }}
-                    className={`p-3 text-left rounded-2xl border transition-all cursor-pointer flex flex-col justify-between h-20 ${
-                      frameId === frame.id
-                        ? 'border-primary bg-primary/[0.03] ring-1 ring-primary'
-                        : 'border-slate-200 hover:border-slate-300 bg-white'
-                    }`}
-                  >
-                    <span className="text-xs font-bold text-slate-850 flex items-center justify-between w-full">
-                      {frame.name}
-                      {frameId === frame.id && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
-                    </span>
-                    <span className="text-[10px] text-slate-500 leading-snug line-clamp-2 mt-1">{frame.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6">
+            <div className="space-y-8">
+              <section className="space-y-3">
+                <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800">
+                  <Layout className="h-4 w-4 text-primary" /> Frame
+                </h3>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {FRAME_PRESETS.map((frame) => {
+                    const selected = frameId === frame.id;
+                    return (
+                      <button
+                        key={frame.id}
+                        type="button"
+                        onClick={() => {
+                          setFrameId(frame.id);
+                          if (frame.id !== 'no_frame' && frameText === 'SCAN ME') {
+                            setFrameText('SCAN MENU');
+                          }
+                        }}
+                        className={`flex min-h-[4.5rem] cursor-pointer items-start gap-2 rounded-xl border px-3 py-3 text-left ${
+                          selected ? 'border-primary bg-primary/[0.04] ring-1 ring-primary' : 'border-slate-200 bg-white hover:border-slate-300'
+                        }`}
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-semibold leading-snug text-slate-800">{frame.name}</span>
+                          <span className="mt-1 block text-xs leading-snug text-slate-500">{frame.desc}</span>
+                        </span>
+                        {selected ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
 
-            {/* If frame is selected, show Frame Text & Color Settings */}
-            {frameId !== 'no_frame' && (
-              <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-1">
-                <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                  Frame Text & Colors
-                </h4>
-                
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-650">Frame Text Banner</label>
+              {frameId !== 'no_frame' ? (
+                <section className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Frame text and colors</h3>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-600">Banner text</label>
                     <input
                       type="text"
                       maxLength={24}
                       value={frameText}
                       onChange={(e) => setFrameText(e.target.value)}
                       placeholder="e.g. SCAN MENU"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-primary"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary"
                     />
                   </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <label className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+                      <span className="text-sm font-semibold text-slate-700">Frame</span>
+                      <span className="flex items-center gap-2">
+                        <span className="font-mono text-[11px] uppercase text-slate-500">{frameColor}</span>
+                        <input type="color" value={frameColor} onChange={(e) => setFrameColor(e.target.value)} className="h-8 w-8 cursor-pointer rounded-lg border border-slate-200 bg-transparent p-0" />
+                      </span>
+                    </label>
+                    <label className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+                      <span className="text-sm font-semibold text-slate-700">Text</span>
+                      <span className="flex items-center gap-2">
+                        <span className="font-mono text-[11px] uppercase text-slate-500">{frameTextColor}</span>
+                        <input type="color" value={frameTextColor} onChange={(e) => setFrameTextColor(e.target.value)} className="h-8 w-8 cursor-pointer rounded-lg border border-slate-200 bg-transparent p-0" />
+                      </span>
+                    </label>
+                  </div>
+                </section>
+              ) : null}
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold text-slate-650 block">Frame Color</label>
-                      <div className="flex gap-2 items-center">
-                        <input
-                          type="color"
-                          value={frameColor}
-                          onChange={(e) => setFrameColor(e.target.value)}
-                          className="w-8 h-8 rounded-lg border border-slate-200 cursor-pointer p-0 bg-transparent"
+              <section className="space-y-3">
+                <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800">
+                  <Palette className="h-4 w-4 text-primary" /> Colors
+                </h3>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">Dots</p>
+                        <p className="mt-0.5 font-mono text-[11px] uppercase text-slate-500">{fgColor}</p>
+                      </div>
+                      <input type="color" value={fgColor} onChange={(e) => setFgColor(e.target.value)} className="h-9 w-9 cursor-pointer rounded-lg border border-slate-200 bg-transparent p-0" />
+                    </div>
+                    <p className="mt-2 text-xs text-slate-400">Dark colors scan more reliably.</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {COLOR_PRESETS.map((color) => (
+                        <button
+                          key={`fg-${color}`}
+                          type="button"
+                          aria-label={`Dot color ${color}`}
+                          onClick={() => setFgColor(color)}
+                          className={`h-7 w-7 cursor-pointer rounded-full border ${fgColor.toLowerCase() === color.toLowerCase() ? 'border-slate-900 ring-2 ring-slate-900 ring-offset-1' : 'border-slate-300'}`}
+                          style={{ backgroundColor: color }}
                         />
-                        <span className="font-mono text-xs text-slate-600 uppercase">{frameColor}</span>
-                      </div>
+                      ))}
                     </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold text-slate-650 block">Text Color</label>
-                      <div className="flex gap-2 items-center">
-                        <input
-                          type="color"
-                          value={frameTextColor}
-                          onChange={(e) => setFrameTextColor(e.target.value)}
-                          className="w-8 h-8 rounded-lg border border-slate-200 cursor-pointer p-0 bg-transparent"
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">Background</p>
+                        <p className="mt-0.5 font-mono text-[11px] uppercase text-slate-500">{bgColor}</p>
+                      </div>
+                      <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="h-9 w-9 cursor-pointer rounded-lg border border-slate-200 bg-transparent p-0" />
+                    </div>
+                    <p className="mt-2 text-xs text-slate-400">A light background keeps the code readable.</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {['#FFFFFF', '#F8FAFC', '#FFFBEB', '#F0FDF4', '#EFF6FF'].map((color) => (
+                        <button
+                          key={`bg-${color}`}
+                          type="button"
+                          aria-label={`Background ${color}`}
+                          onClick={() => setBgColor(color)}
+                          className={`h-7 w-7 cursor-pointer rounded-full border ${bgColor.toLowerCase() === color.toLowerCase() ? 'border-slate-900 ring-2 ring-slate-900 ring-offset-1' : 'border-slate-300'}`}
+                          style={{ backgroundColor: color }}
                         />
-                        <span className="font-mono text-xs text-slate-600 uppercase">{frameTextColor}</span>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              </section>
 
-            {/* 2. QR Code Colors */}
-            <div className="space-y-4">
-              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <Palette className="w-4 h-4 text-primary" /> 2. QR Colors
-              </h4>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                <div className="space-y-3">
-                  <label className="text-xs font-bold text-slate-650 block">Foreground (Dots)</label>
-                  <div className="flex gap-3 items-center">
+              <section className="space-y-3">
+                <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800">
+                  <QrCode className="h-4 w-4 text-primary" /> Center logo
+                </h3>
+                {logoUrl ? (
+                  <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-3">
+                    <img src={logoUrl} alt="" className="h-12 w-12 shrink-0 rounded-lg border border-slate-200 bg-white object-contain p-1" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-emerald-800">Custom logo</p>
+                      <p className="text-xs text-emerald-700">Shown in the center of the code.</p>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label="Remove logo"
+                      onClick={handleRemoveLogo}
+                      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border-none bg-white text-red-500"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div>
                     <input
-                      type="color"
-                      value={fgColor}
-                      onChange={(e) => setFgColor(e.target.value)}
-                      className="w-10 h-10 rounded-xl border border-slate-200 cursor-pointer p-0 bg-transparent"
+                      type="file"
+                      accept="image/png, image/jpeg, image/svg+xml"
+                      className="hidden"
+                      id="qr-logo-upload"
+                      ref={fileInputRef}
+                      onChange={handleLogoUpload}
+                      disabled={uploadingLogo}
                     />
-                    <div className="space-y-0.5">
-                      <span className="font-mono text-xs text-slate-800 uppercase font-bold">{fgColor}</span>
-                      <p className="text-[10px] text-slate-400">Dark colors recommended</p>
-                    </div>
+                    <label
+                      htmlFor="qr-logo-upload"
+                      className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 ${uploadingLogo ? 'pointer-events-none opacity-60' : ''}`}
+                    >
+                      {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      {uploadingLogo ? 'Uploading…' : 'Upload logo · PNG or JPEG, max 1MB'}
+                    </label>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {COLOR_PRESETS.map((c) => (
-                      <button
-                        key={`fg-${c}`}
-                        type="button"
-                        onClick={() => setFgColor(c)}
-                        className="w-5 h-5 rounded-full border border-slate-300 cursor-pointer transition-transform hover:scale-110 shrink-0"
-                        style={{ backgroundColor: c }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-xs font-bold text-slate-650 block">Background</label>
-                  <div className="flex gap-3 items-center">
-                    <input
-                      type="color"
-                      value={bgColor}
-                      onChange={(e) => setBgColor(e.target.value)}
-                      className="w-10 h-10 rounded-xl border border-slate-200 cursor-pointer p-0 bg-transparent"
-                    />
-                    <div className="space-y-0.5">
-                      <span className="font-mono text-xs text-slate-800 uppercase font-bold">{bgColor}</span>
-                      <p className="text-[10px] text-slate-400">Light background works best</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {['#FFFFFF', '#F8FAFC', '#FFFBEB', '#F0FDF4', '#EFF6FF'].map((c) => (
-                      <button
-                        key={`bg-${c}`}
-                        type="button"
-                        onClick={() => setBgColor(c)}
-                        className="w-5 h-5 rounded-full border border-slate-300 cursor-pointer transition-transform hover:scale-110 shrink-0"
-                        style={{ backgroundColor: c }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 3. Logo Overlay */}
-            <div className="space-y-4">
-              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <QrCode className="w-4 h-4 text-primary" /> 3. Central Brand Logo
-              </h4>
-
-              <div className="space-y-5">
-                
-                {/* Upload Section */}
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-650">Upload Custom Logo</label>
-                  {logoUrl ? (
-                    <div className="flex items-center gap-4 bg-emerald-50 border border-emerald-100 p-3 rounded-2xl">
-                      <img src={logoUrl} alt="Logo" className="w-10 h-10 object-contain rounded-lg bg-white border border-slate-200 p-1" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-emerald-800 truncate">Custom logo loaded</p>
-                        <p className="text-[10px] text-emerald-600">Displays in the center of the QR</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleRemoveLogo}
-                        className="p-2 text-slate-500 hover:text-red-600 hover:bg-white rounded-xl transition-colors cursor-pointer border border-transparent"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-3 items-center">
-                      <input
-                        type="file"
-                        accept="image/png, image/jpeg, image/svg+xml"
-                        className="hidden"
-                        id="qr-logo-upload"
-                        ref={fileInputRef}
-                        onChange={handleLogoUpload}
-                        disabled={uploadingLogo}
-                      />
-                      <label
-                        htmlFor="qr-logo-upload"
-                        className={`flex-1 flex flex-col items-center justify-center py-5 border-2 border-dashed rounded-2xl cursor-pointer hover:bg-slate-50 transition-colors ${
-                          uploadingLogo ? 'border-slate-300 opacity-60' : 'border-slate-300 hover:border-slate-400'
-                        }`}
-                      >
-                        {uploadingLogo ? (
-                          <Loader2 className="w-5 h-5 text-primary animate-spin mb-1" />
-                        ) : (
-                          <Upload className="w-5 h-5 text-slate-450 mb-1" />
-                        )}
-                        <span className="text-xs font-semibold text-slate-700">
-                          {uploadingLogo ? 'Uploading logo image...' : 'Choose PNG/JPEG (Max 1MB)'}
-                        </span>
-                      </label>
-                    </div>
-                  )}
-                </div>
-
-                {/* Preset Options */}
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-650">Or Select a Quick Preset Icon</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {LOGO_PRESETS.map((preset) => (
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  {LOGO_PRESETS.map((preset) => {
+                    const selected = logoPreset === preset.id && !logoUrl;
+                    return (
                       <button
                         key={preset.id}
                         type="button"
                         onClick={() => {
-                          setLogoPreset(preset.id as any);
-                          setLogoUrl(null); // Clear custom upload if choosing preset
+                          setLogoPreset(preset.id as typeof logoPreset);
+                          setLogoUrl(null);
                         }}
-                        className={`py-2 px-3 text-xs font-semibold rounded-xl border text-center transition-all cursor-pointer ${
-                          logoPreset === preset.id && !logoUrl
-                            ? 'border-primary bg-primary/5 text-primary font-bold'
-                            : 'border-slate-250 hover:border-slate-300 text-slate-700 bg-white'
+                        className={`cursor-pointer rounded-xl border px-3 py-2.5 text-left text-sm font-semibold ${
+                          selected ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                         }`}
                       >
                         {preset.name}
                       </button>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
-
-              </div>
+              </section>
             </div>
-
           </div>
+        </div>
 
-          {/* Footer Bar */}
-          <div className="p-6 md:p-8 border-t border-slate-100 flex gap-4 bg-white shrink-0">
+        <footer className="shrink-0 border-t border-slate-200 bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
+          <div className="grid grid-cols-2 gap-3">
             <button
-              onClick={onClose}
+              type="button"
+              onClick={closeCustomizer}
               disabled={saving}
-              className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold transition-all border border-slate-200 cursor-pointer disabled:opacity-50 text-center"
+              className="h-11 cursor-pointer rounded-xl border-none bg-slate-100 text-sm font-semibold text-slate-700 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleSave}
               disabled={saving || uploadingLogo}
-              className="flex-1 flex items-center justify-center gap-1.5 py-3 px-4 bg-primary hover:bg-primary-hover text-white rounded-2xl text-xs font-bold transition-all shadow-primary border-none disabled:opacity-60 cursor-pointer"
+              className="inline-flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-none bg-primary text-sm font-semibold text-white disabled:opacity-60"
             >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              <span>Save Customizations</span>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Save
             </button>
           </div>
-
-        </div>
-
-      </div>
+        </footer>
+      </aside>
     </div>
   );
 }

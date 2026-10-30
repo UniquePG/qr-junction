@@ -747,8 +747,8 @@ export default function MenuManagementPage() {
 
         <div className="grid min-w-0 grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
           {/* Categories Sidebar */}
-          <div className="min-w-0 lg:col-span-1 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col h-fit lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100dvh-7.5rem)] lg:overflow-y-auto">
-            <div className="flex items-center justify-between mb-4 px-2">
+          <div className="min-w-0 lg:col-span-1 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col h-fit lg:sticky lg:top-4 lg:self-start">
+            <div className="flex shrink-0 items-center justify-between mb-3 px-2">
               <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Categories</h3>
               <button 
                 onClick={() => {
@@ -768,7 +768,7 @@ export default function MenuManagementPage() {
                 <p className="text-xs">No categories created yet.</p>
               </div>
             ) : (
-              <div className="space-y-1.5 flex-1 pr-1">
+              <div className="max-h-80 space-y-1.5 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] lg:max-h-[calc(100dvh-12rem)]">
                 {categories.map((cat, index) => {
                   const isSelected = activeTabCategoryId === cat.id;
                   const isEditing = editingCatId === cat.id;
