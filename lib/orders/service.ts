@@ -297,7 +297,7 @@ export async function listRestaurantOrders(userId: number) {
     select: { id: true, orderingEnabled: true, prepMinutes: true },
   });
   if (!restaurant) throw new OrderError(404, "NOT_FOUND", "Restaurant not found.");
-  const finishedWhere = { restaurantId: restaurant.id, status: { in: ["SERVED", "REJECTED"] as const } };
+  const finishedWhere: Prisma.MenuOrderWhereInput = { restaurantId: restaurant.id, status: { in: ["SERVED", "REJECTED"] } };
   const [active, finished, finishedCount] = await Promise.all([
     prisma.menuOrder.findMany({
       where: { restaurantId: restaurant.id, status: { in: ["PLACED", "ACCEPTED", "PREPARING", "READY"] } },
