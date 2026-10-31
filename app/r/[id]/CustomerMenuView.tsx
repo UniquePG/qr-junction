@@ -26,6 +26,7 @@ import BentoTheme from '@/components/menu/themes/BentoTheme';
 import PlaybillTheme from '@/components/menu/themes/PlaybillTheme';
 import { PlateProvider } from '@/components/menu/ordering/PlateContext';
 import { DishOrderActions, PlateSlot } from '@/components/menu/ordering/PlateControl';
+import { MenuPlaceDetails } from '@/components/menu/PlaceDetails';
 
 interface MenuItem {
   id: number;
@@ -57,6 +58,13 @@ interface Restaurant {
   taxRate: any; // Decimal type
   taxName: string;
   orderingEnabled?: boolean;
+  phone?: string | null;
+  whatsapp?: string | null;
+  email?: string | null;
+  website?: string | null;
+  instagram?: string | null;
+  openingHours?: unknown;
+  showOpeningHours?: boolean;
 }
 
 interface Menu {
@@ -639,7 +647,8 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
 
       {/* Brand Profile Info Card overlay */}
       <div className={`max-w-4xl mx-auto px-4 relative z-10 ${hideCover ? 'mt-4' : '-mt-20'}`}>
-        <div className={`rounded-3xl border p-5 sm:p-6 transition-all duration-300 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4 ${chrome.card}`}>
+        <div className={`rounded-3xl border p-5 sm:p-6 transition-all duration-300 ${chrome.card}`}>
+          <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4">
           <div className="flex flex-col sm:flex-row items-center gap-4">
             {/* Logo overlay */}
             <div className={`w-24 h-24 rounded-2xl bg-white border border-slate-200 shadow-md overflow-hidden shrink-0 ${hideCover ? '' : '-mt-16 sm:-mt-12'}`}>
@@ -674,6 +683,16 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
               Dining at Table {tableNumber}
             </div>
           )}
+          </div>
+          <MenuPlaceDetails
+            phone={restaurant.phone}
+            whatsapp={restaurant.whatsapp}
+            email={restaurant.email}
+            website={restaurant.website}
+            instagram={restaurant.instagram}
+            hours={restaurant.showOpeningHours ? restaurant.openingHours : null}
+            muted={chrome.modalMuted}
+          />
         </div>
       </div>
 

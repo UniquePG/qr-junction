@@ -1,7 +1,8 @@
 "use client";
 
 import { OrderAlertsProvider } from "@/components/orders/OrderAlerts";
-import { SuiteShell, type SuiteNavItem, type SuiteTheme } from "@/components/suites/SuiteShell";
+import { restaurantService } from "@/lib/api/services/restaurant";
+import { SuiteShell, type SuiteNavItem, type SuitePlace, type SuiteTheme } from "@/components/suites/SuiteShell";
 import {
   BarChart3,
   ClipboardList,
@@ -11,6 +12,9 @@ import {
   Store,
   UtensilsCrossed,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+
+export const RESTAURANT_PROFILE_EVENT = "qrj-restaurant-profile";
 
 const theme: SuiteTheme = {
   background: "#F6F1EA",
@@ -21,9 +25,27 @@ const theme: SuiteTheme = {
   accent: "#C4622D",
   accentText: "#fffaf6",
   card: "#ffffff",
-  eyebrow: "Restaurant QR",
-  title: "Service floor",
+  eyebrow: "Restaurant",
+  title: "Restaurant",
 };
+
+function placeFromRestaurant(restaurant: {
+  name?: string | null;
+  logoUrl?: string | null;
+  venueType?: string | null;
+  city?: string | null;
+}): SuitePlace {
+  const detail = [restaurant.venueType, restaurant.city]
+    .map((part) => (typeof part === "string" ? part.trim() : ""))
+    .filter(Boolean)
+    .join(" · ");
+  return {
+    name: restaurant.name?.trim() || "Restaurant",
+    logoUrl: restaurant.logoUrl || null,
+    detail: detail || "Restaurant",
+    href: "/dashboard/restaurant/profile",
+  };
+}
 
 const items: SuiteNavItem[] = [
   { name: "Home", href: "/dashboard/restaurant", icon: LayoutDashboard, mobile: true },
@@ -36,9 +58,39 @@ const items: SuiteNavItem[] = [
 ];
 
 export default function RestaurantSuiteLayout({ children }: { children: React.ReactNode }) {
+  const [place, setPlace] = useState<SuitePlace>({
+    name: "Restaurant",
+    logoUrl: null,
+    detail: "Restaurant",
+    href: "/dashboard/restaurant/profile",
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await restaurantService.getProfile();
+        const json = (await res.json().catch(() => null)) as {
+          restaurant?: Parameters<typeof placeFromRestaurant>[0];
+        } | null;
+        const restaurant = json?.restaurant;
+        if (!res.ok || cancelled || !restaurant) return;
+        setPlace(placeFromRestaurant(restaurant));
+      } catch {
+        // The header keeps the quiet restaurant label until the profile loads.
+      }
+    };
+    void load();
+    window.addEventListener(RESTAURANT_PROFILE_EVENT, load);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(RESTAURANT_PROFILE_EVENT, load);
+    };
+  }, []);
+
   return (
     <OrderAlertsProvider>
-      <SuiteShell theme={theme} items={items}>
+      <SuiteShell theme={theme} items={items} place={place}>
         {children}
       </SuiteShell>
     </OrderAlertsProvider>

@@ -377,7 +377,26 @@ model Restaurant {
   taxName      String          @default("GST") @map("tax_name")
   orderingEnabled Boolean      @default(false) @map("ordering_enabled")
   prepMinutes     Int          @default(12) @map("prep_minutes")
-  
+  phone           String?
+  whatsapp        String?
+  email           String?
+  website         String?
+  instagram       String?
+  venueType       String?      @map("venue_type")
+  cuisine         String?
+  language        String       @default("en")
+  addressLine1    String?      @map("address_line1")
+  addressLine2    String?      @map("address_line2")
+  city            String?
+  district        String?
+  state           String?
+  country         String?
+  pincode         String?
+  gstin           String?
+  fssai           String?
+  openingHours     Json?        @map("opening_hours")
+  showOpeningHours Boolean     @default(false) @map("show_opening_hours")
+
   createdAt    DateTime        @default(now()) @map("created_at")
   updatedAt    DateTime        @updatedAt @map("updated_at")
 

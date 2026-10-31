@@ -32,6 +32,39 @@ export type SuiteTheme = {
   title: string;
 };
 
+export type SuitePlace = {
+  name: string;
+  logoUrl?: string | null;
+  detail?: string | null;
+  href?: string;
+};
+
+function placeInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const source = parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : parts[0]?.slice(0, 2) || "R";
+  return source.toUpperCase();
+}
+
+function PlaceAvatar({
+  place,
+  className,
+}: {
+  place: SuitePlace;
+  className: string;
+}) {
+  return (
+    <span className={`relative shrink-0 overflow-hidden bg-[#1C1410] text-white ${className}`}>
+      {place.logoUrl ? (
+        <img src={place.logoUrl} alt="" className="h-full w-full object-cover" />
+      ) : (
+        <span className="flex h-full w-full items-center justify-center text-[11px] font-semibold tracking-wide">
+          {placeInitials(place.name)}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function splitDock(items: SuiteNavItem[]) {
   const center = items.find((item) => item.center) ?? items[Math.floor(items.length / 2)] ?? null;
   const sides = center ? items.filter((item) => item.href !== center.href) : items;
@@ -204,15 +237,17 @@ function MobileDock({
 export function SuiteShell({
   theme,
   items,
+  place,
   children,
 }: {
   theme: SuiteTheme;
   items: SuiteNavItem[];
+  place?: SuitePlace | null;
   children: React.ReactNode;
 }) {
   return (
     <SuiteBackProvider>
-      <SuiteShellFrame theme={theme} items={items}>
+      <SuiteShellFrame theme={theme} items={items} place={place}>
         {children}
       </SuiteShellFrame>
     </SuiteBackProvider>
@@ -222,10 +257,12 @@ export function SuiteShell({
 function SuiteShellFrame({
   theme,
   items,
+  place,
   children,
 }: {
   theme: SuiteTheme;
   items: SuiteNavItem[];
+  place?: SuitePlace | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -287,15 +324,27 @@ function SuiteShellFrame({
         className="suite-chrome hidden md:flex flex-col w-64 shrink-0 h-full border-r"
         style={{ background: theme.sidebar, borderColor: theme.sidebarBorder, color: "#F8F4EF" }}
       >
-        <div className="px-5 pt-5 pb-4 border-b" style={{ borderColor: theme.sidebarBorder }}>
-          <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-xs no-underline" style={{ color: theme.muted }}>
+        <div className="px-4 pt-4 pb-4 border-b" style={{ borderColor: theme.sidebarBorder }}>
+          <Link href="/dashboard" className="inline-flex items-center gap-1.5 px-1 text-xs no-underline" style={{ color: theme.muted }}>
             <ArrowLeft className="w-3.5 h-3.5" />
             Dashboard
           </Link>
-          <p className="mt-4 text-[11px] uppercase tracking-[0.18em]" style={{ color: theme.muted }}>
-            {theme.eyebrow}
-          </p>
-          <h1 className="mt-1 text-lg font-semibold text-white">{theme.title}</h1>
+          {place ? (
+            <div className="mt-3 flex items-center gap-3 rounded-2xl bg-white/[0.05] px-3 py-3 ring-1 ring-white/10">
+              <PlaceAvatar place={place} className="h-11 w-11 rounded-xl ring-1 ring-white/15" />
+              <div className="min-w-0">
+                <p className="truncate text-[15px] font-semibold leading-tight text-white">{place.name}</p>
+                <p className="mt-1 truncate text-xs" style={{ color: theme.muted }}>{place.detail || theme.eyebrow}</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="mt-4 px-1 text-[11px] uppercase tracking-[0.18em]" style={{ color: theme.muted }}>
+                {theme.eyebrow}
+              </p>
+              <h1 className="mt-1 px-1 text-lg font-semibold text-white">{theme.title}</h1>
+            </>
+          )}
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {items.map((item) => navLink(item))}
@@ -317,16 +366,16 @@ function SuiteShellFrame({
 
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         <header
-          className="suite-chrome h-14 shrink-0 flex items-center justify-between px-4 md:px-6 border-b bg-white/90"
-          style={{ borderColor: theme.sidebarBorder }}
+          className={`suite-chrome shrink-0 flex items-center justify-between gap-3 border-b bg-white px-4 md:px-6 ${place ? "h-16" : "h-14"}`}
+          style={{ borderColor: place ? "#E7DDD2" : theme.sidebarBorder }}
         >
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
             {suiteBack?.active ? (
               <button
                 type="button"
                 onClick={suiteBack.run}
                 aria-label="Back"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-transparent border-none cursor-pointer"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-transparent border-none cursor-pointer"
                 style={{ color: theme.accent }}
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -335,19 +384,38 @@ function SuiteShellFrame({
               <Link
                 href={nested ? suiteHome : "/dashboard"}
                 aria-label="Back"
-                className={`flex h-9 w-9 items-center justify-center no-underline ${stepBack ? "" : "md:hidden"}`}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center no-underline ${stepBack ? "" : "md:hidden"}`}
                 style={{ color: theme.accent }}
               >
                 <ArrowLeft className="w-5 h-5" />
               </Link>
             )}
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.16em] opacity-55" style={{ color: theme.text }}>{theme.eyebrow}</p>
-              <h2 className="text-base font-semibold truncate" style={{ color: theme.text }}>
+              {place ? null : (
+                <p className="text-[10px] uppercase tracking-[0.16em] opacity-55" style={{ color: theme.text }}>{theme.eyebrow}</p>
+              )}
+              <h2 className="truncate text-base font-semibold" style={{ color: theme.text }}>
                 {activeItem?.name || theme.title}
               </h2>
             </div>
           </div>
+          {place ? (
+            <Link
+              href={place.href || suiteHome}
+              aria-label={`${place.name} profile`}
+              className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-1 pr-1 no-underline transition hover:bg-[#F6F1EA] sm:pl-3"
+            >
+              <span className="min-w-0 text-right">
+                <span className="block max-w-[9.5rem] truncate text-sm font-semibold sm:max-w-[14rem]" style={{ color: theme.text }}>
+                  {place.name}
+                </span>
+                {place.detail ? (
+                  <span className="mt-0.5 hidden max-w-[14rem] truncate text-[11px] sm:block" style={{ color: "#6B5A50" }}>{place.detail}</span>
+                ) : null}
+              </span>
+              <PlaceAvatar place={place} className="h-9 w-9 rounded-full ring-1 ring-[#E7DDD2]" />
+            </Link>
+          ) : null}
         </header>
         <main className="suite-shell-main flex-1 min-h-0 overflow-y-auto p-4 md:p-8 pb-32 md:pb-8 print:overflow-visible print:h-auto print:p-0">
           {children}

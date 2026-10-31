@@ -1,260 +1,199 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { restaurantService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
-import { useAuth } from '@/components/AuthContext';
-import { 
-  BarChart2, 
-  Smartphone, 
-  Monitor, 
-  Tablet, 
-  HelpCircle,
-  Loader2,
-  Calendar,
-  Activity,
-  Users,
-  QrCode
-} from 'lucide-react';
-import { toast } from 'react-toastify';
-import DashboardTimeFilter from '@/components/DashboardTimeFilter';
+import { useAuth } from "@/components/AuthContext";
+import { AnalyticsBoard, type RestaurantAnalytics } from "@/components/restaurant/AnalyticsBoard";
+import { money } from "@/components/restaurant/FloorCharts";
+import { restaurantService } from "@/lib/api";
+import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
-interface StatsData {
-  totalScans: number;
-  uniqueScans: number;
-  devices: { MOBILE: number; DESKTOP: number; TABLET: number; UNKNOWN: number };
-  tablePerformance: Array<{ name: string; scans: number; unique: number }>;
-  trends: Array<{ date: string; scans: number }>;
+type RangeKey = "today" | "7" | "30" | "all" | "custom";
+
+const RANGES: { key: Exclude<RangeKey, "custom">; label: string }[] = [
+  { key: "today", label: "Today" },
+  { key: "7", label: "7 days" },
+  { key: "30", label: "30 days" },
+  { key: "all", label: "All" },
+];
+
+function rangeDates(key: Exclude<RangeKey, "custom">): [Date | null, Date | null] {
+  if (key === "all") return [null, null];
+  const end = new Date();
+  const start = new Date();
+  if (key === "today") start.setHours(0, 0, 0, 0);
+  else start.setDate(end.getDate() - (key === "7" ? 7 : 30));
+  if (key !== "today") start.setHours(0, 0, 0, 0);
+  return [start, end];
+}
+
+function minutes(value: number) {
+  if (!value) return "—";
+  return value >= 10 ? `${Math.round(value)} min` : `${value.toFixed(1)} min`;
 }
 
 export default function RestaurantAnalyticsPage() {
   const { user } = useAuth();
-  const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [timelineLabel, setTimelineLabel] = useState('Last 7 Days');
-
-  const fetchStats = async (start?: Date | null, end?: Date | null) => {
-    setLoading(true);
-    try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
-      
-      const res = await restaurantService.stats(start, end);
-
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setStats(json.stats);
-    } catch (error) {
-      console.error(error);
-      toast.error('Could not load analytics metrics.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [refreshing, setRefreshing] = useState(false);
+  const [data, setData] = useState<RestaurantAnalytics | null>(null);
+  const [error, setError] = useState("");
+  const [range, setRange] = useState<RangeKey>("7");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
 
   useEffect(() => {
-    if (user) {
-      fetchStats();
+    if (!user) return;
+    const [start, end] = rangeDates("7");
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await restaurantService.stats(start, end);
+        const json = await res.json().catch(() => null);
+        if (cancelled) return;
+        if (!res.ok || !json?.restaurant) throw new Error(json?.error || "Could not load analytics.");
+        setData(json as RestaurantAnalytics);
+      } catch (loadError) {
+        if (!cancelled) setError(loadError instanceof Error ? loadError.message : "Could not load analytics.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
-  const handleFilterChange = (start: Date | null, end: Date | null, label: string) => {
-    setTimelineLabel(label);
-    fetchStats(start, end);
+  const apply = async (key: RangeKey, start: Date | null, end: Date | null) => {
+    setRange(key);
+    setRefreshing(true);
+    setError("");
+    try {
+      const res = await restaurantService.stats(start, end);
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.restaurant) throw new Error(json?.error || "Could not load analytics.");
+      setData(json as RestaurantAnalytics);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "Could not load analytics.");
+    } finally {
+      setRefreshing(false);
+    }
   };
 
-  if (loading && !stats) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#C4622D]" />
       </div>
     );
   }
 
-  const deviceData = stats?.devices || { MOBILE: 0, DESKTOP: 0, TABLET: 0, UNKNOWN: 0 };
-  const totalDeviceScans = (deviceData.MOBILE || 0) + (deviceData.DESKTOP || 0) + (deviceData.TABLET || 0) + (deviceData.UNKNOWN || 0) || 1;
+  if (error && !data) {
+    return (
+      <div className="mx-auto max-w-xl rounded-2xl border border-[#E7DDD2] bg-white p-6">
+        <h2 className="text-lg font-semibold text-[#1C1410]">Analytics did not load</h2>
+        <p className="mt-2 text-sm text-[#6B5A50]">{error}</p>
+      </div>
+    );
+  }
 
-  const getPercent = (val: number) => {
-    return Math.round((val / totalDeviceScans) * 100);
-  };
+  if (!data) return null;
 
-  const colors = ['bg-primary', 'bg-secondary', 'bg-emerald-500', 'bg-amber-500', 'bg-indigo-500', 'bg-pink-500'];
+  const summary = data.summary;
+  const perOrder = summary.orders > 0 ? summary.items / summary.orders : 0;
+  const cards = [
+    {
+      label: "Sales",
+      value: money(data.restaurant.currency, summary.sales),
+      hint: summary.orders ? `${money(data.restaurant.currency, summary.average)} average ticket` : "No orders yet",
+    },
+    {
+      label: "Orders",
+      value: String(summary.orders),
+      hint: `${summary.returning} came back · ${summary.firstTime} first time`,
+    },
+    {
+      label: "Serve time",
+      value: minutes(summary.avgMinutes),
+      hint: summary.served ? `${summary.served} plates marked served` : "No served plates in this range",
+    },
+    {
+      label: "Menu scans",
+      value: String(summary.scans),
+      hint: summary.unpaid > 0
+        ? `${money(data.restaurant.currency, summary.unpaid)} still to collect`
+        : `${summary.guests} guests · ${money(data.restaurant.currency, summary.paid)} paid`,
+    },
+  ];
 
   return (
-    <div className="max-w-6xl mx-auto pb-12 animate-fade-in space-y-8">
-      {/* Header & Filter */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-[#001B50] mb-2">Restaurant Analytics</h1>
-          <p className="text-slate-600">Analyze QR scans, visitor trends, and physical table performance.</p>
+    <div className={`mx-auto w-full max-w-6xl space-y-4 ${refreshing ? "opacity-70" : ""}`}>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs uppercase tracking-[0.16em] text-[#8A7568]">Analytics</p>
+          <h2 className="mt-1 text-2xl font-semibold text-[#1C1410]">How the business is moving</h2>
+          <p className="mt-1 text-sm text-[#6B5A50]">
+            {perOrder ? `${perOrder.toFixed(perOrder % 1 === 0 ? 0 : 1)} dishes an order` : "Sales, pace, and what each table is doing"}
+            {summary.rejectedOrders ? ` · ${summary.rejectedOrders} turned away (${money(data.restaurant.currency, summary.rejectedSales)})` : ""}
+            {data.restaurant.orderingEnabled ? "" : " · Ordering is off"}
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider hidden sm:inline">Range:</span>
-          <DashboardTimeFilter onFilterChange={handleFilterChange} />
+        <div className="min-w-0">
+          <div className="flex flex-wrap gap-1.5">
+            {RANGES.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => {
+                  const [start, end] = rangeDates(item.key);
+                  void apply(item.key, start, end);
+                }}
+                className={`h-9 rounded-full px-3 text-xs font-semibold ${range === item.key ? "bg-[#1C1410] text-white" : "border border-[#E7DDD2] bg-white text-[#2A211C]"}`}
+              >
+                {item.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setRange("custom")}
+              className={`h-9 rounded-full px-3 text-xs font-semibold ${range === "custom" ? "bg-[#1C1410] text-white" : "border border-[#E7DDD2] bg-white text-[#2A211C]"}`}
+            >
+              Custom
+            </button>
+          </div>
+          {range === "custom" ? (
+            <form
+              className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!customStart || !customEnd) return;
+                const start = new Date(customStart);
+                start.setHours(0, 0, 0, 0);
+                const end = new Date(customEnd);
+                end.setHours(23, 59, 59, 999);
+                if (start > end) return;
+                void apply("custom", start, end);
+              }}
+            >
+              <input type="date" aria-label="Start date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="h-10 min-w-0 rounded-lg border border-[#E7DDD2] bg-white px-2 text-sm" required />
+              <input type="date" aria-label="End date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="h-10 min-w-0 rounded-lg border border-[#E7DDD2] bg-white px-2 text-sm" required />
+              <button type="submit" className="h-10 rounded-lg bg-[#C4622D] px-4 text-sm font-semibold text-white">Apply</button>
+            </form>
+          ) : null}
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-4">
-          <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          <p className="text-slate-400 text-sm">Compiling scan analytics...</p>
-        </div>
-      ) : !stats ? (
-        <div className="text-center py-12">
-          <p className="text-slate-400">Failed to compile metrics.</p>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          {/* KPI Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-              <div className="bg-primary/10 rounded-xl p-3 text-primary">
-                <Activity className="w-6 h-6" />
-              </div>
-              <div>
-                <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Total Scans</span>
-                <span className="text-2xl font-black text-[#001B50] mt-1 block">{stats.totalScans}</span>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-              <div className="bg-secondary/10 rounded-xl p-3 text-secondary">
-                <Users className="w-6 h-6" />
-              </div>
-              <div>
-                <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Unique Customers</span>
-                <span className="text-2xl font-black text-[#001B50] mt-1 block">{stats.uniqueScans}</span>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-              <div className="bg-emerald-50 rounded-xl p-3 text-emerald-600">
-                <QrCode className="w-6 h-6" />
-              </div>
-              <div>
-                <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Active Locations</span>
-                <span className="text-2xl font-black text-[#001B50] mt-1 block">{stats.tablePerformance.length}</span>
-              </div>
-            </div>
+      <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+        {cards.map((card) => (
+          <div key={card.label} className="min-w-0 rounded-2xl border border-[#E7DDD2] bg-white p-3 sm:p-4">
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#8A776C]">{card.label}</p>
+            <p className="mt-2 truncate text-xl font-semibold tabular-nums text-[#1C1410] sm:text-2xl">{card.value}</p>
+            <p className="mt-1 text-[11px] leading-4 text-[#6B5A50] sm:text-xs">{card.hint}</p>
           </div>
+        ))}
+      </div>
 
-          {/* Table Performance & Devices */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Table Performance */}
-            <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-              <div className="border-b border-slate-100 pb-4 flex items-center gap-2">
-                <BarChart2 className="w-5 h-5 text-primary" />
-                <h3 className="font-bold text-[#001B50] text-sm uppercase tracking-wider">Scans by Table Location</h3>
-              </div>
-
-              {stats.tablePerformance.length === 0 ? (
-                <div className="text-center py-16 text-slate-400">
-                  <p className="text-xs">No table scans recorded in this date range.</p>
-                </div>
-              ) : (
-                <div className="space-y-4.5">
-                  {stats.tablePerformance.map((table, idx) => {
-                    const maxScans = stats.tablePerformance[0].scans || 1;
-                    const percent = Math.round((table.scans / maxScans) * 100);
-                    const colorClass = colors[idx % colors.length];
-
-                    return (
-                      <div key={table.name} className="space-y-1">
-                        <div className="flex justify-between text-xs font-semibold text-slate-700">
-                          <span>{table.name}</span>
-                          <span className="text-slate-500">
-                            {table.scans} scans ({table.unique} unique)
-                          </span>
-                        </div>
-                        <div className="w-full bg-slate-100 rounded-full h-3.5 overflow-hidden">
-                          <div 
-                            className={`${colorClass} h-full rounded-full transition-all duration-500`}
-                            style={{ width: `${percent}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Devices Breakdown */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
-              <div className="border-b border-slate-100 pb-4 flex items-center gap-2">
-                <Smartphone className="w-5 h-5 text-primary" />
-                <h3 className="font-bold text-[#001B50] text-sm uppercase tracking-wider">Device Breakdown</h3>
-              </div>
-
-              <div className="space-y-4">
-                {/* Mobile */}
-                <div className="flex items-center gap-4">
-                  <div className="bg-blue-50 text-blue-600 p-2 rounded-lg">
-                    <Smartphone className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between text-xs font-bold text-slate-700">
-                      <span>Mobile</span>
-                      <span>{getPercent(deviceData.MOBILE)}%</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2 mt-1">
-                      <div className="bg-blue-500 h-full rounded-full" style={{ width: `${getPercent(deviceData.MOBILE)}%` }} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Desktop */}
-                <div className="flex items-center gap-4">
-                  <div className="bg-indigo-50 text-indigo-650 p-2 rounded-lg">
-                    <Monitor className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between text-xs font-bold text-slate-700">
-                      <span>Desktop</span>
-                      <span>{getPercent(deviceData.DESKTOP)}%</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2 mt-1">
-                      <div className="bg-indigo-650 h-full rounded-full" style={{ width: `${getPercent(deviceData.DESKTOP)}%` }} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tablet */}
-                <div className="flex items-center gap-4">
-                  <div className="bg-emerald-50 text-emerald-600 p-2 rounded-lg">
-                    <Tablet className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between text-xs font-bold text-slate-700">
-                      <span>Tablet</span>
-                      <span>{getPercent(deviceData.TABLET)}%</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2 mt-1">
-                      <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${getPercent(deviceData.TABLET)}%` }} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Unknown */}
-                <div className="flex items-center gap-4">
-                  <div className="bg-slate-50 text-slate-600 p-2 rounded-lg">
-                    <HelpCircle className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between text-xs font-bold text-slate-700">
-                      <span>Other</span>
-                      <span>{getPercent(deviceData.UNKNOWN)}%</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2 mt-1">
-                      <div className="bg-slate-500 h-full rounded-full" style={{ width: `${getPercent(deviceData.UNKNOWN)}%` }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnalyticsBoard data={data} />
     </div>
   );
 }

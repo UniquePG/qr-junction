@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import CustomerMenuView from '../CustomerMenuView';
 import { Metadata } from 'next';
 import { isMenuTheme } from '@/components/menu/themeCatalog';
+import { guestRestaurantSelect } from '@/lib/restaurant/guest';
 
 interface PageProps {
   params: Promise<{ id: string; menuId: string }>;
@@ -14,6 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id, menuId } = await params;
   const restaurant = await prisma.restaurant.findUnique({
     where: { id: parseInt(id, 10) },
+    select: guestRestaurantSelect,
   });
   const menu = await prisma.menu.findUnique({
     where: { id: parseInt(menuId, 10) },
@@ -50,6 +52,7 @@ export default async function SpecificMenuPage({ params, searchParams }: PagePro
 
   const restaurant = await prisma.restaurant.findUnique({
     where: { id: restaurantId },
+    select: guestRestaurantSelect,
   });
 
   if (!restaurant) {

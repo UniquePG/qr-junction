@@ -43,6 +43,7 @@ export const endpoints = {
   },
   restaurant: {
     profile: "/api/restaurant/profile",
+    address: "/api/restaurant/address",
     menus: "/api/restaurant/menus",
     menu: "/api/restaurant/menu",
     categories: "/api/restaurant/categories",
@@ -50,6 +51,7 @@ export const endpoints = {
     generateImage: "/api/restaurant/items/generate-image",
     tables: "/api/restaurant/tables",
     stats: "/api/restaurant/stats",
+    overview: "/api/restaurant/overview",
     scanMenu: "/api/restaurant/scan-menu",
     importMenu: "/api/restaurant/import-menu",
     orders: "/api/restaurant/orders",

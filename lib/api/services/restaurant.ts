@@ -11,6 +11,10 @@ export const restaurantService = {
     return apiRequest({ method: "POST", url: endpoints.restaurant.profile, data: body });
   },
 
+  lookupAddress(params: { kind: "pincode"; pin: string } | { kind: "states"; country: string } | { kind: "cities"; country: string; state: string }) {
+    return apiRequest({ method: "GET", url: endpoints.restaurant.address, params });
+  },
+
   listMenus() {
     return apiRequest({ method: "GET", url: endpoints.restaurant.menus });
   },
@@ -95,6 +99,14 @@ export const restaurantService = {
     return apiRequest({
       method: "GET",
       url: endpoints.restaurant.stats,
+      params: dateRangeParams(start, end),
+    });
+  },
+
+  overview(start?: Date | null, end?: Date | null) {
+    return apiRequest({
+      method: "GET",
+      url: endpoints.restaurant.overview,
       params: dateRangeParams(start, end),
     });
   },
