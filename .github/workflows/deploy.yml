@@ -1,0 +1,43 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Pull, migrate, build, and restart
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 30m
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd /home/deploy/qr-junction
+            echo "Fetching origin/main"
+            git fetch origin main
+            git reset --hard origin/main
+            echo "Installing dependencies"
+            npm ci
+            echo "Applying database migrations"
+            npx prisma migrate deploy
+            echo "Building"
+            NODE_OPTIONS="--max-old-space-size=1536" npm run build
+            echo "Restarting"
+            pm2 restart qrjunction
+            echo "Checking status"
+            pm2 save
+            pm2 status qrjunction
+            echo "Deployment complete"
