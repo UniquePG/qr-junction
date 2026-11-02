@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
+import { planErrorResponse } from '@/lib/billing/errors';
+import { requireAllowed, requireQuota, requireWritable } from '@/lib/billing/guard';
 import { parseProfileBody, type ProfilePatch } from '@/lib/restaurant/profile';
 
 function hoursValue(patch: ProfilePatch): Prisma.InputJsonValue | undefined {
@@ -70,6 +72,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
 
+    if (parsed.patch.language) {
+      await requireAllowed(userId, 'restaurant.menu.languages', parsed.patch.language);
+    } else {
+      await requireWritable(userId);
+    }
+
     const restaurant = await prisma.restaurant.upsert({
       where: { userId },
       update: { ...parsed.patch, openingHours: hoursValue(parsed.patch) },
@@ -81,6 +89,7 @@ export async function POST(request: Request) {
     });
 
     if (menuCount === 0) {
+      await requireQuota(userId, 'restaurant.menu.count', 0);
       await prisma.menu.create({
         data: {
           restaurantId: restaurant.id,
@@ -94,6 +103,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, restaurant });
   } catch (error: unknown) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error updating restaurant profile:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

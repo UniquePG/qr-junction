@@ -139,7 +139,7 @@ export default function TablesManagementPage() {
         setSelectedMenuId('');
         await fetchData();
       } else {
-        toast.error(json.error || 'Failed to create table');
+        toast.error(json.message || json.error || 'Failed to create table');
       }
     } catch (err) {
       toast.error('Failed to create table');
@@ -171,7 +171,7 @@ export default function TablesManagementPage() {
         setEditingTable(null);
         await fetchData();
       } else {
-        toast.error(json.error || 'Failed to update table');
+        toast.error(json.message || json.error || 'Failed to update table');
       }
     } catch (err) {
       toast.error('Failed to update table');
@@ -191,7 +191,7 @@ export default function TablesManagementPage() {
         toast.success('Table menu updated successfully!');
         await fetchData();
       } else {
-        toast.error(json.error || 'Failed to update table menu');
+        toast.error(json.message || json.error || 'Failed to update table menu');
       }
     } catch (err) {
       toast.error('Failed to update table menu');

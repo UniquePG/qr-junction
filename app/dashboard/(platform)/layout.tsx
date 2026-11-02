@@ -5,6 +5,7 @@ import { useAuth } from '@/components/AuthContext';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
+  CreditCard,
   LayoutDashboard,
   QrCode,
   Users,
@@ -28,6 +29,7 @@ const navLinks = [
   { name: 'Landing Pages', href: '/dashboard/pages', icon: Layout },
   { name: 'My QR Codes', href: '/dashboard/qrs', icon: QrCode },
   { name: 'Collected Leads', href: '/dashboard/leads', icon: Users },
+  { name: 'Plan', href: '/dashboard/billing', icon: CreditCard },
 ];
 
 const suites = [

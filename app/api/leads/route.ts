@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
+import { planErrorResponse } from '@/lib/billing/errors';
+import { requireEnabled } from '@/lib/billing/guard';
 
 export async function GET(request: Request) {
   try {
@@ -51,6 +53,8 @@ export async function POST(request: Request) {
       );
     }
 
+    await requireEnabled(parsedUserId, 'platform.leads');
+
     // Insert lead into PostgreSQL
     const lead = await prisma.lead.create({
       data: {
@@ -66,6 +70,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, lead });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error logging lead:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', details: error.message },

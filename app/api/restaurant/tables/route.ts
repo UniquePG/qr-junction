@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
+import { planErrorResponse } from '@/lib/billing/errors';
+import { requireQuota, requireWritable } from '@/lib/billing/guard';
 import { generateUniqueShortCode } from '@/utils/shortCode';
 import { QRType, QRStatus } from '@prisma/client';
 
@@ -52,6 +54,10 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { tableNumber, menuId, capacity } = body;
+
+    const tableCount = await prisma.restaurantTable.count({ where: { restaurantId: restaurant.id } });
+    await requireWritable(userId);
+    await requireQuota(userId, 'restaurant.tables', tableCount);
 
     if (!tableNumber) {
       return NextResponse.json({ error: 'Table number/name is required' }, { status: 400 });
@@ -114,6 +120,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, table });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error creating table:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
@@ -133,6 +141,8 @@ export async function PUT(request: Request) {
     if (!restaurant) {
       return NextResponse.json({ error: 'Restaurant profile not found.' }, { status: 400 });
     }
+
+    await requireWritable(userId);
 
     const body = await request.json();
     const { id, tableNumber, menuId, capacity } = body;
@@ -204,6 +214,8 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ success: true, table });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error updating table:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
@@ -215,6 +227,8 @@ export async function DELETE(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    await requireWritable(userId);
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -246,6 +260,8 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true, message: 'Table and its QR code deleted' });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error deleting table:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

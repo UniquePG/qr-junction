@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { callLLM } from '@/lib/ai';
+import { planErrorResponse } from '@/lib/billing/errors';
+import { requireEnabled } from '@/lib/billing/guard';
 
 export async function GET(request: Request) {
   try {
@@ -9,6 +11,8 @@ export async function GET(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    await requireEnabled(userId, 'reviews.ai_analytics');
 
     const { searchParams } = new URL(request.url);
     const qrCodeIdParam = searchParams.get('qrCodeId');
@@ -113,6 +117,8 @@ Do not include any markdown backticks (like \`\`\`json) or other text besides th
     return NextResponse.json({ success: true, ...insights });
 
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error generating weekly insights:', error);
     return NextResponse.json({
       success: false,

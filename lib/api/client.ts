@@ -93,9 +93,9 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
-    const data = normalizeBody(error.response?.data) as { error?: string };
+    const data = normalizeBody(error.response?.data) as { message?: string; error?: string };
     logResponse(error.config, error.response?.status ?? 0, data);
-    const message = data.error || error.message || "Network error";
+    const message = data.message || data.error || error.message || "Network error";
     return Promise.reject(new ApiError(message, error.response?.status ?? 0, data));
   },
 );
@@ -137,8 +137,8 @@ export async function apiRequest<T = any>(config: ApiRequestConfig): Promise<Api
 export async function apiData<T = any>(config: ApiRequestConfig): Promise<T> {
   const result = await apiRequest<T>(config);
   if (!result.ok) {
-    const body = result.data as { error?: string };
-    throw new ApiError(body?.error || "Request failed", result.status, result.data);
+    const body = result.data as { message?: string; error?: string };
+    throw new ApiError(body?.message || body?.error || "Request failed", result.status, result.data);
   }
   return result.data;
 }

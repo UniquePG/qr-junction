@@ -6,11 +6,12 @@ import { AlertTriangle, Loader2 } from 'lucide-react';
 interface ConfirmModalProps {
   isOpen: boolean;
   title: string;
-  message: string;
+  message: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
   isDanger?: boolean;
   isLoading?: boolean;
+  hideConfirm?: boolean;
   onConfirm: () => void | Promise<void>;
   onClose: () => void;
 }
@@ -23,6 +24,7 @@ export default function ConfirmModal({
   cancelText = 'Cancel',
   isDanger = true,
   isLoading = false,
+  hideConfirm = false,
   onConfirm,
   onClose
 }: ConfirmModalProps) {
@@ -53,19 +55,21 @@ export default function ConfirmModal({
           >
             {cancelText}
           </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={isLoading}
-            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-all border-none flex items-center justify-center gap-1.5 ${
-              isDanger 
-                ? 'bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-100 hover:shadow-lg hover:shadow-red-200' 
-                : 'bg-primary hover:bg-primary-hover text-white shadow-primary hover:shadow-primary-hover'
-            } disabled:opacity-50`}
-          >
-            {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-            <span>{confirmText}</span>
-          </button>
+          {hideConfirm ? null : (
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={isLoading}
+              className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-all border-none flex items-center justify-center gap-1.5 ${
+                isDanger
+                  ? 'bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-100 hover:shadow-lg hover:shadow-red-200'
+                  : 'bg-primary hover:bg-primary-hover text-white shadow-primary hover:shadow-primary-hover'
+              } disabled:opacity-50`}
+            >
+              {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>{confirmText}</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

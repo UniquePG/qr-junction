@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
 import { callLLM } from '@/lib/ai';
+import { prisma } from '@/lib/prisma';
+import { planErrorResponse } from '@/lib/billing/errors';
+import { requireEnabled } from '@/lib/billing/guard';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { rating, selectedTags, businessName, reviewCategory, language } = body;
+    const { rating, selectedTags, businessName, reviewCategory, language, qrCodeId } = body;
+    const qr = qrCodeId
+      ? await prisma.qRCode.findUnique({ where: { id: Number(qrCodeId) }, select: { userId: true } })
+      : null;
+    if (!qr) {
+      return NextResponse.json({ error: 'Review QR not found.' }, { status: 404 });
+    }
+    await requireEnabled(qr.userId, 'reviews.ai_suggestions');
 
     if (!rating || !businessName || !reviewCategory) {
       return NextResponse.json(
@@ -56,6 +66,8 @@ Do not return any introductory, explanation, or markdown backticks outside of va
 
     return NextResponse.json({ success: true, suggestions: result.suggestions });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error generating review suggestions:', error);
     // Fallback static reviews if LLM fails or returns garbage
     const rating = 5;

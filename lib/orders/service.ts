@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { allows } from "@/lib/billing/guard";
 import { prisma } from "@/lib/prisma";
 import { orderChannel, publishOrder, restaurantChannel } from "@/lib/orders/bus";
 import { newCustomerPublicId, newOrderPublicId, newPublicToken } from "@/lib/orders/ids";
@@ -126,10 +127,12 @@ export async function quoteOrder(input: {
 
   const restaurant = await prisma.restaurant.findUnique({
     where: { id: input.restaurantId },
-    select: { id: true, orderingEnabled: true, taxRate: true, taxName: true, currency: true, prepMinutes: true },
+    select: { id: true, userId: true, orderingEnabled: true, taxRate: true, taxName: true, currency: true, prepMinutes: true },
   });
   if (!restaurant) throw new OrderError(404, "NOT_FOUND", "Restaurant not found.");
-  if (!restaurant.orderingEnabled) throw new OrderError(403, "ORDERING_OFF", "Ordering is off for this restaurant.");
+  if (!restaurant.orderingEnabled || !(await allows(restaurant.userId, "restaurant.ordering"))) {
+    throw new OrderError(403, "ORDERING_OFF", "Ordering is off for this restaurant.");
+  }
 
   const menu = await prisma.menu.findFirst({
     where: { id: input.menuId, restaurantId: restaurant.id },

@@ -4,6 +4,7 @@ export { ApiError } from "@/lib/api/types";
 export type { ApiResult } from "@/lib/api/types";
 
 export { adminService } from "@/lib/api/services/admin";
+export { billingService } from "@/lib/api/services/billing";
 export { authService } from "@/lib/api/services/auth";
 export { campaignService } from "@/lib/api/services/campaigns";
 export { dashboardService } from "@/lib/api/services/dashboard";

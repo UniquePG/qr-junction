@@ -168,7 +168,7 @@ export default function AIScannerPage() {
       const res = await uploadService.file(uploadData);
       if (!res.ok) throw new Error('Upload failed');
       const json = await res.json();
-      if (!json.success) throw new Error(json.error || 'Upload failed');
+      if (!json.success) throw new Error(json.message || json.error || 'Upload failed');
       setFileUrl(json.url);
       toast.success('File uploaded! Starting AI Menu Scanner...');
       await runScanner(json.url, file.type);
@@ -186,7 +186,7 @@ export default function AIScannerPage() {
 
       if (!res.ok) {
         const json = await res.json();
-        throw new Error(json.error || 'AI scanner request failed');
+        throw new Error(json.message || json.error || 'AI scanner request failed');
       }
 
       const json = await res.json();
@@ -281,7 +281,7 @@ export default function AIScannerPage() {
       uploadData.append('file', file);
       const res = await uploadService.file(uploadData);
       const json = await res.json();
-      if (!res.ok || !json.url) throw new Error(json.error || 'Upload failed');
+      if (!res.ok || !json.url) throw new Error(json.message || json.error || 'Upload failed');
       handleUpdateItem(catIdx, itemIdx, { image: json.url });
       toast.success('Dish photo uploaded.');
     } catch (err: any) {
@@ -304,7 +304,7 @@ export default function AIScannerPage() {
     try {
       const res = await restaurantService.generateImage({ itemName });
       const json = await res.json();
-      if (!res.ok || !json.url) throw new Error(json.error || 'Failed to generate image.');
+      if (!res.ok || !json.url) throw new Error(json.message || json.error || 'Failed to generate image.');
       handleUpdateItem(catIdx, itemIdx, { image: json.url });
       toast.success('AI dish photo added.');
     } catch (err: any) {
@@ -342,7 +342,7 @@ export default function AIScannerPage() {
         router.push('/dashboard/restaurant/menu');
       } else {
         const json = await res.json();
-        throw new Error(json.error || 'Import failed');
+        throw new Error(json.message || json.error || 'Import failed');
       }
     } catch (e: any) {
       toast.error(e.message || 'Failed to import menu details.');

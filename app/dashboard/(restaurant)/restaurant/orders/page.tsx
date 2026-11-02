@@ -186,18 +186,22 @@ export default function RestaurantOrdersPage() {
     }
   }, [prepReady]);
 
+  const seenTick = useRef(alerts.liveTick);
+
   useEffect(() => {
     void load();
-    const timer = window.setInterval(() => void load(), 4000);
     const clock = window.setInterval(() => setNow(Date.now()), 15000);
     if (typeof Notification !== "undefined" && Notification.permission === "default") {
       void Notification.requestPermission();
     }
-    return () => {
-      window.clearInterval(timer);
-      window.clearInterval(clock);
-    };
-  }, [load, alerts.placedCount]);
+    return () => window.clearInterval(clock);
+  }, [load]);
+
+  useEffect(() => {
+    if (seenTick.current === alerts.liveTick) return;
+    seenTick.current = alerts.liveTick;
+    void load();
+  }, [alerts.liveTick, load]);
 
   const spots = useMemo(() => buildSpots(tables, menus, orders), [tables, menus, orders]);
   const openSpot = spots.find((spot) => spot.key === openKey) || null;
@@ -527,6 +531,8 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
   const [busy, setBusy] = useState("");
   const [detail, setDetail] = useState<Ticket | null>(null);
   const requestSeq = useRef(0);
+  const alerts = useOrderAlerts();
+  const seenTick = useRef(alerts.liveTick);
 
   const load = useCallback(async (quiet = false) => {
     const id = ++requestSeq.current;
@@ -547,9 +553,10 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
   }, [load]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => void load(true), 6000);
-    return () => window.clearInterval(timer);
-  }, [load]);
+    if (seenTick.current === alerts.liveTick) return;
+    seenTick.current = alerts.liveTick;
+    void load(true);
+  }, [alerts.liveTick, load]);
 
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;

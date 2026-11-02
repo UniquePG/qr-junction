@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { callLLM } from '@/lib/ai';
+import { allows } from '@/lib/billing/guard';
 
 // Helper function to perform AI analysis on reviews
 async function analyzeReview(rating: number, feedback: string, selectedTags: string, qrCodeId: number) {
@@ -70,6 +71,12 @@ Return only valid JSON. Do not include markdown backticks or other conversationa
   }
 }
 
+async function reviewAiAllowed(qrCodeId: number) {
+  if (!qrCodeId) return false;
+  const qr = await prisma.qRCode.findUnique({ where: { id: qrCodeId }, select: { userId: true } });
+  return Boolean(qr && (await allows(qr.userId, 'reviews.ai_analytics')));
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -93,7 +100,9 @@ export async function POST(request: Request) {
           resolvedQrCodeId = existingReview.qrCodeId;
         }
       }
-      aiFields = await analyzeReview(rating, feedback, tagsStr, resolvedQrCodeId);
+      if (await reviewAiAllowed(resolvedQrCodeId)) {
+        aiFields = await analyzeReview(rating, feedback, tagsStr, resolvedQrCodeId);
+      }
     }
 
     if (id) {
@@ -109,7 +118,9 @@ export async function POST(request: Request) {
       // If we didn't get qrCodeId in body, fetch from existing
       const resolvedQrCodeId = qrCodeId || existingReview.qrCodeId;
       if (feedback || tagsStr) {
-        aiFields = await analyzeReview(rating || existingReview.rating, feedback || existingReview.feedback || '', tagsStr || existingReview.selectedTags || '', resolvedQrCodeId);
+        if (await reviewAiAllowed(resolvedQrCodeId)) {
+          aiFields = await analyzeReview(rating || existingReview.rating, feedback || existingReview.feedback || '', tagsStr || existingReview.selectedTags || '', resolvedQrCodeId);
+        }
       }
 
       const reviewResponse = await prisma.reviewResponse.update({

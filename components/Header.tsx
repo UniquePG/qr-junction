@@ -43,7 +43,7 @@ export default function Header() {
         </Link>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+        <nav className="hidden xl:flex items-center gap-x-4 text-sm font-medium text-slate-600">
           <Link
             href="/#features"
             className="hover:text-[#001B50] transition-colors no-underline"
@@ -55,6 +55,12 @@ export default function Header() {
             className="hover:text-[#001B50] transition-colors no-underline"
           >
             Use Cases
+          </Link>
+          <Link
+            href="/pricing"
+            className="hover:text-[#001B50] transition-colors no-underline"
+          >
+            Pricing
           </Link>
           <Link
             href="/qr"
@@ -92,7 +98,7 @@ export default function Header() {
         </nav>
 
         {/* Desktop CTA Action Button */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden xl:flex items-center gap-4">
           {loading ? (
             <div className="w-24 h-9 bg-slate-100 border border-slate-200 rounded-xl animate-pulse" />
           ) : user ? (
@@ -125,7 +131,7 @@ export default function Header() {
         {/* Mobile menu trigger */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden p-1 text-slate-600 hover:text-[#001B50] transition-colors cursor-pointer"
+          className="xl:hidden p-1 text-slate-600 hover:text-[#001B50] transition-colors cursor-pointer"
         >
           {mobileOpen ? (
             <X className="w-6 h-6" />
@@ -137,7 +143,7 @@ export default function Header() {
 
       {/* Mobile navigation panel */}
       {mobileOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-xl px-6 py-6 space-y-4 animate-fade-in">
+        <div className="xl:hidden absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-xl px-6 py-6 space-y-4 animate-fade-in">
           <nav className="flex flex-col gap-4 text-sm font-medium text-slate-600">
             <Link
               href="/#features"
@@ -152,6 +158,13 @@ export default function Header() {
               className="hover:text-[#001B50] no-underline"
             >
               Use Cases
+            </Link>
+            <Link
+              href="/pricing"
+              onClick={() => setMobileOpen(false)}
+              className="hover:text-[#001B50] no-underline"
+            >
+              Pricing
             </Link>
             <Link
               href="/qr"

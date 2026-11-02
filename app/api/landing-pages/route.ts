@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
+import { planErrorResponse } from '@/lib/billing/errors';
+import { requireQuota, requireWritable } from '@/lib/billing/guard';
 
 export async function GET(request: Request) {
   try {
@@ -64,6 +66,10 @@ export async function POST(request: Request) {
       buttons 
     } = body;
 
+    const used = await prisma.landingPage.count({ where: { userId } });
+    await requireWritable(userId);
+    await requireQuota(userId, 'platform.landing.count', used);
+
     if (!title || typeof title !== 'string' || !title.trim()) {
       return NextResponse.json(
         { error: 'Bad Request: Title is required.' },
@@ -105,6 +111,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, landingPage });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error creating landing page:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', details: error.message },

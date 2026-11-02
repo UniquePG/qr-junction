@@ -160,7 +160,7 @@ export default function EditQrPage({
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to update QR Code');
+        throw new Error(errorData.message || errorData.error || 'Failed to update QR Code');
       }
 
       toast.success('Dynamic destination updated successfully!');

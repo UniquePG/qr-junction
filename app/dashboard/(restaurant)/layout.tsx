@@ -5,6 +5,7 @@ import { restaurantService } from "@/lib/api/services/restaurant";
 import { SuiteShell, type SuiteNavItem, type SuitePlace, type SuiteTheme } from "@/components/suites/SuiteShell";
 import {
   BarChart3,
+  CreditCard,
   ClipboardList,
   LayoutDashboard,
   QrCode,
@@ -55,6 +56,7 @@ const items: SuiteNavItem[] = [
   { name: "Profile", href: "/dashboard/restaurant/profile", icon: Store },
   { name: "Scanner", href: "/dashboard/restaurant/scanner", icon: ScanLine },
   { name: "Analytics", href: "/dashboard/restaurant/analytics", icon: BarChart3 },
+  { name: "Plan", href: "/dashboard/restaurant/billing", icon: CreditCard },
 ];
 
 export default function RestaurantSuiteLayout({ children }: { children: React.ReactNode }) {

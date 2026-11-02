@@ -41,6 +41,10 @@ export const endpoints = {
   public: {
     qrEvents: "/api/public/qr-events",
   },
+  billing: {
+    current: "/api/billing",
+    checkout: "/api/billing/checkout",
+  },
   restaurant: {
     profile: "/api/restaurant/profile",
     address: "/api/restaurant/address",
@@ -62,6 +66,11 @@ export const endpoints = {
     overview: "/api/admin/overview",
     users: "/api/admin/users",
     user: (id: string | number) => `/api/admin/users/${id}`,
+    plans: "/api/admin/plans",
+    plan: (id: string) => `/api/admin/plans/${id}`,
+    features: "/api/admin/features",
+    userSubscription: (id: string | number) => `/api/admin/users/${id}/subscription`,
+    userOverrides: (id: string | number) => `/api/admin/users/${id}/overrides`,
     qrs: "/api/admin/qrs",
     qr: (id: string | number) => `/api/admin/qrs/${id}`,
     campaigns: "/api/admin/campaigns",

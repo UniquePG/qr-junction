@@ -170,7 +170,7 @@ export default function QRDesignModal({ isOpen, onClose, qrCode, onSave }: QRDes
 
       if (!res.ok) {
         const errJson = await res.json();
-        throw new Error(errJson.error || 'Failed to save QR code design.');
+        throw new Error(errJson.message || errJson.error || 'Failed to save QR code design.');
       }
 
       const responseData = await res.json();

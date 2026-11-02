@@ -28,6 +28,7 @@ interface PublicLandingPageProps {
     buttons: any;
     userId: number;
   };
+  leadsEnabled: boolean;
   qrCodeId: string | null;
   utmSource: string | null;
   utmMedium: string | null;
@@ -35,6 +36,7 @@ interface PublicLandingPageProps {
 }
 
 export default function PublicLandingPageClient({
+  leadsEnabled,
   landingPage,
   qrCodeId,
   utmSource,
@@ -359,8 +361,7 @@ export default function PublicLandingPageClient({
           </div>
         )}
 
-        {/* Dynamic Lead Capture Widget */}
-        <div className="border-t border-white/10 pt-6">
+        {leadsEnabled ? <div className="border-t border-white/10 pt-6">
           {leadCaptured ? (
             <div className={currentTheme.successCard}>
               <div className={currentTheme.successIcon}>
@@ -419,7 +420,7 @@ export default function PublicLandingPageClient({
               </button>
             </form>
           )}
-        </div>
+        </div> : null}
       </div>
 
       {/* Branding link */}

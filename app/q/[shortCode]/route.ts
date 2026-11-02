@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, userAgent } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveGeoLocation } from '@/lib/geo';
 import { DeviceType } from '@prisma/client';
+import { reserveScan } from '@/lib/billing/guard';
 import { qrPausedTemplate, qrTextTemplate } from '@/lib/HtmlTemplates/htmlTemplates';
 
 export async function GET(
@@ -65,8 +66,16 @@ export async function GET(
     const utmCampaign = urlObj.searchParams.get('utm_campaign') || qrCode.utmCampaign || qrCode.name;
     const referer = request.headers.get('referer') || request.headers.get('referrer') || null;
 
-    // 6. Log Scan and increment totals in database
-    await prisma.$transaction([
+    // 6. Log the scan unless this plan's monthly cap is already used. The guest still continues.
+    const bucket = qrCode.type === 'RESTAURANT_MENU' ? 'restaurant' : 'platform';
+    let track = true;
+    try {
+      track = await reserveScan(qrCode.userId, bucket);
+    } catch (error) {
+      console.error('Scan cap check failed:', error);
+    }
+
+    if (track) await prisma.$transaction([
       prisma.scan.create({
         data: {
           qrCodeId: qrCode.id,

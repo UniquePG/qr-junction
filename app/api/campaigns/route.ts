@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
+import { planErrorResponse } from '@/lib/billing/errors';
+import { requireQuota, requireWritable } from '@/lib/billing/guard';
 
 export async function GET(request: Request) {
   try {
@@ -65,6 +67,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, description, startDate, endDate } = body;
 
+    const used = await prisma.campaign.count({ where: { userId } });
+    await requireWritable(userId);
+    await requireQuota(userId, 'platform.campaigns', used);
+
     if (!name || typeof name !== 'string' || !name.trim()) {
       return NextResponse.json(
         { error: 'Bad Request: Campaign name is required.' },
@@ -84,6 +90,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, campaign });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error creating campaign:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', details: error.message },

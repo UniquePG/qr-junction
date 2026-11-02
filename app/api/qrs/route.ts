@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { generateUniqueShortCode } from '@/utils/shortCode';
 import { QRType, QRStatus } from '@prisma/client';
+import { planErrorResponse } from '@/lib/billing/errors';
+import { requireQuota, requireWritable } from '@/lib/billing/guard';
 
 export async function GET(request: Request) {
   try {
@@ -76,6 +78,23 @@ export async function POST(request: Request) {
       );
     }
 
+    await requireWritable(userId);
+    if (type === QRType.REVIEW) {
+      const used = await prisma.qRCode.count({
+        where: { userId, type: QRType.REVIEW, status: { not: QRStatus.DELETED } },
+      });
+      await requireQuota(userId, 'reviews.qr.count', used);
+    } else if (type !== QRType.RESTAURANT_MENU) {
+      const used = await prisma.qRCode.count({
+        where: {
+          userId,
+          status: { not: QRStatus.DELETED },
+          type: { notIn: [QRType.REVIEW, QRType.RESTAURANT_MENU] },
+        },
+      });
+      await requireQuota(userId, 'platform.qr.dynamic', used);
+    }
+
     // Generate short code
     const shortCode = await generateUniqueShortCode();
 
@@ -107,6 +126,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, qrCode });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error creating QR code:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', details: error.message },

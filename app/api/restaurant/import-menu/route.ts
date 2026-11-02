@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
+import { planErrorResponse } from '@/lib/billing/errors';
+import { requireEnabled, requireQuota, requireWritable } from '@/lib/billing/guard';
+import { itemsOnMenu } from '@/lib/billing/resolve';
 
 export async function POST(request: Request) {
   try {
@@ -38,6 +41,18 @@ export async function POST(request: Request) {
 
     if (!categories || !Array.isArray(categories)) {
       return NextResponse.json({ error: 'Invalid menu data format' }, { status: 400 });
+    }
+
+    const incoming = categories.reduce((sum: number, category: { items?: unknown[] }) => {
+      return sum + (Array.isArray(category.items) ? category.items.length : 0);
+    }, 0);
+    if (mode === 'overwrite') {
+      await requireEnabled(userId, 'restaurant.menu.edit');
+      await requireQuota(userId, 'restaurant.menu.items_per_menu', Math.max(incoming - 1, 0));
+    } else {
+      await requireWritable(userId);
+      const existing = await itemsOnMenu(menu.id);
+      await requireQuota(userId, 'restaurant.menu.items_per_menu', existing + Math.max(incoming - 1, 0));
     }
 
     await prisma.$transaction(async (tx) => {
@@ -112,6 +127,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, message: 'Menu imported successfully' });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error importing menu:', error);
     return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
   }

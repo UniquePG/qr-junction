@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { forbidden, requireAdmin } from "@/lib/adminAuth";
+import { allows } from "@/lib/billing/guard";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -89,6 +90,21 @@ export async function PATCH(
   }
 
   try {
+    const current = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+      select: { userId: true },
+    });
+    if (!current) return NextResponse.json({ error: "Restaurant not found." }, { status: 404 });
+    if (body.orderingEnabled && !(await allows(current.userId, "restaurant.ordering"))) {
+      return NextResponse.json(
+        {
+          error: "plan_limit",
+          message: "This plan does not include live orders. Grant an override first.",
+          feature: "restaurant.ordering",
+        },
+        { status: 402 },
+      );
+    }
     const restaurant = await prisma.restaurant.update({
       where: { id: restaurantId },
       data: { orderingEnabled: body.orderingEnabled },

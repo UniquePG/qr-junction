@@ -50,7 +50,7 @@ export default function RestaurantAnalyticsPage() {
         const res = await restaurantService.stats(start, end);
         const json = await res.json().catch(() => null);
         if (cancelled) return;
-        if (!res.ok || !json?.restaurant) throw new Error(json?.error || "Could not load analytics.");
+        if (!res.ok || !json?.restaurant) throw new Error(json?.message || json?.error || "Could not load analytics.");
         setData(json as RestaurantAnalytics);
       } catch (loadError) {
         if (!cancelled) setError(loadError instanceof Error ? loadError.message : "Could not load analytics.");
@@ -71,7 +71,7 @@ export default function RestaurantAnalyticsPage() {
     try {
       const res = await restaurantService.stats(start, end);
       const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.restaurant) throw new Error(json?.error || "Could not load analytics.");
+      if (!res.ok || !json?.restaurant) throw new Error(json?.message || json?.error || "Could not load analytics.");
       setData(json as RestaurantAnalytics);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Could not load analytics.");
@@ -93,6 +93,7 @@ export default function RestaurantAnalyticsPage() {
       <div className="mx-auto max-w-xl rounded-2xl border border-[#E7DDD2] bg-white p-6">
         <h2 className="text-lg font-semibold text-[#1C1410]">Analytics did not load</h2>
         <p className="mt-2 text-sm text-[#6B5A50]">{error}</p>
+        <a href="/dashboard/restaurant/billing" className="mt-4 inline-block text-sm font-semibold text-[#C4622D]">See your plan</a>
       </div>
     );
   }

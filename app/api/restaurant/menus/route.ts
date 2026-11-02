@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { generateUniqueShortCode } from '@/utils/shortCode';
+import { planErrorResponse } from '@/lib/billing/errors';
+import { requireAllowed, requireEnabled, requireQuota, requireWritable } from '@/lib/billing/guard';
 import { QRType, QRStatus } from '@prisma/client';
 
 // Helper to verify restaurant ownership
@@ -109,6 +111,9 @@ export async function POST(request: Request) {
     const existingCount = await prisma.menu.count({
       where: { restaurantId: restaurant.id }
     });
+    await requireWritable(userId);
+    await requireQuota(userId, 'restaurant.menu.count', existingCount);
+    await requireAllowed(userId, 'restaurant.menu.themes', theme || 'modern');
     const makeDefault = existingCount === 0 || !!isDefault;
 
     const newMenu = await prisma.$transaction(async (tx) => {
@@ -167,6 +172,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, menu: menuWithQr });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error creating menu:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
@@ -202,6 +209,9 @@ export async function PUT(request: Request) {
     if (!existingMenu) {
       return NextResponse.json({ error: 'Menu not found or access denied' }, { status: 404 });
     }
+
+    await requireEnabled(userId, 'restaurant.menu.edit');
+    if (theme) await requireAllowed(userId, 'restaurant.menu.themes', theme);
 
     const updatedMenu = await prisma.$transaction(async (tx) => {
       if (isDefault && !existingMenu.isDefault) {
@@ -273,6 +283,8 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ success: true, menu: menuWithQr });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error updating menu:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
@@ -310,6 +322,8 @@ export async function DELETE(request: Request) {
     if (!existingMenu) {
       return NextResponse.json({ error: 'Menu not found or access denied' }, { status: 404 });
     }
+
+    await requireEnabled(userId, 'restaurant.menu.edit');
 
     // Check count: do not allow deleting the only menu
     const totalMenus = await prisma.menu.count({
@@ -359,6 +373,8 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true, message: 'Menu deleted successfully' });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error deleting menu:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

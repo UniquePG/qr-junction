@@ -119,7 +119,7 @@ export default function CreateQrPage() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to create QR Code');
+        throw new Error(errorData.message || errorData.error || 'Failed to create QR Code');
       }
 
       toast.success('Dynamic QR Code created successfully!');

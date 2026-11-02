@@ -63,7 +63,7 @@ export default function VerifyEmailPage() {
 
         if (!res.ok) {
           sessionStorage.removeItem(OTP_LOCK_KEY);
-          throw new Error(data.error || "Failed to send verification code.");
+          throw new Error(data.message || data.error || "Failed to send verification code.");
         }
 
         if (data.alreadyVerified) {
@@ -134,8 +134,8 @@ export default function VerifyEmailPage() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data.error || "Invalid code.");
-        toast.error(data.error || "Invalid code.");
+        setError(data.message || data.error || "Invalid code.");
+        toast.error(data.message || data.error || "Invalid code.");
         if (res.status === 429) {
           setDigits(Array(OTP_LENGTH).fill(""));
         }

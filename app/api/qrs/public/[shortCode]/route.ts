@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { allows } from '@/lib/billing/guard';
 
 export async function GET(
   request: Request,
@@ -18,6 +19,7 @@ export async function GET(
         bgColor: true,
         logoUrl: true,
         status: true,
+        userId: true,
       }
     });
 
@@ -29,7 +31,15 @@ export async function GET(
       return NextResponse.json({ error: 'QR Code paused' }, { status: 403 });
     }
 
-    return NextResponse.json({ success: true, qrCode });
+    const [aiSuggestions, smartRedirect] = await Promise.all([
+      allows(qrCode.userId, 'reviews.ai_suggestions'),
+      allows(qrCode.userId, 'reviews.smart_redirect'),
+    ]);
+    const { userId: _userId, ...publicQr } = qrCode;
+    return NextResponse.json({
+      success: true,
+      qrCode: { ...publicQr, plan: { aiSuggestions, smartRedirect } },
+    });
   } catch (error: any) {
     console.error('Error fetching public QR code:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

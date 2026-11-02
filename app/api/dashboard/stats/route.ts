@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { QRStatus } from '@prisma/client';
+import { allows } from '@/lib/billing/guard';
 
 export async function GET(request: Request) {
   try {
@@ -9,6 +10,8 @@ export async function GET(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const advanced = await allows(userId, 'platform.analytics.advanced');
 
     const { searchParams } = new URL(request.url);
     const startDateParam = searchParams.get('startDate');
@@ -26,6 +29,14 @@ export async function GET(request: Request) {
         endDate = new Date(endDateParam);
       }
 
+      if (!advanced) {
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        weekAgo.setHours(0, 0, 0, 0);
+        if (!startDate || startDate < weekAgo) startDate = weekAgo;
+        if (!endDate) endDate = new Date();
+      }
+
       // Default to last 7 days if no dates provided
       if (!startDate && !endDate) {
         startDate = new Date();
@@ -33,6 +44,13 @@ export async function GET(request: Request) {
         startDate.setHours(0, 0, 0, 0);
         endDate = new Date();
       }
+    }
+
+    if (!advanced && !startDate) {
+      startDate = new Date();
+      startDate.setDate(startDate.getDate() - 7);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = endDate ?? new Date();
     }
 
     // 1. Fetch user's QR codes count
@@ -350,13 +368,13 @@ export async function GET(request: Request) {
           // Sort by date key chronologically if needed, but the loop generation already does it
           return 0;
         }),
-        devices,
-        browsers: formatBreakdown(browsers),
-        os: formatBreakdown(operatingSystems),
-        locations: formattedLocations,
-        cities: topCities,
-        campaigns: formatBreakdown(campaigns),
-        scanPoints: Object.values(scanPointsMap),
+        devices: advanced ? devices : [],
+        browsers: advanced ? formatBreakdown(browsers) : [],
+        os: advanced ? formatBreakdown(operatingSystems) : [],
+        locations: advanced ? formattedLocations : [],
+        cities: advanced ? topCities : [],
+        campaigns: advanced ? formatBreakdown(campaigns) : [],
+        scanPoints: advanced ? Object.values(scanPointsMap) : [],
       },
     });
   } catch (error: any) {

@@ -571,7 +571,7 @@ export function LandingPageTabForm({ formData, updateFormData }: TabFormProps) {
         if (data.success) {
           setLandingPages(data.landingPages || []);
         } else {
-          throw new Error(data.error || "Failed to fetch landing pages");
+          throw new Error(data.message || data.error || "Failed to fetch landing pages");
         }
       } catch (err: any) {
         console.error(err);
@@ -716,7 +716,7 @@ export function ReviewTabForm({ formData, updateFormData }: TabFormProps) {
 
       if (!res.ok) throw new Error("Upload failed");
       const json = await res.json();
-      if (!json.success) throw new Error(json.error || "Upload failed");
+      if (!json.success) throw new Error(json.message || json.error || "Upload failed");
 
       updateFormData("logoUrl", json.url);
     } catch (err) {

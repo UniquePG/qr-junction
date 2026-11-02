@@ -152,7 +152,7 @@ export default function EditReviewQrPage() {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || 'Failed to update campaign.');
+        throw new Error(err.message || err.error || 'Failed to update campaign.');
       }
 
       toast.success('Review campaign updated successfully!');

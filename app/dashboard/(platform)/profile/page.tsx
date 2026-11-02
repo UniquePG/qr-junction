@@ -131,7 +131,7 @@ export default function ProfilePage() {
                     const res = await uploadService.file(uploadData);
                     if (!res.ok) throw new Error('Upload failed');
                     const json = await res.json();
-                    if (!json.success) throw new Error(json.error || 'Upload failed');
+                    if (!json.success) throw new Error(json.message || json.error || 'Upload failed');
                     setData(prev => ({ ...prev, logoUrl: json.url }));
                     toast.success('Avatar image uploaded successfully!');
                   } catch (err) {

@@ -269,7 +269,7 @@ export default function MenuManagementPage() {
         setEditingMenu(null);
         await fetchMenusList(json.menu?.id);
       } else {
-        toast.error(json.error || 'Failed to save menu');
+        toast.error(json.message || json.error || 'Failed to save menu');
       }
     } catch (e) {
       toast.error('Failed to save menu configuration');
@@ -294,7 +294,7 @@ export default function MenuManagementPage() {
         await fetchMenusList();
       } else {
         const json = await res.json();
-        toast.error(json.error || 'Failed to delete menu');
+        toast.error(json.message || json.error || 'Failed to delete menu');
       }
     } catch (e) {
       toast.error('Failed to delete menu');
@@ -411,7 +411,7 @@ export default function MenuManagementPage() {
       if (!res.ok) {
         const json = await res.json();
         setItemAvailability(item.id, item.isAvailable);
-        toast.error(json.error || 'Could not update availability');
+        toast.error(json.message || json.error || 'Could not update availability');
         return;
       }
       toast.success(`${item.name} is now ${next ? 'available' : 'not available'}`);
@@ -463,7 +463,7 @@ export default function MenuManagementPage() {
         setEditingItem(prev => (prev ? { ...prev, image: json.url } : null));
         toast.success(`Image generated successfully using ${json.provider}!`);
       } else {
-        toast.error(json.error || 'Failed to generate image.');
+        toast.error(json.message || json.error || 'Failed to generate image.');
       }
     } catch (err) {
       toast.error('Error generating AI image.');
@@ -543,7 +543,7 @@ export default function MenuManagementPage() {
       const res = await restaurantService.saveMenu('PUT', { ...currentMenu, theme: themeId });
       if (!res.ok) {
         const json = await res.json();
-        throw new Error(json.error || 'Failed to update layout');
+        throw new Error(json.message || json.error || 'Failed to update layout');
       }
       toast.success('Menu layout updated. Scan the QR to see it on a phone.');
       setShowLayoutPicker(false);

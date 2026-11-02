@@ -142,7 +142,7 @@ export default function CreateReviewQrPage() {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || 'Failed to generate review campaign.');
+        throw new Error(err.message || err.error || 'Failed to generate review campaign.');
       }
 
       toast.success('Review QR Code Campaign generated successfully!');

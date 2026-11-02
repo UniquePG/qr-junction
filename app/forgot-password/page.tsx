@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to send reset link.");
+        throw new Error(data.message || data.error || "Failed to send reset link.");
       }
 
       setSent(true);

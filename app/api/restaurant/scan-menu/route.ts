@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { completeChat } from '@/lib/ai';
+import { planErrorResponse } from '@/lib/billing/errors';
+import { assertAiImportAvailable, consumeAiImport } from '@/lib/billing/guard';
 
 export const maxDuration = 60; // Max allowed duration on Vercel Hobby plan is 60 seconds
 
@@ -71,6 +73,8 @@ export async function POST(request: Request) {
     if (!fileUrl) {
       return NextResponse.json({ error: 'fileUrl is required' }, { status: 400 });
     }
+
+    await assertAiImportAvailable(userId);
 
     const isPdf = fileType === 'application/pdf' || fileUrl.toLowerCase().endsWith('.pdf');
     let textContent = '';
@@ -188,8 +192,11 @@ IMPORTANT: If no size variants exist for an item, omit the 'variants' field or s
       );
     }
 
+    await consumeAiImport(userId);
     return NextResponse.json({ success: true, menu: resultJson });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Menu Scan API Error:', error);
     return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
   }

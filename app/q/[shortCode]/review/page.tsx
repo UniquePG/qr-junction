@@ -185,12 +185,18 @@ export default function ReviewLandingPage() {
       // Fetch AI generated review suggestions
       setSuggestionsLoading(true);
       try {
+        if (!qrCode?.plan?.aiSuggestions) {
+          setSuggestions([]);
+          setSuggestionsLoading(false);
+          return;
+        }
         const res = await reviewService.generateSuggestions({
           rating,
           selectedTags,
           businessName,
           reviewCategory,
           language: selectedLanguage,
+          qrCodeId: qrCode.id,
         });
 
         if (res.ok) {
@@ -243,8 +249,7 @@ export default function ReviewLandingPage() {
       localStorage.setItem(`reviewed_${qrCode.id}`, 'true');
       setSubmitted(true);
       
-      if (isPositive) {
-        // Redirect positive reviews to public review platforms after submission
+      if (isPositive && qrCode?.plan?.smartRedirect) {
         window.location.href = publicReviewUrl;
       } else {
         setStep(3); // Show private feedback thank you note

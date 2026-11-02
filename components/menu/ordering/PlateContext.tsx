@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { MenuItem } from "@/components/menu/types";
 import { newIdempotencyKey } from "@/components/menu/ordering/ids";
+import { openLiveSocket } from "@/lib/live/client";
 import { PlateChrome } from "@/components/menu/ordering/PlateChrome";
 import { addLabelForTheme } from "@/components/menu/ordering/wording";
 
@@ -205,7 +206,7 @@ export function PlateProvider({
     const data = await response.json();
     if (!response.ok) {
       setQuote(null);
-      setQuoteError(data.error || "This plate needs a look.");
+      setQuoteError(data.message || data.error || "This plate needs a look.");
       return;
     }
     setQuote(data.quote);
@@ -273,7 +274,7 @@ export function PlateProvider({
       });
       const data = await response.json();
       if (!response.ok) {
-        setQuoteError(data.error || "The kitchen did not get this plate.");
+        setQuoteError(data.message || data.error || "The kitchen did not get this plate.");
         if (data.code === "UNAVAILABLE" || data.code === "UNKNOWN_ITEM") void refreshQuote();
         return;
       }
@@ -286,29 +287,21 @@ export function PlateProvider({
     }
   }, [customer, lines, menuId, refreshQuote, remember, restaurantId, sendKey, tableNumber]);
 
+  const watchKey = liveOrders
+    .filter((order) => order.status !== "REJECTED" && !(order.status === "SERVED" && order.paidAt))
+    .map((order) => order.publicToken)
+    .join("|");
+
   useEffect(() => {
-    const sources = liveOrders
-      .filter((order) => order.status !== "REJECTED" && !(order.status === "SERVED" && order.paidAt))
-      .map((order) => {
-        const source = new EventSource(`/api/public/orders/stream?token=${encodeURIComponent(order.publicToken)}`);
-        source.onmessage = () => undefined;
-        source.addEventListener("order.updated", (event) => {
-          const payload = JSON.parse((event as MessageEvent).data);
-          if (!payload.order) return;
-          setLiveOrders((current) => current.map((row) => row.publicId === payload.order.publicId ? { ...row, ...payload.order } : row));
-        });
-        source.onerror = () => {
-          void fetch(`/api/public/orders?token=${encodeURIComponent(order.publicToken)}`)
-            .then((response) => response.ok ? response.json() : null)
-            .then((data) => {
-              if (!data?.order) return;
-              setLiveOrders((current) => current.map((row) => row.publicId === data.order.publicId ? { ...row, ...data.order } : row));
-            });
-        };
-        return source;
-      });
-    return () => sources.forEach((source) => source.close());
-  }, [liveOrders.map((order) => `${order.publicId}:${order.status}:${order.paidAt || ""}`).join("|")]);
+    if (!watchKey) return;
+    const tokens = watchKey.split("|");
+    const connection = openLiveSocket({ role: "guest", tokens: () => tokens }, (event) => {
+      if ((event.type !== "order.updated" && event.type !== "order.placed") || !event.order?.publicId) return;
+      const incoming = event.order;
+      setLiveOrders((current) => current.map((row) => row.publicId === incoming.publicId ? { ...row, ...incoming } : row));
+    });
+    return () => connection.close();
+  }, [watchKey]);
 
   const api = useMemo<PlateApi>(() => ({
     enabled,

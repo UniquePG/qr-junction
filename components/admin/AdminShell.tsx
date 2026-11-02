@@ -7,6 +7,7 @@ import {
   FolderOpen,
   Globe,
   Layout,
+  CreditCard,
   LayoutDashboard,
   Loader2,
   LogOut,
@@ -26,6 +27,7 @@ import React, { useEffect, useState } from "react";
 const NAV = [
   { name: "Overview", href: "/admin", icon: LayoutDashboard },
   { name: "Users", href: "/admin/users", icon: UserRound },
+  { name: "Plans", href: "/admin/plans", icon: CreditCard },
   { name: "QR Codes", href: "/admin/qrs", icon: QrCode },
   { name: "Guests", href: "/admin/guests", icon: Fingerprint },
   { name: "Review Suite", href: "/admin/reviews", icon: Star },
@@ -162,8 +164,8 @@ function AuthenticatedShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-50 flex">
-      <aside className="hidden md:flex w-64 h-screen flex-col bg-[#001B50] text-white shrink-0">
+    <div className="flex h-dvh overflow-hidden bg-slate-50">
+      <aside className="hidden h-full min-h-0 w-64 shrink-0 flex-col bg-[#001B50] text-white md:flex">
         {sidebar}
       </aside>
 
@@ -181,8 +183,8 @@ function AuthenticatedShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <div className="flex-1 min-w-0 h-screen overflow-y-auto">
-        <header className="md:hidden sticky top-0 z-30 h-14 bg-white border-b border-slate-200 px-3 grid grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center">
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+        <header className="md:hidden sticky top-0 z-30 h-14 shrink-0 bg-white border-b border-slate-200 px-3 grid grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center">
           <button
             type="button"
             onClick={() => setNavOpen(true)}
@@ -200,7 +202,7 @@ function AuthenticatedShell({ children }: { children: React.ReactNode }) {
             priority
           />
         </header>
-        <main className="p-4 md:p-8">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto p-4 md:p-8">{children}</main>
       </div>
     </div>
   );

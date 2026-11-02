@@ -29,6 +29,47 @@ export const adminService = {
     return apiData<T>({ method: "GET", url: endpoints.admin.user(id), requireAuth: true });
   },
 
+  plans<T = any>() {
+    return apiData<T>({ method: "GET", url: endpoints.admin.plans, requireAuth: true });
+  },
+
+  savePlan<T = any>(id: string, data: unknown) {
+    return apiData<T>({ method: "PATCH", url: endpoints.admin.plan(id), data, requireAuth: true });
+  },
+
+  createPlan<T = any>(data: unknown) {
+    return apiData<T>({ method: "POST", url: endpoints.admin.plans, data, requireAuth: true });
+  },
+
+  deletePlan<T = any>(id: string) {
+    return apiData<T>({ method: "DELETE", url: endpoints.admin.plan(id), requireAuth: true });
+  },
+
+  createFeature<T = any>(data: unknown) {
+    return apiData<T>({ method: "POST", url: endpoints.admin.features, data, requireAuth: true });
+  },
+
+  userSubscription<T = any>(id: string | number) {
+    return apiData<T>({ method: "GET", url: endpoints.admin.userSubscription(id), requireAuth: true });
+  },
+
+  saveUserSubscription<T = any>(id: string | number, data: unknown) {
+    return apiData<T>({ method: "PATCH", url: endpoints.admin.userSubscription(id), data, requireAuth: true });
+  },
+
+  addOverride<T = any>(id: string | number, data: unknown) {
+    return apiData<T>({ method: "POST", url: endpoints.admin.userOverrides(id), data, requireAuth: true });
+  },
+
+  removeOverride<T = any>(id: string | number, overrideId: string) {
+    return apiData<T>({
+      method: "DELETE",
+      url: endpoints.admin.userOverrides(id),
+      params: { overrideId },
+      requireAuth: true,
+    });
+  },
+
   qrs<T = any>(query?: Query) {
     return list(endpoints.admin.qrs, query) as Promise<T>;
   },

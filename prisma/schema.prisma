@@ -102,6 +102,9 @@ model User {
   restaurant           Restaurant?
   emailOtp             EmailOtp?
   passwordResetTokens  PasswordResetToken[]
+  subscriptions        Subscription[]
+  subscriptionEvents   SubscriptionEvent[]
+  entitlementOverrides EntitlementOverride[]
 
   @@index([createdAt])
   @@map("users")
@@ -587,4 +590,183 @@ model MenuOrderEvent {
 
   @@index([orderId])
   @@map("menu_order_events")
+}
+
+enum PlanScope {
+  ACCOUNT
+  SUITE
+}
+
+enum FeatureKind {
+  BOOLEAN
+  QUOTA
+  MONTHLY
+  LIFETIME
+  ALLOWLIST
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+enum SubscriptionSource {
+  MIGRATION
+  SIGNUP
+  ADMIN
+  RAZORPAY
+}
+
+enum BillingInterval {
+  MONTH
+  YEAR
+}
+
+model FeatureDefinition {
+  key       String      @id
+  suite     String
+  kind      FeatureKind
+  label     String
+  shipped   Boolean     @default(true)
+  early     Boolean     @default(false)
+  sortOrder Int         @default(0) @map("sort_order")
+
+  limits    PlanLimit[]
+  overrides EntitlementOverride[]
+  counters  UsageCounter[]
+
+  @@map("feature_definitions")
+}
+
+model Plan {
+  id                String    @id @default(cuid())
+  code              String    @unique
+  scope             PlanScope @default(ACCOUNT)
+  name              String
+  monthlyPricePaise Int       @default(0) @map("monthly_price_paise")
+  yearlyPricePaise  Int       @default(0) @map("yearly_price_paise")
+  currency          String    @default("INR")
+  isPublic          Boolean   @default(true) @map("is_public")
+  active            Boolean   @default(true)
+  graceDays         Int       @default(7) @map("grace_days")
+  highlights        Json      @default("[]")
+  sortOrder         Int       @default(0) @map("sort_order")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  limits        PlanLimit[]
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model PlanLimit {
+  planId     String  @map("plan_id")
+  featureKey String  @map("feature_key")
+  enabled    Boolean @default(false)
+  quota      Int     @default(0)
+  allowlist  Json?
+  config     Json?
+
+  plan    Plan              @relation(fields: [planId], references: [id], onDelete: Cascade)
+  feature FeatureDefinition @relation(fields: [featureKey], references: [key], onDelete: Cascade)
+
+  @@id([planId, featureKey])
+  @@map("plan_limits")
+}
+
+model Subscription {
+  id                     String             @id @default(cuid())
+  userId                 Int                @unique @map("user_id")
+  planId                 String             @map("plan_id")
+  status                 SubscriptionStatus @default(ACTIVE)
+  source                 SubscriptionSource
+  interval               BillingInterval?
+  currentPeriodStart     DateTime?          @map("current_period_start")
+  currentPeriodEnd       DateTime?          @map("current_period_end")
+  graceUntil             DateTime?          @map("grace_until")
+  graceDays              Int                @default(7) @map("grace_days")
+  cancelAtPeriodEnd      Boolean            @default(false) @map("cancel_at_period_end")
+  lockedPricePaise       Int?               @map("locked_price_paise")
+  provider               String?
+  providerCustomerId     String?            @map("provider_customer_id")
+  providerSubscriptionId String?            @unique @map("provider_subscription_id")
+  createdAt              DateTime           @default(now()) @map("created_at")
+  updatedAt              DateTime           @updatedAt @map("updated_at")
+
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      Plan                   @relation(fields: [planId], references: [id])
+  overrides EntitlementOverride[]
+  events    SubscriptionEvent[]
+  counters  UsageCounter[]
+
+  @@index([planId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model EntitlementOverride {
+  id             String    @id @default(cuid())
+  subscriptionId String    @map("subscription_id")
+  featureKey     String    @map("feature_key")
+  enabled        Boolean?
+  quota          Int?
+  allowlist      Json?
+  config         Json?
+  startsAt       DateTime  @default(now()) @map("starts_at")
+  endsAt         DateTime? @map("ends_at")
+  note           String?   @db.Text
+  createdById    Int?      @map("created_by_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  subscription Subscription      @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  feature      FeatureDefinition @relation(fields: [featureKey], references: [key], onDelete: Cascade)
+  createdBy    User?             @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([subscriptionId, featureKey])
+  @@map("entitlement_overrides")
+}
+
+model UsageCounter {
+  id             String   @id @default(cuid())
+  subscriptionId String   @map("subscription_id")
+  featureKey     String   @map("feature_key")
+  periodStart    DateTime @map("period_start")
+  used           Int      @default(0)
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  subscription Subscription      @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  feature      FeatureDefinition @relation(fields: [featureKey], references: [key], onDelete: Cascade)
+
+  @@unique([subscriptionId, featureKey, periodStart])
+  @@map("usage_counters")
+}
+
+model SubscriptionEvent {
+  id             String   @id @default(cuid())
+  subscriptionId String   @map("subscription_id")
+  type           String
+  payload        Json
+  createdById    Int?     @map("created_by_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  createdBy    User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([subscriptionId, createdAt])
+  @@map("subscription_events")
+}
+
+model BillingEvent {
+  id              String    @id @default(cuid())
+  provider        String
+  providerEventId String    @map("provider_event_id")
+  payload         Json
+  processedAt     DateTime? @map("processed_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@unique([provider, providerEventId])
+  @@map("billing_events")
 }

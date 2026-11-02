@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminCard, AdminLink, AdminLoading, AdminTable } from "@/components/admin/AdminUI";
+import AdminUserPlan from "@/components/admin/AdminUserPlan";
 import { adminService } from "@/lib/api";
 import { formatDate } from "@/lib/adminClient";
 import { useParams } from "next/navigation";
@@ -37,6 +38,8 @@ export default function AdminUserDetailPage() {
         <Stat label="Review responses" value={user.reviewResponses} />
         <Stat label="Avg rating" value={user.avgRating.toFixed(1)} />
       </div>
+
+      <AdminUserPlan userId={user.id} />
 
       {user.profile ? (
         <AdminCard title="Profile">

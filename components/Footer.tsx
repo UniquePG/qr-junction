@@ -42,6 +42,9 @@ export default function Footer() {
                 <Link href="/" className="text-slate-600 hover:text-primary transition-colors no-underline">Home</Link>
               </li>
               <li>
+                <Link href="/pricing" className="text-slate-600 hover:text-primary transition-colors no-underline">Pricing</Link>
+              </li>
+              <li>
                 <Link href="/qr" className="text-slate-600 hover:text-primary transition-colors no-underline">Advanced Generator</Link>
               </li>
               <li>
@@ -60,9 +63,9 @@ export default function Footer() {
               <li>
                 <Link href="/terms" className="text-slate-600 hover:text-primary transition-colors no-underline">Terms of Service</Link>
               </li>
-              <li>
+              {/* <li>
                 <a href="/llms.txt" className="text-slate-600 hover:text-primary transition-colors no-underline">llms.txt</a>
-              </li>
+              </li> */}
             </ul>
           </div>
 

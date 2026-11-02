@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
+import { planErrorResponse } from '@/lib/billing/errors';
+import { requireEnabled, requireWritable } from '@/lib/billing/guard';
 
 async function getRestaurantByUserId(userId: number) {
   return await prisma.restaurant.findUnique({
@@ -22,6 +24,8 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { name, order, menuId } = body;
+
+    await requireWritable(userId);
 
     if (!name || !menuId) {
       return NextResponse.json({ error: 'Category name and Menu ID are required' }, { status: 400 });
@@ -56,6 +60,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, category });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error creating category:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
@@ -72,6 +78,8 @@ export async function PUT(request: Request) {
     if (!restaurant) {
       return NextResponse.json({ error: 'Restaurant profile not found' }, { status: 400 });
     }
+
+    await requireEnabled(userId, 'restaurant.menu.edit');
 
     const body = await request.json();
     
@@ -114,6 +122,8 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ success: true, category });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error updating category:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
@@ -130,6 +140,8 @@ export async function DELETE(request: Request) {
     if (!restaurant) {
       return NextResponse.json({ error: 'Restaurant profile not found' }, { status: 400 });
     }
+
+    await requireEnabled(userId, 'restaurant.menu.edit');
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -152,6 +164,8 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true, message: 'Category deleted' });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error deleting category:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

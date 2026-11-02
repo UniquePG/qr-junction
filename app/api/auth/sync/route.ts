@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { adminAuth } from '@/lib/firebaseAdmin';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
+import { ensureAccountSubscription } from '@/lib/billing/seed';
 import { isOAuthProvider, publicUser } from '@/lib/otp';
 import { getEmailVerified, setEmailVerified } from '@/lib/otpDb';
 
@@ -72,6 +73,8 @@ export async function POST(request: Request) {
         passwordHash,
       },
     });
+
+    await ensureAccountSubscription(user.id);
 
     if (oauthVerified || decodedToken.email_verified) {
       await setEmailVerified(user.id, true);

@@ -2,6 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import PublicLandingPageClient from '@/components/qr/PublicLandingPageClient';
+import { allows } from '@/lib/billing/guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,8 +31,11 @@ export default async function PublicSlugPage({
   const utmMedium = resolvedSearchParams.utm_medium || null;
   const utmCampaign = resolvedSearchParams.utm_campaign || null;
 
+  const leadsEnabled = await allows(landingPage.userId, 'platform.leads');
+
   return (
     <PublicLandingPageClient
+      leadsEnabled={leadsEnabled}
       landingPage={landingPage}
       qrCodeId={qrCodeId}
       utmSource={utmSource}

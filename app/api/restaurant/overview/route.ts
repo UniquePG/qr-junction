@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { dateFilter, parseAdminRange } from "@/lib/adminQuery";
 import { getDbUserIdFromRequest } from "@/lib/authHelper";
+import { allows } from "@/lib/billing/guard";
 import { prisma } from "@/lib/prisma";
 
 const ZONE = "Asia/Kolkata";
@@ -125,12 +126,21 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const range = parseAdminRange(searchParams);
-    const start = range.startDate;
-    const end = range.endDate;
-    const bucket = bucketFor(range.isAllTime, start, end);
+    let start = range.startDate;
+    let end = range.endDate;
+    let allTime = range.isAllTime;
+    if (!(await allows(userId, "platform.analytics.advanced"))) {
+      allTime = false;
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      weekAgo.setHours(0, 0, 0, 0);
+      if (!start || start < weekAgo) start = weekAgo;
+      if (!end || end < weekAgo) end = new Date();
+    }
+    const bucket = bucketFor(allTime, start, end);
     const orderRange = dateFilter(Prisma.raw(`created_at`), start, end);
     const scanRange = dateFilter(Prisma.raw(`s.scanned_at`), start, end);
-    const previous = !range.isAllTime && start && end
+    const previous = !allTime && start && end
       ? {
           end: new Date(start.getTime() - 1),
           start: new Date(start.getTime() - (end.getTime() - start.getTime())),

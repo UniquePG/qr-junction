@@ -1,17 +1,21 @@
 "use client";
 
 import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { openLiveSocket, type LiveEvent } from "@/lib/live/client";
 import { toast } from "react-toastify";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 type OrderAlertsValue = {
   placedCount: number;
+  liveTick: number;
   soundReady: boolean;
   enableSound: () => void;
 };
 
 const OrderAlertsContext = createContext<OrderAlertsValue>({
   placedCount: 0,
+  liveTick: 0,
   soundReady: false,
   enableSound: () => {},
 });
@@ -20,18 +24,13 @@ export function useOrderAlerts() {
   return useContext(OrderAlertsContext);
 }
 
-async function authHeader() {
-  const user = auth.currentUser;
-  if (!user) return null;
-  const token = await user.getIdToken();
-  return { Authorization: `Bearer ${token}` };
-}
-
 export function OrderAlertsProvider({ children }: { children: React.ReactNode }) {
   const [placedCount, setPlacedCount] = useState(0);
+  const [liveTick, setLiveTick] = useState(0);
   const [soundReady, setSoundReady] = useState(false);
   const seen = useRef(new Set<string>());
   const audio = useRef<HTMLAudioElement | null>(null);
+  const hadReady = useRef(false);
 
   const play = useCallback(() => {
     const player = audio.current;
@@ -58,86 +57,56 @@ export function OrderAlertsProvider({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    let controller: AbortController | null = null;
-
-    const handle = (raw: string) => {
-      const blocks = raw.split("\n\n");
-      for (const block of blocks) {
-        const dataLine = block.split("\n").find((line) => line.startsWith("data:"));
-        const eventLine = block.split("\n").find((line) => line.startsWith("event:"));
-        if (!dataLine) continue;
-        const eventName = eventLine?.slice(6).trim();
-        let payload: { id?: string; type?: string; placedCount?: number; order?: { publicId?: string; tableNumber?: string | null } };
-        try {
-          payload = JSON.parse(dataLine.slice(5).trim());
-        } catch {
-          continue;
-        }
-        if (typeof payload.placedCount === "number") setPlacedCount(payload.placedCount);
-        if ((eventName || payload.type) !== "order.placed") continue;
-        const key = payload.id || payload.order?.publicId;
-        if (!key || seen.current.has(key)) continue;
-        seen.current.add(key);
-        const where = payload.order?.tableNumber ? `Table ${payload.order.tableNumber}` : "Counter";
-        toast.info(`New plate from ${where}`);
-        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-          new Notification("New plate", { body: `${where} · ${payload.order?.publicId || ""}` });
-        }
-        if (sessionStorage.getItem("qj-kitchen-sound") === "1") play();
+    const onEvent = (event: LiveEvent) => {
+      if (event.type === "ready") {
+        if (typeof event.placedCount === "number") setPlacedCount(event.placedCount);
+        if (hadReady.current) setLiveTick((tick) => tick + 1);
+        hadReady.current = true;
+        return;
       }
+      if (event.type !== "order.placed" && event.type !== "order.updated") return;
+      if (typeof event.placedCount === "number") setPlacedCount(event.placedCount);
+      setLiveTick((tick) => tick + 1);
+      if (event.type !== "order.placed") return;
+      const key = event.id || event.order?.publicId;
+      if (!key || seen.current.has(key)) return;
+      seen.current.add(key);
+      const where = event.order?.tableNumber ? `Table ${event.order.tableNumber}` : "Counter";
+      toast.info(`New plate from ${where}`);
+      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+        new Notification("New plate", { body: `${where} · ${event.order?.publicId || ""}` });
+      }
+      if (sessionStorage.getItem("qj-kitchen-sound") === "1") play();
     };
 
-    const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
-
-    const run = async () => {
-      while (!cancelled) {
-        try {
-          const headers = await authHeader();
-          if (!headers) {
-            await wait(1500);
-            continue;
-          }
-          const list = await fetch("/api/restaurant/orders", { headers });
-          if (list.ok) {
-            const data = await list.json();
-            if (!cancelled) {
-              setPlacedCount(Number(data.placedCount) || 0);
+    const connection = openLiveSocket(
+      {
+        role: "kitchen",
+        token: () => new Promise((resolve) => {
+          const send = (user: typeof auth.currentUser) => {
+            if (!user) {
+              resolve(null);
+              return;
             }
+            void user.getIdToken().then(resolve, () => resolve(null));
+          };
+          if (auth.currentUser) {
+            send(auth.currentUser);
+            return;
           }
-          controller = new AbortController();
-          const response = await fetch("/api/restaurant/orders/stream", {
-            headers: { ...headers, Accept: "text/event-stream" },
-            signal: controller.signal,
+          const stop = onAuthStateChanged(auth, (user) => {
+            stop();
+            send(user);
           });
-          if (!response.ok || !response.body) throw new Error("stream");
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder();
-          let buffer = "";
-          while (!cancelled) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-            const parts = buffer.split("\n\n");
-            buffer = parts.pop() || "";
-            if (parts.length) handle(parts.join("\n\n"));
-          }
-        } catch {
-          // reconnect after a dropped stream
-        }
-        if (!cancelled) await wait(2000);
-      }
-    };
-
-    void run();
-    return () => {
-      cancelled = true;
-      controller?.abort();
-    };
+        }),
+      },
+      onEvent,
+    );
+    return () => connection.close();
   }, [play]);
 
   return (
-    <OrderAlertsContext.Provider value={{ placedCount, soundReady, enableSound }}>
+    <OrderAlertsContext.Provider value={{ placedCount, liveTick, soundReady, enableSound }}>
       {children}
     </OrderAlertsContext.Provider>
   );

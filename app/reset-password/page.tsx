@@ -36,7 +36,7 @@ function ResetPasswordForm() {
         const data = await res.json().catch(() => ({}));
         if (cancelled) return;
         if (!res.ok || !data.valid) {
-          setError(data.error || "This reset link is invalid or has expired.");
+          setError(data.message || data.error || "This reset link is invalid or has expired.");
           setValid(false);
         } else {
           setValid(true);
@@ -73,7 +73,7 @@ function ResetPasswordForm() {
       const res = await authService.resetPassword({ token, password, confirmPassword });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data.error || "Failed to reset password.");
+        throw new Error(data.message || data.error || "Failed to reset password.");
       }
       toast.success(data.message || "Password updated. You can sign in now.");
       router.push("/login");

@@ -204,7 +204,7 @@ export default function LandingPageBuilder({ pageId }: LandingPageBuilderProps) 
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to save page.');
+        throw new Error(errorData.message || errorData.error || 'Failed to save page.');
       }
 
       toast.success(isEditMode ? 'Landing page updated!' : 'Landing page created successfully!');

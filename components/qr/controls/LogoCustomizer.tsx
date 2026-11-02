@@ -52,7 +52,7 @@ export default function LogoCustomizer({ logo, onChange, onEclLocked }: LogoCust
 
       if (!res.ok) throw new Error('Upload failed');
       const json = await res.json();
-      if (!json.success) throw new Error(json.error || 'Upload failed');
+      if (!json.success) throw new Error(json.message || json.error || 'Upload failed');
 
       setPreviewUrl(json.url);
       onChange({

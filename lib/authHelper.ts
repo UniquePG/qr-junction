@@ -22,22 +22,40 @@ export async function getUserIdFromRequest(request: Request): Promise<string | n
   return decodedToken?.uid || null;
 }
 
+async function dbUserFromFirebaseUid(firebaseUid: string) {
+  const user = await prisma.user.findUnique({
+    where: { firebaseUid },
+  });
+  if (!user) return null;
+  const emailVerified = await getEmailVerified(user.id);
+  if (!emailVerified && !isOAuthProvider(user.provider)) {
+    return null;
+  }
+  return { ...user, emailVerified };
+}
+
 export async function getDbUserFromRequest(request: Request) {
   const firebaseUid = await getUserIdFromRequest(request);
   if (!firebaseUid) return null;
-  
+
   try {
-    const user = await prisma.user.findUnique({
-      where: { firebaseUid },
-    });
-    if (!user) return null;
-    const emailVerified = await getEmailVerified(user.id);
-    if (!emailVerified && !isOAuthProvider(user.provider)) {
-      return null;
-    }
-    return { ...user, emailVerified };
+    return await dbUserFromFirebaseUid(firebaseUid);
   } catch (error) {
     console.error('Error getting DB user from request:', error);
+    return null;
+  }
+}
+
+export async function getDbUserIdFromIdToken(idToken: string): Promise<number | null> {
+  const token = idToken.trim();
+  if (!token) return null;
+  try {
+    const decoded = await adminAuth.verifyIdToken(token);
+    const firebaseUid = decoded?.uid;
+    if (!firebaseUid) return null;
+    const user = await dbUserFromFirebaseUid(firebaseUid);
+    return user?.id || null;
+  } catch {
     return null;
   }
 }

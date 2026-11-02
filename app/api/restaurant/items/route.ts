@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { Prisma } from '@prisma/client';
+import { planErrorResponse } from '@/lib/billing/errors';
+import { requireEnabled, requireQuota, requireWritable } from '@/lib/billing/guard';
+import { itemsOnMenu } from '@/lib/billing/resolve';
 
 async function checkCategoryOwnership(categoryId: number, userId: number) {
   const category = await prisma.menuCategory.findFirst({
@@ -51,10 +54,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Category ID, name, and price are required' }, { status: 400 });
     }
 
-    const hasAccess = await checkCategoryOwnership(Number(categoryId), userId);
-    if (!hasAccess) {
+    const category = await prisma.menuCategory.findFirst({
+      where: { id: Number(categoryId), restaurant: { userId } },
+      select: { menuId: true },
+    });
+    if (!category) {
       return NextResponse.json({ error: 'Category not found or access denied' }, { status: 403 });
     }
+    await requireWritable(userId);
+    await requireQuota(userId, 'restaurant.menu.items_per_menu', await itemsOnMenu(category.menuId));
 
     const maxOrderItem = await prisma.menuItem.findFirst({
       where: { categoryId: Number(categoryId) },
@@ -84,6 +92,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, item });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error creating menu item:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
@@ -95,6 +105,8 @@ export async function PUT(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    await requireEnabled(userId, 'restaurant.menu.edit');
 
     const body = await request.json();
     
@@ -174,6 +186,8 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ success: true, item });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error updating menu item:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
@@ -185,6 +199,8 @@ export async function DELETE(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    await requireEnabled(userId, 'restaurant.menu.edit');
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -204,6 +220,8 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true, message: 'Item deleted' });
   } catch (error: any) {
+    const denied = planErrorResponse(error);
+    if (denied) return denied;
     console.error('Error deleting menu item:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

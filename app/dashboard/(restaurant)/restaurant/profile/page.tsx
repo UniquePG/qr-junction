@@ -168,7 +168,7 @@ export default function RestaurantProfilePage() {
       if (!res.ok) {
         lastLookup.current = '';
         setLocalities([]);
-        setLookupNote(json.error || 'No post office found. Type the city, district, and state.');
+        setLookupNote(json.message || json.error || 'No post office found. Type the city, district, and state.');
         return;
       }
       setLocalities(Array.isArray(json.localities) ? json.localities : []);
@@ -315,7 +315,7 @@ export default function RestaurantProfilePage() {
       uploadData.append('file', file);
       const res = await uploadService.file(uploadData);
       const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.error || 'Upload failed');
+      if (!res.ok || !json.success) throw new Error(json.message || json.error || 'Upload failed');
       setData((prev) => ({ ...prev, [field]: json.url }));
       toast.success(field === 'logoUrl' ? 'Logo uploaded.' : 'Cover uploaded.');
     } catch (error) {
@@ -336,7 +336,7 @@ export default function RestaurantProfilePage() {
     try {
       const res = await restaurantService.saveProfile(data);
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || 'Could not save details.');
+      if (!res.ok) throw new Error(json.message || json.error || 'Could not save details.');
       toast.success('Restaurant profile saved.');
       window.dispatchEvent(new Event('qrj-restaurant-profile'));
     } catch (error) {
@@ -728,7 +728,7 @@ export default function RestaurantProfilePage() {
         <div className="contents lg:order-2 lg:flex lg:min-w-0 lg:flex-col lg:gap-5 lg:self-start">
         <div className="order-1 min-w-0">
           <section className="overflow-hidden rounded-2xl border border-[#E7DDD2] bg-white">
-            <div className="relative h-36 bg-[#EFE6DC] sm:h-40">
+            <div className="relative z-0 h-36 bg-[#EFE6DC] sm:h-40">
               {data.coverImage ? (
                 <img src={data.coverImage} alt="" className="h-full w-full object-cover" />
               ) : (
@@ -763,7 +763,7 @@ export default function RestaurantProfilePage() {
               />
               <label
                 htmlFor="logo-upload"
-                className="-mt-8 flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-[#F6F1EA] text-[#8A776C] shadow-sm"
+                className="relative z-10 -mt-8 flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-[#F6F1EA] text-[#8A776C] shadow-sm"
               >
                 {uploadingLogo ? (
                   <Loader2 className="h-5 w-5 animate-spin text-[#C4622D]" />

@@ -54,7 +54,7 @@ export default function RestaurantHomePage() {
         const res = await restaurantService.overview(start, end);
         const json = await res.json().catch(() => null);
         if (cancelled) return;
-        if (!res.ok) throw new Error(json?.error || "Could not load the floor.");
+        if (!res.ok) throw new Error(json?.message || json?.error || "Could not load the floor.");
         if (!json?.restaurant) {
           setMissing(true);
           setData(null);
