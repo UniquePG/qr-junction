@@ -48,6 +48,7 @@ export async function POST(request: Request) {
       tableNumber: body.tableNumber ?? null,
       customerName: String(body.customerName || ""),
       customerPhone: String(body.customerPhone || ""),
+      note: body.note ?? null,
       idempotencyKey: String(body.idempotencyKey || ""),
       lines: linesFrom(body),
     };

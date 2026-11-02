@@ -1,4 +1,5 @@
 import { DietMark, formatMoney } from "../shared";
+import { ItemTags } from "../ItemTags";
 import type { ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
@@ -41,8 +42,11 @@ export default function TicketTheme({ categories, currencySymbol, onSelectItem }
                       House pick
                     </span>
                   )}
-<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
-</div>
+                  <div className="mt-1 space-y-2">
+                    <ItemTags item={item} hidePopular />
+                    <PlateSlot item={item} />
+                  </div>
+                </div>
               ))}
             </div>
           </section>

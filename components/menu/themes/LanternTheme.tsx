@@ -1,4 +1,5 @@
 import { DietMark, VariantPills, formatMoney } from "../shared";
+import { ItemTags } from "../ItemTags";
 import type { ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
@@ -40,9 +41,10 @@ export default function LanternTheme({ categories, currencySymbol, onSelectItem 
                     symbol={currencySymbol}
                     className="mt-1 text-[9px] bg-[#f3c97a] text-[#3a1012] px-1.5 py-0.5 rounded-full"
                   />
+                  <ItemTags item={item} className="mt-1 justify-center" />
+                  <PlateSlot item={item} className="mt-2" align="center" />
                 </div>
-<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
-</div>
+              </div>
             ))}
           </div>
         </section>

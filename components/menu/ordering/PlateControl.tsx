@@ -23,17 +23,18 @@ export function PlateControl({
           event.stopPropagation();
           onAdd();
         }}
-        className="inline-flex h-8 cursor-pointer items-center gap-1 rounded-full border border-current/15 bg-white/90 px-3 text-xs font-semibold text-slate-800 shadow-sm"
+        className="inline-flex h-8 max-w-full shrink-0 cursor-pointer items-center gap-1 rounded-full border border-current/15 bg-white/90 px-2.5 text-xs font-semibold text-slate-800 shadow-sm sm:px-3"
       >
-        <Plus className="h-3.5 w-3.5" />
-        {label}
+        <Plus className="h-3.5 w-3.5 shrink-0" />
+        <span className="truncate sm:hidden">Add</span>
+        <span className="hidden truncate sm:inline">{label}</span>
       </button>
     );
   }
 
   return (
     <div
-      className="inline-flex h-8 items-center rounded-full border border-current/15 bg-white text-slate-800 shadow-sm"
+      className="inline-flex h-8 shrink-0 items-center rounded-full border border-current/15 bg-white text-slate-800 shadow-sm"
       onClick={(event) => event.stopPropagation()}
     >
       <button
@@ -76,47 +77,78 @@ export function DishOrderActions({
   return (
     <div className="space-y-3 border-t border-current/10 pt-4">
       {variants ? (
-        <div className="flex flex-wrap gap-2">
-          {variants.map((variant) => (
-            <button
-              key={variant.label}
-              type="button"
-              onClick={() => onVariant(variant.label)}
-              className={`cursor-pointer rounded-xl border px-3 py-2 text-left text-xs font-semibold ${active === variant.label ? "border-[#C4622D] bg-[#1C1410] text-white" : "border-slate-200 bg-white text-slate-900"}`}
-            >
-              {variant.label}
-              <span className={`mt-0.5 block text-sm ${active === variant.label ? "text-white" : "text-slate-800"}`}>{currencySymbol}{Number(variant.price).toFixed(0)}</span>
-            </button>
-          ))}
+        <div className="space-y-2">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Choose portion</p>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+            {variants.map((variant) => {
+              const selected = active === variant.label;
+              return (
+                <button
+                  key={variant.label}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => onVariant(variant.label)}
+                  className={`min-h-14 cursor-pointer rounded-2xl border px-3 py-2.5 text-left transition ${
+                    selected
+                      ? "border-[#C4622D] bg-[#1C1410] text-white shadow-sm"
+                      : "border-slate-200 bg-white text-slate-900 hover:border-slate-300"
+                  }`}
+                >
+                  <span className="block text-xs font-semibold uppercase tracking-wide">{variant.label}</span>
+                  <span className={`mt-0.5 block text-base font-black ${selected ? "text-white" : "text-slate-900"}`}>
+                    {currencySymbol}{Number(variant.price).toFixed(0)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       ) : null}
-      <PlateControl
-        label={plate.addLabel}
-        quantity={quantity}
-        onAdd={() => plate.add(item, active)}
-        onChange={(next) => plate.setQuantity(item, active, next)}
-      />
+      <div className="flex justify-end">
+        <PlateControl
+          label={plate.addLabel}
+          quantity={quantity}
+          onAdd={() => plate.add(item, active)}
+          onChange={(next) => plate.setQuantity(item, active, next)}
+        />
+      </div>
     </div>
   );
 }
 
-export function PlateSlot({ item }: { item: MenuItem }) {
+export function PlateSlot({
+  item,
+  className = "",
+  align = "end",
+  inline = false,
+}: {
+  item: MenuItem;
+  className?: string;
+  align?: "end" | "start" | "center";
+  inline?: boolean;
+}) {
   const plate = usePlate();
   if (!plate?.enabled) return null;
   const variants = item.variants?.length ? item.variants : null;
   const quantity = variants ? plate.quantityForItem(item.id) : plate.quantity(item.id, null);
+  const justify = align === "start" ? "justify-start" : align === "center" ? "justify-center" : "justify-end";
   return (
-    <PlateControl
-      label={plate.addLabel}
-      quantity={quantity}
-      onAdd={() => (variants ? plate.openItem(item) : plate.add(item, null))}
-      onChange={(next) => {
-        if (variants) {
-          plate.openItem(item);
-          return;
-        }
-        plate.setQuantity(item, null, next);
-      }}
-    />
+    <div
+      className={`${inline ? "inline-flex shrink-0" : `flex w-full min-w-0 ${justify}`} ${className}`}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <PlateControl
+        label={plate.addLabel}
+        quantity={quantity}
+        onAdd={() => (variants ? plate.openItem(item) : plate.add(item, null))}
+        onChange={(next) => {
+          if (variants) {
+            plate.openItem(item);
+            return;
+          }
+          plate.setQuantity(item, null, next);
+        }}
+      />
+    </div>
   );
 }

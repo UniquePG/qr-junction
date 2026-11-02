@@ -5,6 +5,26 @@ import { Prisma } from '@prisma/client';
 import { planErrorResponse } from '@/lib/billing/errors';
 import { requireEnabled, requireQuota, requireWritable } from '@/lib/billing/guard';
 import { itemsOnMenu } from '@/lib/billing/resolve';
+import { isPopularFromTags, normalizeTags, parseItemConfig, withTags } from '@/lib/menu/item-config';
+
+function configFromBody(body: { tags?: unknown; config?: unknown }, existing?: unknown) {
+  if (body.tags !== undefined) {
+    const next = withTags(existing ?? body.config, normalizeTags(body.tags));
+    return next ? (next as Prisma.InputJsonValue) : Prisma.DbNull;
+  }
+  if (body.config !== undefined) {
+    const next = parseItemConfig(body.config);
+    return next ? (next as Prisma.InputJsonValue) : Prisma.DbNull;
+  }
+  return undefined;
+}
+
+function popularFromBody(body: { tags?: unknown; config?: unknown; isPopular?: unknown }, fallback?: boolean) {
+  if (body.tags !== undefined) return isPopularFromTags(normalizeTags(body.tags));
+  if (body.config !== undefined) return isPopularFromTags(parseItemConfig(body.config)?.tags ?? []);
+  if (body.isPopular !== undefined) return Boolean(body.isPopular);
+  return fallback;
+}
 
 async function checkCategoryOwnership(categoryId: number, userId: number) {
   const category = await prisma.menuCategory.findFirst({
@@ -47,7 +67,9 @@ export async function POST(request: Request) {
       isVeg, 
       isNonVeg, 
       isVegan, 
-      isPopular 
+      isPopular,
+      tags,
+      config,
     } = body;
 
     if (!categoryId || !name || price === undefined) {
@@ -72,6 +94,8 @@ export async function POST(request: Request) {
 
     // Normalize variants: array of { label: string, price: number } or null
     const normalizedVariants = Array.isArray(variants) && variants.length > 0 ? variants : Prisma.JsonNull;
+    const normalizedConfig = configFromBody({ tags, config });
+    const popular = popularFromBody({ tags, config, isPopular }, false) ?? false;
 
     const item = await prisma.menuItem.create({
       data: {
@@ -80,12 +104,13 @@ export async function POST(request: Request) {
         description,
         price: Number(price),
         variants: normalizedVariants,
+        config: normalizedConfig === undefined ? Prisma.DbNull : normalizedConfig,
         image,
         isAvailable: isAvailable !== undefined ? Boolean(isAvailable) : true,
         isVeg: isVeg !== undefined ? Boolean(isVeg) : true,
         isNonVeg: isNonVeg !== undefined ? Boolean(isNonVeg) : false,
         isVegan: isVegan !== undefined ? Boolean(isVegan) : false,
-        isPopular: isPopular !== undefined ? Boolean(isPopular) : false,
+        isPopular: popular,
         order: nextOrder,
       },
     });
@@ -141,6 +166,8 @@ export async function PUT(request: Request) {
       isNonVeg, 
       isVegan, 
       isPopular,
+      tags,
+      config,
       order
     } = body;
 
@@ -148,8 +175,11 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Item ID is required' }, { status: 400 });
     }
 
-    const hasAccess = await checkItemOwnership(Number(id), userId);
-    if (!hasAccess) {
+    const existing = await prisma.menuItem.findFirst({
+      where: { id: Number(id), category: { restaurant: { userId } } },
+      select: { id: true, config: true },
+    });
+    if (!existing) {
       return NextResponse.json({ error: 'Item not found or access denied' }, { status: 403 });
     }
 
@@ -165,6 +195,8 @@ export async function PUT(request: Request) {
     if (variants !== undefined) {
       normalizedVariants = Array.isArray(variants) && variants.length > 0 ? variants : Prisma.JsonNull;
     }
+    const normalizedConfig = configFromBody({ tags, config }, existing.config);
+    const popular = popularFromBody({ tags, config, isPopular });
 
     const item = await prisma.menuItem.update({
       where: { id: Number(id) },
@@ -174,12 +206,13 @@ export async function PUT(request: Request) {
         description: description !== undefined ? description : undefined,
         price: price !== undefined ? Number(price) : undefined,
         variants: normalizedVariants,
+        config: normalizedConfig,
         image: image !== undefined ? image : undefined,
         isAvailable: isAvailable !== undefined ? Boolean(isAvailable) : undefined,
         isVeg: isVeg !== undefined ? Boolean(isVeg) : undefined,
         isNonVeg: isNonVeg !== undefined ? Boolean(isNonVeg) : undefined,
         isVegan: isVegan !== undefined ? Boolean(isVegan) : undefined,
-        isPopular: isPopular !== undefined ? Boolean(isPopular) : undefined,
+        isPopular: popular,
         order: order !== undefined ? Number(order) : undefined,
       },
     });

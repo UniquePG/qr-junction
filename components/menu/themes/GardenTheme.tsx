@@ -1,5 +1,6 @@
 import { Leaf } from "lucide-react";
 import { DietMark, VariantPills, formatMoney } from "../shared";
+import { ItemTags } from "../ItemTags";
 import type { ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
@@ -43,9 +44,12 @@ export default function GardenTheme({ categories, currencySymbol, onSelectItem }
                     symbol={currencySymbol}
                     className="mt-2 text-[10px] border border-[#2f5d3a]/30 px-2 py-0.5 rounded-full"
                   />
+                  <div className="mt-2 space-y-2">
+                    <ItemTags item={item} />
+                    <PlateSlot item={item} />
+                  </div>
                 </div>
-<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
-</div>
+              </div>
             ))}
           </div>
         </section>

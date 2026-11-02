@@ -72,6 +72,7 @@ export function PlateChrome({
   currencySymbol,
   tableNumber,
   customer,
+  note,
   hasSavedIdentity,
   editingIdentity,
   identityLocked,
@@ -85,6 +86,7 @@ export function PlateChrome({
   onCloseTracker,
   onQuantity,
   onCustomer,
+  onNote,
   onEditIdentity,
   onSaveIdentity,
   onCancelIdentity,
@@ -98,6 +100,7 @@ export function PlateChrome({
   currencySymbol: string;
   tableNumber: string | null;
   customer: { name: string; phone: string };
+  note: string;
   hasSavedIdentity: boolean;
   editingIdentity: boolean;
   identityLocked: boolean;
@@ -111,6 +114,7 @@ export function PlateChrome({
   onCloseTracker: () => void;
   onQuantity: (line: PlateLine, quantity: number) => void;
   onCustomer: (next: { name: string; phone: string }) => void;
+  onNote: (next: string) => void;
   onEditIdentity: () => void;
   onSaveIdentity: () => void;
   onCancelIdentity: () => void;
@@ -282,6 +286,21 @@ export function PlateChrome({
                 )}
               </div>
             )}
+          </div>
+
+          <div className="mt-4 rounded-2xl bg-white p-4">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-[#6B5A50]">
+              Note for the kitchen
+              <textarea
+                value={note}
+                onChange={(event) => onNote(event.target.value.slice(0, 160))}
+                rows={3}
+                maxLength={160}
+                placeholder="Less spice, no onion, pack separately…"
+                className="mt-2 w-full resize-none rounded-xl border border-[#E7DDD2] bg-[#F6F1EA] px-3 py-2 text-sm font-normal normal-case tracking-normal text-[#1C1410] outline-none placeholder:text-[#6B5A50]/70"
+              />
+            </label>
+            <p className="mt-1 text-right text-[11px] text-[#6B5A50]">{note.trim().length}/160</p>
           </div>
 
         </Drawer>

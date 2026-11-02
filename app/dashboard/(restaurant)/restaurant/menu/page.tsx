@@ -29,6 +29,16 @@ import CustomizableQRCode from '@/components/CustomizableQRCode';
 import QRDesignModal from '@/components/QRDesignModal';
 import MenuLayoutPicker from '@/components/menu/MenuLayoutPicker';
 import { getMenuTheme } from '@/components/menu/themeCatalog';
+import { ItemTags } from '@/components/menu/ItemTags';
+import {
+  MENU_TAG_PRESETS,
+  MAX_ITEM_TAGS,
+  MAX_TAG_LENGTH,
+  isPopularFromTags,
+  normalizeTag,
+  tagsForItem,
+  withTags,
+} from '@/lib/menu/item-config';
 
 function VegMark() {
   return (
@@ -53,6 +63,8 @@ interface MenuItem {
   description: string | null;
   price: number;
   variants?: { label: string; price: number }[] | null;
+  config?: { tags?: string[] } | null;
+  tags?: string[];
   image: string | null;
   isAvailable: boolean;
   isVeg: boolean;
@@ -125,6 +137,7 @@ export default function MenuManagementPage() {
   const [togglingItemId, setTogglingItemId] = useState<number | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [copiedMenuId, setCopiedMenuId] = useState(false);
+  const [customTagDraft, setCustomTagDraft] = useState('');
 
   const handleCopyMenuUrl = (shortCode: string) => {
     const fullUrl = getQrUrl(shortCode);
@@ -481,11 +494,22 @@ export default function MenuManagementPage() {
     setSavingItem(true);
     try {
       const method = editingItem.id ? 'PUT' : 'POST';
-      const res = await restaurantService.saveItem(method, editingItem);
+      const tags = tagsForItem({
+        isPopular: editingItem.isPopular,
+        config: withTags(editingItem.config, editingItem.tags || tagsForItem(editingItem)),
+      });
+      const payload = {
+        ...editingItem,
+        tags,
+        config: withTags(editingItem.config, tags),
+        isPopular: isPopularFromTags(tags),
+      };
+      const res = await restaurantService.saveItem(method, payload);
       if (res.ok) {
         toast.success(`Item ${editingItem.id ? 'updated' : 'added'}!`);
         setShowItemModal(false);
         setEditingItem(null);
+        setCustomTagDraft('');
         await fetchMenuHierarchy();
       } else {
         throw new Error();
@@ -495,6 +519,44 @@ export default function MenuManagementPage() {
     } finally {
       setSavingItem(false);
     }
+  };
+
+  const editingTags = editingItem ? (editingItem.tags || tagsForItem(editingItem)) : [];
+
+  const setEditingTags = (tags: string[]) => {
+    setEditingItem((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tags,
+        config: withTags(prev.config, tags),
+        isPopular: isPopularFromTags(tags),
+      };
+    });
+  };
+
+  const toggleEditingTag = (tag: string) => {
+    const next = editingTags.includes(tag)
+      ? editingTags.filter((entry) => entry !== tag)
+      : editingTags.length >= MAX_ITEM_TAGS
+        ? editingTags
+        : [...editingTags, tag];
+    setEditingTags(next);
+  };
+
+  const addCustomEditingTag = () => {
+    const tag = normalizeTag(customTagDraft);
+    if (!tag) return;
+    if (editingTags.some((entry) => entry.toLowerCase() === tag.toLowerCase())) {
+      setCustomTagDraft('');
+      return;
+    }
+    if (editingTags.length >= MAX_ITEM_TAGS) {
+      toast.error(`You can add up to ${MAX_ITEM_TAGS} tags.`);
+      return;
+    }
+    setEditingTags([...editingTags, tag]);
+    setCustomTagDraft('');
   };
 
   const handleDeleteItem = async (id: number) => {
@@ -884,6 +946,8 @@ export default function MenuManagementPage() {
                         description: '',
                         price: 0,
                         variants: null,
+                        config: null,
+                        tags: [],
                         image: '',
                         isAvailable: true,
                         isVeg: true,
@@ -891,6 +955,7 @@ export default function MenuManagementPage() {
                         isVegan: false,
                         isPopular: false
                       });
+                      setCustomTagDraft('');
                       setShowItemModal(true);
                     }}
                     className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 whitespace-nowrap px-3.5 py-2.5 bg-primary/10 hover:bg-primary/15 text-primary font-bold rounded-xl text-sm transition-colors cursor-pointer border-none"
@@ -942,11 +1007,7 @@ export default function MenuManagementPage() {
                               {item.isVegan && (
                                 <span className="px-1.5 py-0.5 rounded bg-green-50 text-green-700 text-[10px] font-semibold border border-green-100">Vegan</span>
                               )}
-                              {item.isPopular && (
-                                <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-[10px] font-semibold border border-amber-100 inline-flex items-center gap-0.5">
-                                  <Sparkles className="w-2.5 h-2.5" /> Popular
-                                </span>
-                              )}
+                              <ItemTags item={item} />
                               {!item.isAvailable && (
                                 <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-semibold border border-slate-200">Not available</span>
                               )}
@@ -1006,7 +1067,8 @@ export default function MenuManagementPage() {
                               type="button"
                               aria-label="Edit item"
                               onClick={() => {
-                                setEditingItem({ ...item });
+                                setEditingItem({ ...item, tags: tagsForItem(item) });
+                                setCustomTagDraft('');
                                 setShowItemModal(true);
                               }}
                               className="flex h-8 w-8 items-center justify-center text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer bg-transparent border-none"
@@ -1347,29 +1409,80 @@ export default function MenuManagementPage() {
                       Non-veg
                     </button>
                   </div>
-                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3">
-                      <input
-                        type="checkbox"
-                        checked={editingItem.isVegan || false}
-                        onChange={(e) => setEditingItem(prev => ({ ...prev, isVegan: e.target.checked }))}
-                        className="h-4 w-4 rounded border-slate-300 text-primary"
-                      />
-                      <span className="text-sm font-semibold text-slate-700">Vegan</span>
-                    </label>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3">
-                      <input
-                        type="checkbox"
-                        checked={editingItem.isPopular || false}
-                        onChange={(e) => setEditingItem(prev => ({ ...prev, isPopular: e.target.checked }))}
-                        className="h-4 w-4 rounded border-slate-300 text-primary"
-                      />
-                      <span className="inline-flex items-center gap-1 text-sm font-semibold text-slate-700">
-                        <Sparkles className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
-                        Popular
-                      </span>
-                    </label>
+                  <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3">
+                    <input
+                      type="checkbox"
+                      checked={editingItem.isVegan || false}
+                      onChange={(e) => setEditingItem(prev => ({ ...prev, isVegan: e.target.checked }))}
+                      className="h-4 w-4 rounded border-slate-300 text-primary"
+                    />
+                    <span className="text-sm font-semibold text-slate-700">Vegan</span>
+                  </label>
+                </div>
+
+                <div>
+                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-600">Tags</p>
+                  <p className="mb-3 text-xs leading-5 text-slate-400">
+                    Pick ready tags guests will notice, or add your own. Popular also feeds the Bestsellers filter.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {MENU_TAG_PRESETS.map((preset) => {
+                      const selected = editingTags.includes(preset.id);
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => toggleEditingTag(preset.id)}
+                          className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+                            selected
+                              ? 'border-[#001B50] bg-[#001B50]/5 text-[#001B50]'
+                              : 'border-slate-200 bg-white text-slate-500'
+                          }`}
+                        >
+                          {preset.id === 'popular' ? <Sparkles className="h-3.5 w-3.5 fill-amber-500 text-amber-500" /> : null}
+                          {preset.label}
+                        </button>
+                      );
+                    })}
                   </div>
+                  {editingTags.filter((tag) => !MENU_TAG_PRESETS.some((preset) => preset.id === tag)).length ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {editingTags
+                        .filter((tag) => !MENU_TAG_PRESETS.some((preset) => preset.id === tag))
+                        .map((tag) => (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => toggleEditingTag(tag)}
+                            className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600"
+                          >
+                            {tag} ×
+                          </button>
+                        ))}
+                    </div>
+                  ) : null}
+                  <div className="mt-3 flex gap-2">
+                    <input
+                      value={customTagDraft}
+                      onChange={(event) => setCustomTagDraft(event.target.value.slice(0, MAX_TAG_LENGTH))}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          addCustomEditingTag();
+                        }
+                      }}
+                      placeholder="Add a custom tag"
+                      className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={addCustomEditingTag}
+                      className="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-[#001B50]"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <p className="mt-2 text-[11px] text-slate-400">{editingTags.length}/{MAX_ITEM_TAGS} tags</p>
                 </div>
 
                 <div>

@@ -1,4 +1,5 @@
 import { DietMark, VariantPills, formatMoney } from "../shared";
+import { ItemTags } from "../ItemTags";
 import type { ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
@@ -83,9 +84,10 @@ export default function ThaliTheme({ categories, currencySymbol, onSelectItem }:
                       {item.isPopular && (
                         <p className="text-[9px] uppercase tracking-widest text-[#8b3d12]">House favourite</p>
                       )}
+                      <ItemTags item={item} hidePopular className="justify-center" />
+                      <PlateSlot item={item} className="mt-2" align="center" />
                     </div>
-<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
-</div>
+                  </div>
                 ))}
               </div>
             </div>

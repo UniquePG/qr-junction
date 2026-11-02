@@ -1,4 +1,5 @@
 import { DietMark, VariantPills, formatMoney } from "../shared";
+import { ItemTags } from "../ItemTags";
 import type { ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
@@ -42,9 +43,12 @@ export default function StampTheme({ categories, currencySymbol, onSelectItem }:
                     symbol={currencySymbol}
                     className="mt-1 text-[9px] border border-[#1d3557] px-1.5 py-0.5"
                   />
+                  <div className="mt-1 space-y-2">
+                    <ItemTags item={item} />
+                    <PlateSlot item={item} />
+                  </div>
                 </div>
-<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
-</div>
+              </div>
             ))}
           </div>
         </section>

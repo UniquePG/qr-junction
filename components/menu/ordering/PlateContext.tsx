@@ -25,6 +25,7 @@ export type LiveOrder = {
   total: number;
   currency: string;
   taxName: string;
+  customerNote?: string | null;
   rejectReason: string | null;
   expectedReadyAt: string | null;
   paidAt?: string | null;
@@ -119,6 +120,7 @@ export function PlateProvider({
   const [customer, setCustomer] = useState({ name: "", phone: "" });
   const [savedCustomer, setSavedCustomer] = useState({ name: "", phone: "" });
   const [editingIdentity, setEditingIdentity] = useState(false);
+  const [note, setNote] = useState("");
   const [quote, setQuote] = useState<Quote | null>(null);
   const [quoteError, setQuoteError] = useState("");
   const [sending, setSending] = useState(false);
@@ -264,6 +266,7 @@ export function PlateProvider({
           tableNumber,
           customerName: customer.name,
           customerPhone: customer.phone,
+          note,
           idempotencyKey: sendKey,
           items: lines.map((line) => ({
             menuItemId: line.item.id,
@@ -279,13 +282,14 @@ export function PlateProvider({
         return;
       }
       setLines([]);
+      setNote("");
       setCartOpen(false);
       setTrackerOpen(true);
       remember(data.order);
     } finally {
       setSending(false);
     }
-  }, [customer, lines, menuId, refreshQuote, remember, restaurantId, sendKey, tableNumber]);
+  }, [customer, lines, menuId, note, refreshQuote, remember, restaurantId, sendKey, tableNumber]);
 
   const watchKey = liveOrders
     .filter((order) => order.status !== "REJECTED" && !(order.status === "SERVED" && order.paidAt))
@@ -340,6 +344,7 @@ export function PlateProvider({
           currencySymbol={currencySymbol}
           tableNumber={tableNumber}
           customer={customer}
+          note={note}
           hasSavedIdentity={identityComplete(savedCustomer)}
           editingIdentity={editingIdentity && identityComplete(savedCustomer)}
           identityLocked={identityLocked}
@@ -363,6 +368,7 @@ export function PlateProvider({
           onCloseTracker={() => setTrackerOpen(false)}
           onQuantity={(line, next) => setQuantity(line.item, line.variantLabel, next)}
           onCustomer={setCustomer}
+          onNote={setNote}
           onEditIdentity={() => {
             if (identityLocked) return;
             setEditingIdentity(true);

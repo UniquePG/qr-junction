@@ -52,6 +52,11 @@ export function normalizeName(raw: string) {
   return String(raw || "").replace(/\s+/g, " ").trim().slice(0, 60);
 }
 
+export function normalizeCustomerNote(raw: unknown) {
+  const note = String(raw || "").replace(/\s+/g, " ").trim().slice(0, 160);
+  return note || null;
+}
+
 export function toOrderDto(order: OrderRow, extras?: { publicToken?: boolean; history?: unknown[] }) {
   return {
     publicId: order.publicId,
@@ -67,6 +72,7 @@ export function toOrderDto(order: OrderRow, extras?: { publicToken?: boolean; hi
     total: money(order.total),
     currency: order.currency,
     taxName: order.restaurant.taxName,
+    customerNote: order.customerNote,
     rejectReason: order.rejectReason,
     expectedReadyAt: order.expectedReadyAt ? order.expectedReadyAt.toISOString() : null,
     stageDueAt: order.stageDueAt ? order.stageDueAt.toISOString() : null,
@@ -195,11 +201,13 @@ export async function createOrder(input: {
   tableNumber?: string | null;
   customerName: string;
   customerPhone: string;
+  note?: string | null;
   idempotencyKey: string;
   lines: OrderLineInput[];
 }) {
   const name = normalizeName(input.customerName);
   const phone = normalizePhone(input.customerPhone);
+  const customerNote = normalizeCustomerNote(input.note);
   if (name.length < 1) throw new OrderError(400, "NAME", "Add the name for the kitchen.");
   if (phone.length < 10 || phone.length > 15) throw new OrderError(400, "PHONE", "Add a mobile number with at least 10 digits.");
   const idempotencyKey = String(input.idempotencyKey || "").trim().slice(0, 80);
@@ -256,6 +264,7 @@ export async function createOrder(input: {
         tax: new Prisma.Decimal(priced.quote.tax),
         total: new Prisma.Decimal(priced.quote.total),
         currency: priced.quote.currency,
+        customerNote,
         items: {
           create: priced.quote.lines.map((line) => ({
             menuItemId: line.menuItemId,

@@ -1,4 +1,5 @@
 import { DietMark, VariantPills, formatMoney } from "../shared";
+import { ItemTags } from "../ItemTags";
 import type { ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
@@ -28,8 +29,10 @@ export default function EditorialTheme({ categories, currencySymbol, onSelectIte
               <p className="mt-2 text-sm font-semibold">{formatMoney(currencySymbol, hero.variants?.[0]?.price ?? hero.price)}</p>
             </div>
           </div>
-<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={hero} /></div>
-</div>
+          <div className="flex justify-end px-4 py-3">
+            <PlateSlot item={hero} inline />
+          </div>
+        </div>
       )}
 
       {categories.map((cat) => (
@@ -65,9 +68,12 @@ export default function EditorialTheme({ categories, currencySymbol, onSelectIte
                     symbol={currencySymbol}
                     className="mt-2 text-[10px] border border-[#2b241c] px-2 py-0.5"
                   />
+                  <div className="mt-2 space-y-2">
+                    <ItemTags item={item} />
+                    <PlateSlot item={item} />
+                  </div>
                 </div>
-<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
-</div>
+              </div>
             ))}
           </div>
         </section>

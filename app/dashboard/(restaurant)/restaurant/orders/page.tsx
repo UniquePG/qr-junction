@@ -28,6 +28,7 @@ type Ticket = {
   taxName: string;
   total: number;
   currency: string;
+  customerNote?: string | null;
   rejectReason: string | null;
   stageDueAt: string | null;
   paidAt: string | null;
@@ -400,6 +401,12 @@ function TableDrawer({
                     </li>
                   ))}
                 </ul>
+                {order.customerNote ? (
+                  <div className="mt-3 rounded-xl border border-[#E8C4AE] bg-[#FFF8F3] px-3 py-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#C4622D]">Kitchen note</p>
+                    <p className="mt-1 text-sm text-[#2A211C]">{order.customerNote}</p>
+                  </div>
+                ) : null}
                 {stage ? (
                   <div className="mt-3">
                     <button type="button" disabled={working} onClick={() => void onMove(order.publicId, stage.next)} className="h-11 w-full cursor-pointer rounded-xl border-none bg-[#C4622D] text-sm font-semibold text-white disabled:opacity-50">
@@ -494,6 +501,11 @@ function EarlierDialog({ order, history, onClose }: { order: Ticket; history: Ti
                   </li>
                 ))}
               </ul>
+              {past.customerNote ? (
+                <p className="mt-3 rounded-xl bg-[#FFF8F3] px-3 py-2 text-sm text-[#2A211C]">
+                  <span className="font-semibold text-[#C4622D]">Note · </span>{past.customerNote}
+                </p>
+              ) : null}
             </article>
           ))}
         </div>
@@ -678,6 +690,11 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
                   </div>
                 </div>
                 <p className="mt-3 text-sm text-[#2A211C]">{order.items.map((item) => `${item.quantity} × ${item.name}${item.variantLabel ? ` (${item.variantLabel})` : ""}`).join(", ")}</p>
+                {order.customerNote ? (
+                  <p className="mt-2 rounded-xl border border-[#E8C4AE] bg-[#FFF8F3] px-3 py-2 text-sm text-[#2A211C]">
+                    <span className="font-semibold text-[#C4622D]">Kitchen note · </span>{order.customerNote}
+                  </p>
+                ) : null}
                 <OrderTimes order={order} servedAt={servedAt} />
                 {order.status === "SERVED" ? (
                   <button type="button" disabled={busy === order.publicId} onClick={() => void markPaid(order, !order.paidAt)} className={`mt-3 h-10 w-full cursor-pointer rounded-xl border-none text-sm font-semibold disabled:opacity-50 ${order.paidAt ? "bg-[#F6F1EA] text-[#1C1410]" : "bg-[#1C1410] text-white"}`}>
@@ -748,6 +765,12 @@ function PaymentDetail({ order, onClose }: { order: Ticket; onClose: () => void 
               </li>
             ))}
           </ul>
+          {order.customerNote ? (
+            <div className="mt-4 rounded-2xl border border-[#E8C4AE] bg-[#FFF8F3] px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#C4622D]">Kitchen note</p>
+              <p className="mt-1 text-sm text-[#2A211C]">{order.customerNote}</p>
+            </div>
+          ) : null}
           <div className="ml-auto mt-3 w-full max-w-[16rem] space-y-1.5 text-sm text-[#6B5A50]">
             <div className="flex justify-between gap-4"><span>Subtotal</span><span>{money(order.currency, order.subtotal)}</span></div>
             <div className="flex justify-between gap-4"><span>{order.taxName || "Tax"}</span><span>{money(order.currency, order.tax)}</span></div>

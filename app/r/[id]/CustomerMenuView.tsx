@@ -27,6 +27,7 @@ import PlaybillTheme from '@/components/menu/themes/PlaybillTheme';
 import { PlateProvider } from '@/components/menu/ordering/PlateContext';
 import { DishOrderActions, PlateSlot } from '@/components/menu/ordering/PlateControl';
 import { MenuPlaceDetails } from '@/components/menu/PlaceDetails';
+import { ItemTags } from '@/components/menu/ItemTags';
 
 interface MenuItem {
   id: number;
@@ -34,6 +35,7 @@ interface MenuItem {
   description: string | null;
   price: any; // Decimal type from Prisma
   variants?: { label: string; price: number }[] | null;
+  config?: { tags?: string[] } | null;
   image: string | null;
   isAvailable: boolean;
   isVeg: boolean;
@@ -161,19 +163,19 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
             {cat.items.map((item) => (
               <div 
                 key={item.id} 
-                className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex min-h-32 sm:h-36 cursor-pointer group"
+                className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex min-h-32 cursor-pointer group"
                 onClick={() => setSelectedItem(item)}
               >
-                <div className="flex-1 p-3.5 sm:p-5 flex flex-col justify-between min-w-0">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 min-w-0">
+                <div className="flex min-w-0 flex-1 flex-col gap-2 p-3.5 sm:p-5">
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-start gap-2 min-w-0">
                       {item.isVeg && (
-                        <span className="w-4 h-4 rounded border border-emerald-500 flex items-center justify-center shrink-0">
+                        <span className="mt-0.5 w-4 h-4 rounded border border-emerald-500 flex items-center justify-center shrink-0">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                         </span>
                       )}
                       {item.isNonVeg && (
-                        <span className="w-4 h-4 rounded border border-red-500 flex items-center justify-center shrink-0">
+                        <span className="mt-0.5 w-4 h-4 rounded border border-red-500 flex items-center justify-center shrink-0">
                           <span className="w-1.5 h-1.5 bg-red-500 rotate-45 transform" />
                         </span>
                       )}
@@ -182,8 +184,8 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                     {item.description && <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed font-sans">{item.description}</p>}
                   </div>
 
-                  <div className="flex items-center justify-between mt-2">
-                    <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
                       {item.variants && item.variants.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {item.variants.slice(0, 2).map((v: any, vi: number) => (
@@ -207,15 +209,18 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                       </span>
                     )}
                   </div>
-                  <div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
+                  <div className={`space-y-2 ${item.image ? "mt-auto" : "mt-1"}`}>
+                    <ItemTags item={item} hidePopular />
+                    <PlateSlot item={item} />
+                  </div>
                 </div>
 
                 {item.image && (
-                  <div className="w-32 sm:w-36 h-full shrink-0 overflow-hidden relative bg-slate-50">
+                  <div className="w-28 self-stretch shrink-0 overflow-hidden relative bg-slate-50 sm:w-36">
                     <img 
                       src={item.image} 
                       alt={item.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" 
+                      className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" 
                     />
                   </div>
                 )}
@@ -288,7 +293,10 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                     ★ chef's recommendation
                   </div>
                 )}
-                <div onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
+                <div className="mt-2 space-y-2">
+                  <ItemTags item={item} hidePopular />
+                  <PlateSlot item={item} />
+                </div>
               </div>
             ))}
           </div>
@@ -323,8 +331,8 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                     <img src={item.image} alt={item.name} className="w-full h-full object-cover rounded-xl" />
                   </div>
                 )}
-                <div className="flex-1 flex flex-col justify-between min-w-0">
-                  <div>
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <div className="min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <h4 className="font-serif font-black text-amber-950 text-base wrap-anywhere flex items-center gap-2 min-w-0">
                         {item.isVeg && (
@@ -347,9 +355,9 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                     </div>
                     {item.description && <p className="text-slate-600 text-xs line-clamp-2 mt-1 leading-relaxed font-sans">{item.description}</p>}
                   </div>
-                  
+
                   {item.variants && item.variants.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {item.variants.map((v: any, vi: number) => (
                         <span key={vi} className="text-[10px] font-bold text-amber-900 bg-amber-50 border border-amber-200/50 px-2 py-0.5 rounded-lg whitespace-nowrap">
                           {v.label} {currencySymbol}{Number(v.price).toFixed(0)}
@@ -358,14 +366,15 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-amber-100/40 text-[10px]">
+                  <div className={`space-y-2 border-t border-amber-100/40 pt-2 ${item.image ? "mt-auto" : ""}`}>
                     {item.isPopular && (
-                      <span className="text-amber-700 font-extrabold flex items-center gap-0.5">
+                      <span className="text-amber-700 font-extrabold flex items-center gap-0.5 text-[10px]">
                         <Award className="w-3.5 h-3.5 fill-amber-500 text-amber-600" /> Chef's Choice
                       </span>
                     )}
+                    <ItemTags item={item} hidePopular />
+                    <PlateSlot item={item} />
                   </div>
-                  <div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
                 </div>
               </div>
             ))}
@@ -386,11 +395,11 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
             {cat.items.map((item) => (
               <div 
                 key={item.id} 
-                className="bg-white border-2 border-slate-900 p-4 sm:p-5 rounded-3xl shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all cursor-pointer flex flex-col justify-between gap-4 min-w-0"
+                className="bg-white border-2 border-slate-900 p-4 sm:p-5 rounded-3xl shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all cursor-pointer flex flex-col gap-3 min-w-0"
                 onClick={() => setSelectedItem(item)}
               >
                 {item.image && (
-                  <div className="h-36 w-full rounded-2xl overflow-hidden border-2 border-slate-900 bg-slate-100">
+                  <div className="h-36 w-full rounded-2xl overflow-hidden border-2 border-slate-900 bg-slate-100 shrink-0">
                     <img src={item.image} alt="" className="w-full h-full object-cover" />
                   </div>
                 )}
@@ -428,14 +437,17 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                   </div>
                 )}
 
-                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-dashed border-slate-200">
-                  {item.isPopular ? (
-                    <span className="text-amber-600 flex items-center gap-0.5 font-black uppercase tracking-wider text-[9px]"><Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> Popular</span>
-                  ) : (
-                    <span className="text-slate-400">Available</span>
-                  )}
+                <div className="space-y-2 border-t border-dashed border-slate-200 pt-2">
+                  <ItemTags item={item} hidePopular />
+                  <div className="flex items-center justify-between gap-2">
+                    {item.isPopular ? (
+                      <span className="text-amber-600 flex items-center gap-0.5 text-[9px] font-black uppercase tracking-wider"><Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" /> Popular</span>
+                    ) : (
+                      <span className="text-xs font-bold text-slate-400">Available</span>
+                    )}
+                    <PlateSlot item={item} inline />
+                  </div>
                 </div>
-                <div onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
               </div>
             ))}
           </div>
@@ -470,8 +482,8 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                     <img src={item.image} alt={item.name} className="w-full h-full object-cover filter brightness-95" />
                   </div>
                 )}
-                <div className="flex-1 flex flex-col justify-between min-w-0">
-                  <div>
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <div className="min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <h4 className="font-serif font-black text-amber-100 text-base wrap-anywhere flex items-center gap-2 min-w-0">
                         {item.isVeg && (
@@ -496,7 +508,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                   </div>
 
                   {item.variants && item.variants.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {item.variants.map((v: any, vi: number) => (
                         <span key={vi} className="text-[10px] font-bold text-amber-500 bg-amber-500/5 border border-amber-500/20 px-2 py-0.5 rounded-lg whitespace-nowrap">
                           {v.label} {currencySymbol}{Number(v.price).toFixed(0)}
@@ -505,16 +517,15 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-800 text-[10px]">
+                  <div className={`space-y-2 border-t border-slate-800 pt-2 ${item.image ? "mt-auto" : ""}`}>
                     {item.isPopular ? (
                       <span className="text-amber-500 font-extrabold flex items-center gap-0.5 text-[9px] uppercase tracking-wider">
                         ★ Chef Recommend
                       </span>
-                    ) : (
-                      <span className="text-slate-500">Available</span>
-                    )}
+                    ) : null}
+                    <ItemTags item={item} hidePopular />
+                    <PlateSlot item={item} />
                   </div>
-                  <div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
                 </div>
               </div>
             ))}
@@ -541,7 +552,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
             {cat.items.map((item) => (
               <div 
                 key={item.id} 
-                className="bg-white rounded-3xl border border-orange-100/50 p-4 shadow-sm hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between gap-4 relative overflow-hidden group"
+                className="bg-white rounded-3xl border border-orange-100/50 p-4 shadow-sm hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col gap-3 relative overflow-hidden group"
                 onClick={() => setSelectedItem(item)}
               >
                 {/* Image Banner */}
@@ -559,12 +570,12 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                     )}
                   </div>
                 ) : (
-                  <div className="h-36 sm:h-44 w-full rounded-2xl bg-gradient-to-br from-orange-400/10 to-red-500/10 flex items-center justify-center shrink-0 mb-1">
+                  <div className="h-36 sm:h-44 w-full rounded-2xl bg-gradient-to-br from-orange-400/10 to-red-500/10 flex items-center justify-center shrink-0">
                     <Utensils className="w-8 h-8 text-orange-400" />
                   </div>
                 )}
 
-                <div className="flex-1 flex flex-col justify-between space-y-2">
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
                   <div className="space-y-1">
                     <div className="flex items-center justify-between gap-2">
                       <h4 className="font-black text-slate-900 text-base wrap-anywhere flex items-center gap-2 min-w-0">
@@ -590,7 +601,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                   </div>
 
                   {item.variants && item.variants.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pt-1">
+                    <div className="flex flex-wrap gap-1.5">
                       {item.variants.map((v: any, vi: number) => (
                         <span key={vi} className="text-[10px] font-black text-white bg-gradient-to-r from-orange-500 to-red-500 px-2.5 py-0.5 rounded-lg whitespace-nowrap shadow-sm">
                           {v.label} {currencySymbol}{Number(v.price).toFixed(0)}
@@ -599,14 +610,13 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between pt-2 border-t border-orange-50 text-[10px] font-bold">
+                  <div className="mt-auto space-y-2 border-t border-orange-50 pt-2">
                     {item.isVegan ? (
-                      <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">🌿 Vegan</span>
-                    ) : (
-                      <span className="text-slate-400">Available</span>
-                    )}
+                      <span className="inline-flex text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">Vegan</span>
+                    ) : null}
+                    <ItemTags item={item} hidePopular />
+                    <PlateSlot item={item} />
                   </div>
-                  <div onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
                 </div>
               </div>
             ))}
@@ -863,11 +873,11 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
 
             {/* Dish Image */}
             {selectedItem.image ? (
-              <div className="h-64 w-full bg-slate-100 overflow-hidden relative shrink-0">
-                <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-full object-cover" />
+              <div className="relative h-44 w-full shrink-0 overflow-hidden bg-slate-100 sm:h-64">
+                <img src={selectedItem.image} alt={selectedItem.name} className="h-full w-full object-cover" />
               </div>
             ) : (
-              <div className={`h-28 w-full flex items-center justify-center shrink-0 border-b ${chrome.empty}`}>
+              <div className={`h-20 w-full flex items-center justify-center shrink-0 border-b sm:h-28 ${chrome.empty}`}>
                 <Utensils className="w-10 h-10" />
               </div>
             )}
@@ -889,16 +899,23 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                   <h3 className={`text-xl font-bold tracking-tight wrap-anywhere ${chrome.title}`}>{selectedItem.name}</h3>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {selectedItem.variants && selectedItem.variants.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {selectedItem.variants.map((v: any, vi: number) => (
-                        <div key={vi} className={`flex flex-col items-center border rounded-xl px-3 py-2 min-w-[75px] ${chrome.empty}`}>
-                          <span className={`text-[9px] font-semibold uppercase tracking-wider ${chrome.modalMuted}`}>{v.label}</span>
-                          <span className="text-base font-black">{currencySymbol}{Number(v.price).toFixed(0)}</span>
-                        </div>
-                      ))}
-                    </div>
+                    orderingEnabled ? (
+                      <span className={`text-sm font-semibold ${chrome.modalMuted}`}>
+                        From {currencySymbol}
+                        {Math.min(...selectedItem.variants.map((v: any) => Number(v.price))).toFixed(0)}
+                      </span>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {selectedItem.variants.map((v: any, vi: number) => (
+                          <div key={vi} className={`flex flex-col items-center border rounded-xl px-3 py-2 min-w-[75px] ${chrome.empty}`}>
+                            <span className={`text-[9px] font-semibold uppercase tracking-wider ${chrome.modalMuted}`}>{v.label}</span>
+                            <span className="text-base font-black">{currencySymbol}{Number(v.price).toFixed(0)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )
                   ) : (
                     <span className="text-lg font-black">
                       {currencySymbol}{parseFloat(selectedItem.price.toString()).toFixed(2)}
@@ -910,6 +927,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                     </span>
                   )}
                 </div>
+                <ItemTags item={selectedItem} hidePopular size="md" className="mt-2" />
               </div>
 
               {selectedItem.description && (

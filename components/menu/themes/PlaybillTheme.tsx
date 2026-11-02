@@ -1,4 +1,5 @@
 import { DietMark, formatMoney } from "../shared";
+import { ItemTags } from "../ItemTags";
 import type { ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
@@ -34,8 +35,9 @@ export default function PlaybillTheme({ categories, currencySymbol, onSelectItem
                 {item.isPopular && (
                   <p className="mt-1 text-[9px] uppercase tracking-[0.28em] text-[#e8c39e]">Encore</p>
                 )}
-<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
-</div>
+                <ItemTags item={item} hidePopular className="mt-1 justify-center" />
+                <PlateSlot item={item} className="mt-2" align="center" />
+              </div>
             ))}
           </div>
         </section>

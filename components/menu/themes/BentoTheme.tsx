@@ -1,4 +1,5 @@
 import { DietMark, VariantPills, formatMoney } from "../shared";
+import { ItemTags } from "../ItemTags";
 import type { MenuItem, ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
 
@@ -45,9 +46,12 @@ function Cell({
           className="text-[9px] bg-[#2b2118] text-[#fffaf1] px-1.5 py-0.5"
         />
         {item.isPopular && <p className="text-[9px] uppercase tracking-widest text-[#b42318]">Chef pick</p>}
+        <div className="space-y-2">
+          <ItemTags item={item} hidePopular />
+          <PlateSlot item={item} />
+        </div>
       </div>
-<div className="mt-2" onClick={(event) => event.stopPropagation()}><PlateSlot item={item} /></div>
-</div>
+    </div>
   );
 }
 

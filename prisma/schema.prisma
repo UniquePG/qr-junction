@@ -456,6 +456,7 @@ model MenuItem {
   description  String?      @db.Text
   price        Decimal      @db.Decimal(10, 2)
   variants     Json?        // [{ "label": "Half", "price": 120 }, { "label": "Full", "price": 200 }]
+  config       Json?        // { "tags": ["spicy", "signature"], ...future knobs }
   image        String?
   isAvailable  Boolean      @default(true) @map("is_available")
   isVeg        Boolean      @default(true) @map("is_veg")
@@ -545,6 +546,7 @@ model MenuOrder {
   tax            Decimal         @db.Decimal(10, 2)
   total          Decimal         @db.Decimal(10, 2)
   currency       String          @default("INR")
+  customerNote   String?         @map("customer_note") @db.Text
   rejectReason   String?         @map("reject_reason") @db.Text
   expectedReadyAt DateTime?      @map("expected_ready_at")
   stageDueAt     DateTime?       @map("stage_due_at")

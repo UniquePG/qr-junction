@@ -4,6 +4,7 @@ export type MenuItem = {
   description: string | null;
   price: any;
   variants?: { label: string; price: number }[] | null;
+  config?: { tags?: string[] } | null;
   image: string | null;
   isAvailable: boolean;
   isVeg: boolean;
