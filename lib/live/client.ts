@@ -33,8 +33,9 @@ export function openLiveSocket(auth: KitchenAuth | GuestAuth, onEvent: (event: L
     if (!socket || socket.readyState !== WebSocket.OPEN) return;
     if (auth.role === "kitchen") {
       void auth.token().then((token) => {
-        if (!token || !socket || socket.readyState !== WebSocket.OPEN) return;
-        socket.send(JSON.stringify({ type: "auth", token }));
+        if (!socket || socket.readyState !== WebSocket.OPEN) return;
+        // Token optional: HttpOnly qrj_session on the upgrade request is enough.
+        socket.send(JSON.stringify({ type: "auth", token: token || null }));
       });
       return;
     }

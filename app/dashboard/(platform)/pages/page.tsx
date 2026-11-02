@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { landingPageService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import Link from 'next/link';
 import { 
@@ -53,8 +52,7 @@ export default function LandingPagesDirectory() {
 
   const fetchPages = async () => {
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await landingPageService.list();
 
@@ -96,8 +94,7 @@ export default function LandingPagesDirectory() {
 
     setDeleting(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await landingPageService.remove(deletingPageId);
 

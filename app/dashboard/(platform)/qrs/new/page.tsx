@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { campaignService, qrService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/components/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
   ArrowLeft, 
@@ -19,6 +19,7 @@ import { TabFormRenderer } from '@/components/qr/TabsForms';
 
 export default function CreateQrPage() {
   const router = useRouter();
+  const { user } = useAuth();
   
   // Form State
   const [name, setName] = useState('');
@@ -41,8 +42,7 @@ export default function CreateQrPage() {
   React.useEffect(() => {
     const fetchCampaigns = async () => {
       try {
-        const currentUser = auth.currentUser;
-        if (!currentUser) return;
+        if (!user) return;
         
         const res = await campaignService.list();
         if (res.ok) {
@@ -54,7 +54,7 @@ export default function CreateQrPage() {
       }
     };
     fetchCampaigns();
-  }, []);
+  }, [user]);
 
   // Form data updater
   const updateFormData = (field: string, value: string | boolean) => {
@@ -101,8 +101,7 @@ export default function CreateQrPage() {
 
     setLoading(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) throw new Error('Unauthenticated user.');
+      if (!user) throw new Error('Unauthenticated user.');
 
       const res = await qrService.create({
         name,

@@ -3,20 +3,25 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { qrService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/components/AuthContext';
 import { Loader2, Star, MessageSquareWarning, BarChart, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 export default function ReviewAnalyticsPage() {
   const { id } = useParams() as { id: string };
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
+    if (authLoading) return;
+
     const fetchData = async () => {
       try {
-        const currentUser = auth.currentUser;
-        if (!currentUser) return;
+        if (!user) {
+          setLoading(false);
+          return;
+        }
 
         const res = await qrService.reviews(id);
         
@@ -30,16 +35,11 @@ export default function ReviewAnalyticsPage() {
         setLoading(false);
       }
     };
-    
-    // Wait for auth to be ready
-    const unsub = auth.onAuthStateChanged(user => {
-      if (user) fetchData();
-      else setLoading(false);
-    });
-    return () => unsub();
-  }, [id]);
 
-  if (loading) {
+    fetchData();
+  }, [id, user, authLoading]);
+
+  if (loading || authLoading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />

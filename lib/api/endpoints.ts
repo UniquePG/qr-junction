@@ -1,6 +1,12 @@
 export const endpoints = {
   auth: {
     sync: "/api/auth/sync",
+    register: "/api/auth/register",
+    login: "/api/auth/login",
+    adminLogin: "/api/auth/admin/login",
+    logout: "/api/auth/logout",
+    me: "/api/auth/me",
+    google: "/api/auth/google",
     otpSend: "/api/auth/otp/send",
     otpVerify: "/api/auth/otp/verify",
     passwordForgot: "/api/auth/password/forgot",

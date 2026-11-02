@@ -14,12 +14,12 @@ export const reviewService = {
     });
   },
 
-  save(body: unknown, options?: { auth?: boolean }) {
+  save(body: unknown) {
     return apiRequest({
       method: "POST",
       url: endpoints.reviews.collection,
       data: body,
-      firebaseAuth: options?.auth ?? true,
+      requireAuth: false,
     });
   },
 
@@ -28,7 +28,7 @@ export const reviewService = {
       method: "POST",
       url: endpoints.reviews.generateSuggestions,
       data: body,
-      firebaseAuth: false,
+      requireAuth: false,
     });
   },
 };

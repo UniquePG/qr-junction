@@ -1,4 +1,4 @@
-import { adminAuth } from "@/lib/firebaseAdmin";
+import { getSessionUserId } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
 export type AdminUser = {
@@ -6,7 +6,7 @@ export type AdminUser = {
   email: string;
   name: string | null;
   role: string;
-  firebaseUid: string;
+  firebaseUid: string | null;
 };
 
 export function parseAdminEmails(): string[] {
@@ -22,24 +22,13 @@ export function isAdminRole(role?: string | null, email?: string | null): boolea
   return false;
 }
 
-async function getTokenFromRequest(request: Request): Promise<string | null> {
-  const authHeader = request.headers.get("Authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    return authHeader.slice("Bearer ".length);
-  }
-  return null;
-}
-
 export async function requireAdmin(request: Request): Promise<AdminUser | null> {
-  const token = await getTokenFromRequest(request);
-  if (!token) return null;
-
   try {
-    const decoded = await adminAuth.verifyIdToken(token);
-    if (!decoded?.uid) return null;
+    const userId = await getSessionUserId(request);
+    if (!userId) return null;
 
     const user = await prisma.user.findUnique({
-      where: { firebaseUid: decoded.uid },
+      where: { id: userId },
       select: {
         id: true,
         email: true,

@@ -3,7 +3,6 @@
 import { authService } from "@/lib/api";
 import { useAuth } from "@/components/AuthContext";
 import { needsEmailVerification, maskEmail } from "@/lib/emailVerification";
-import { auth } from "@/lib/firebase";
 import { ArrowRight, Loader2, Mail, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -26,19 +25,9 @@ export default function VerifyEmailPage() {
   const sentOnMount = useRef(false);
 
   const code = digits.join("");
-  const firebaseUser = typeof window !== "undefined" ? auth.currentUser : null;
-
-  const getToken = useCallback(async () => {
-    const current = auth.currentUser;
-    if (!current) return null;
-    return current.getIdToken();
-  }, []);
 
   const sendCode = useCallback(
     async (force = false) => {
-      const token = await getToken();
-      if (!token) return;
-
       if (!force) {
         const prev = Number(sessionStorage.getItem(OTP_LOCK_KEY) || 0);
         const elapsed = Date.now() - prev;
@@ -54,6 +43,13 @@ export default function VerifyEmailPage() {
       try {
         const res = await authService.sendOtp();
         const data = await res.json().catch(() => ({}));
+
+        if (res.status === 401) {
+          sessionStorage.removeItem(OTP_LOCK_KEY);
+          toast.error("Your session expired. Please sign in again.");
+          router.replace("/login");
+          return;
+        }
 
         if (res.status === 429) {
           const retryAfter = Number(data.retryAfter || 60);
@@ -87,27 +83,27 @@ export default function VerifyEmailPage() {
         setSending(false);
       }
     },
-    [getToken, refreshUser, router],
+    [refreshUser, router],
   );
 
   useEffect(() => {
     if (authLoading) return;
 
-    if (!user && !firebaseUser) {
+    if (!user) {
       router.replace("/login");
       return;
     }
 
-    if (user && !needsEmailVerification(user)) {
+    if (!needsEmailVerification(user)) {
       router.replace("/dashboard");
       return;
     }
 
-    if (user && needsEmailVerification(user) && !sentOnMount.current) {
+    if (!sentOnMount.current) {
       sentOnMount.current = true;
       void sendCode();
     }
-  }, [authLoading, user, firebaseUser, router, sendCode]);
+  }, [authLoading, user, router, sendCode]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -120,8 +116,7 @@ export default function VerifyEmailPage() {
   const handleVerify = async (value = code) => {
     if (value.length !== OTP_LENGTH || verifying) return;
 
-    const token = await getToken();
-    if (!token) {
+    if (!user) {
       toast.error("Your session expired. Please sign in again.");
       router.replace("/login");
       return;
@@ -206,7 +201,7 @@ export default function VerifyEmailPage() {
     router.replace("/login");
   };
 
-  if (authLoading || (!user && firebaseUser) || (user && !needsEmailVerification(user))) {
+  if (authLoading || !user || !needsEmailVerification(user)) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, Download, Save, Upload, X, Check, Trash2, Sparkles, Palette, Layout, QrCode, ChevronDown } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { qrService, uploadService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/components/AuthContext';
 import { getQrUrl } from '@/utils/qrUrl';
 import CustomizableQRCode from './CustomizableQRCode';
 
@@ -60,6 +60,7 @@ const COLOR_PRESETS = [
 ];
 
 export default function QRDesignModal({ isOpen, onClose, qrCode, onSave }: QRDesignModalProps) {
+  const { user } = useAuth();
   const [fgColor, setFgColor] = useState('#000000');
   const [bgColor, setBgColor] = useState('#FFFFFF');
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -146,8 +147,7 @@ export default function QRDesignModal({ isOpen, onClose, qrCode, onSave }: QRDes
   const handleSave = async () => {
     setSaving(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
+      if (!user) {
         toast.error('You must be logged in to save design changes.');
         setSaving(false);
         return;

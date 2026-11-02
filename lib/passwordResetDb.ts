@@ -22,10 +22,10 @@ export async function findUserByEmail(email: string): Promise<{
   id: number;
   email: string;
   name: string | null;
-  firebaseUid: string;
+  firebaseUid: string | null;
 } | null> {
   const rows = await prisma.$queryRaw<
-    { id: number; email: string; name: string | null; firebase_uid: string }[]
+    { id: number; email: string; name: string | null; firebase_uid: string | null }[]
   >`
     SELECT id, email, name, firebase_uid
     FROM users
@@ -91,7 +91,7 @@ export async function createResetToken(input: {
 }
 
 export async function findResetByHash(tokenHash: string): Promise<
-  | (PasswordResetRecord & { firebaseUid: string; email: string })
+  | (PasswordResetRecord & { firebaseUid: string | null; email: string })
   | null
 > {
   const rows = await prisma.$queryRaw<
@@ -102,7 +102,7 @@ export async function findResetByHash(tokenHash: string): Promise<
       expires_at: Date | string;
       used_at: Date | string | null;
       created_at: Date | string;
-      firebase_uid: string;
+      firebase_uid: string | null;
       email: string;
     }[]
   >`

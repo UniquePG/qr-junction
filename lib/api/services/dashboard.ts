@@ -22,7 +22,7 @@ export const dashboardService = {
     return apiRequest({
       method: "GET",
       url: endpoints.devIp,
-      firebaseAuth: false,
+      requireAuth: false,
     });
   },
 };

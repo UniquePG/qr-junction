@@ -192,7 +192,7 @@ export default function PublicLandingPageClient({
       }
 
       // 1. Submit lead details
-      const leadRes = await leadService.create(payload, { auth: false });
+      const leadRes = await leadService.create(payload);
 
       if (!leadRes.ok) throw new Error("Lead registration failed.");
 

@@ -45,6 +45,8 @@ export function publicUser(user: {
   name: string | null;
   emailVerified: boolean;
   provider: string | null;
+  role?: string | null;
+  avatarUrl?: string | null;
 }) {
   return {
     id: user.id,
@@ -52,5 +54,7 @@ export function publicUser(user: {
     name: user.name,
     emailVerified: user.emailVerified,
     provider: user.provider,
+    role: user.role || "USER",
+    avatarUrl: user.avatarUrl ?? null,
   };
 }

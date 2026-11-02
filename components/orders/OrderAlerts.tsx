@@ -1,7 +1,5 @@
 "use client";
 
-import { auth } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
 import { openLiveSocket, type LiveEvent } from "@/lib/live/client";
 import { toast } from "react-toastify";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -82,23 +80,8 @@ export function OrderAlertsProvider({ children }: { children: React.ReactNode })
     const connection = openLiveSocket(
       {
         role: "kitchen",
-        token: () => new Promise((resolve) => {
-          const send = (user: typeof auth.currentUser) => {
-            if (!user) {
-              resolve(null);
-              return;
-            }
-            void user.getIdToken().then(resolve, () => resolve(null));
-          };
-          if (auth.currentUser) {
-            send(auth.currentUser);
-            return;
-          }
-          const stop = onAuthStateChanged(auth, (user) => {
-            stop();
-            send(user);
-          });
-        }),
+        // Session cookie is sent on the WebSocket upgrade; token optional.
+        token: async () => null,
       },
       onEvent,
     );

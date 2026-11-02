@@ -49,16 +49,13 @@ export default function WifiDetailsClient({
     setSubmitting(true);
     try {
       // 1. Submit lead
-      const leadRes = await leadService.create(
-        {
-          name,
-          email,
-          phone,
-          qrCodeId,
-          userId,
-        },
-        { auth: false },
-      );
+      const leadRes = await leadService.create({
+        name,
+        email,
+        phone,
+        qrCodeId,
+        userId,
+      });
 
       if (!leadRes.ok) throw new Error("Failed to submit lead");
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { clientIp, rateLimit, rateLimitResponse } from "@/lib/auth/rateLimit";
 import { sendPasswordResetEmail } from "@/lib/mailer";
 import {
   RESET_RESEND_COOLDOWN_MS,
@@ -22,6 +23,10 @@ const GENERIC_SUCCESS = {
 
 export async function POST(request: Request) {
   try {
+    const ip = clientIp(request);
+    const limited = rateLimit(`password-forgot:${ip}`, 10, 15 * 60 * 1000);
+    if (!limited.allowed) return rateLimitResponse(limited.retryAfterSec);
+
     const body = await request.json().catch(() => ({}));
     const email = normalizeEmail(body?.email);
 

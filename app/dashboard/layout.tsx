@@ -34,12 +34,22 @@ export default function DashboardLayout({
       router.push('/login');
       return;
     }
+    if (user.role === 'ADMIN' || user.role === 'OWNER') {
+      router.replace('/admin');
+      return;
+    }
     if (needsEmailVerification(user)) {
       router.push('/verify-email');
     }
   }, [user, loading, router]);
 
-  if (loading || !user || needsEmailVerification(user)) {
+  if (
+    loading ||
+    !user ||
+    user.role === 'ADMIN' ||
+    user.role === 'OWNER' ||
+    needsEmailVerification(user)
+  ) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />

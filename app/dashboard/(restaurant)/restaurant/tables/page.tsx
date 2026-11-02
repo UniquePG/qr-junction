@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { restaurantService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { 
   Plus, 
@@ -86,8 +85,7 @@ export default function TablesManagementPage() {
 
   const fetchData = async () => {
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
       const tablesRes = await restaurantService.listTables();
       const menusRes = await restaurantService.listMenus();
 

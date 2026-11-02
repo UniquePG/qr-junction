@@ -2,11 +2,66 @@ import { apiRequest } from "@/lib/api/client";
 import { endpoints } from "@/lib/api/endpoints";
 
 export const authService = {
+  register(body: { email: string; password: string; name?: string }) {
+    return apiRequest({
+      method: "POST",
+      url: endpoints.auth.register,
+      data: body,
+      requireAuth: false,
+    });
+  },
+
+  login(body: { email: string; password: string }) {
+    return apiRequest({
+      method: "POST",
+      url: endpoints.auth.login,
+      data: body,
+      requireAuth: false,
+    });
+  },
+
+  adminLogin(body: { email: string; password: string }) {
+    return apiRequest({
+      method: "POST",
+      url: endpoints.auth.adminLogin,
+      data: body,
+      requireAuth: false,
+    });
+  },
+
+  logout() {
+    return apiRequest({
+      method: "POST",
+      url: endpoints.auth.logout,
+      requireAuth: false,
+    });
+  },
+
+  me() {
+    return apiRequest({
+      method: "GET",
+      url: endpoints.auth.me,
+      requireAuth: false,
+    });
+  },
+
+  google(idToken: string) {
+    return apiRequest({
+      method: "POST",
+      url: endpoints.auth.google,
+      data: {},
+      requireAuth: false,
+      firebaseIdToken: idToken,
+    });
+  },
+
+  /** @deprecated Use google() */
   sync(body: { password: string | null; provider: string }) {
     return apiRequest({
       method: "POST",
       url: endpoints.auth.sync,
       data: body,
+      requireAuth: false,
     });
   },
 
@@ -30,7 +85,7 @@ export const authService = {
       method: "POST",
       url: endpoints.auth.passwordForgot,
       data: { email },
-      firebaseAuth: false,
+      requireAuth: false,
     });
   },
 
@@ -39,7 +94,7 @@ export const authService = {
       method: "GET",
       url: endpoints.auth.passwordValidate,
       params: { token },
-      firebaseAuth: false,
+      requireAuth: false,
     });
   },
 
@@ -48,7 +103,7 @@ export const authService = {
       method: "POST",
       url: endpoints.auth.passwordReset,
       data: body,
-      firebaseAuth: false,
+      requireAuth: false,
     });
   },
 };

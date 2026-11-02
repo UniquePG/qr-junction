@@ -1,6 +1,6 @@
 import PasswordInput from "@/components/PasswordInput";
+import { useAuth } from "@/components/AuthContext";
 import { landingPageService, uploadService } from "@/lib/api";
-import { auth } from "@/lib/firebase";
 import { FormData } from "@/lib/qrEngine";
 import {
   ExternalLink,
@@ -551,16 +551,17 @@ export function AppDownloadTabForm({ formData, updateFormData }: TabFormProps) {
 }
 
 export function LandingPageTabForm({ formData, updateFormData }: TabFormProps) {
+  const { user, loading: authLoading } = useAuth();
   const [landingPages, setLandingPages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading) return;
+
     async function fetchLandingPages() {
       try {
-        const currentUser = auth.currentUser;
-        if (!currentUser) {
-          // If auth isn't initialized yet, try again or return
+        if (!user) {
           setLoading(false);
           return;
         }
@@ -581,19 +582,8 @@ export function LandingPageTabForm({ formData, updateFormData }: TabFormProps) {
       }
     }
 
-    // Wait a bit or fetch on state change, but firebase auth can load asynchronously.
-    // Let's run when auth state is resolved or directly on mount.
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        fetchLandingPages();
-      } else {
-        // If not logged in after check
-        setLoading(false);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
+    fetchLandingPages();
+  }, [user, authLoading]);
 
   if (loading) {
     return (

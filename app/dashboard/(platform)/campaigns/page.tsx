@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { campaignService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import Link from 'next/link';
 import { 
@@ -82,8 +81,7 @@ export default function CampaignsPage() {
 
   const fetchCampaigns = async () => {
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await campaignService.list();
 
@@ -105,8 +103,7 @@ export default function CampaignsPage() {
   const fetchCampaignDetails = async (id: number) => {
     setDetailLoading(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await campaignService.get(id);
 
@@ -154,8 +151,7 @@ export default function CampaignsPage() {
 
     setSubmitting(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await campaignService.create({
         name: formName,
@@ -186,8 +182,7 @@ export default function CampaignsPage() {
 
     setSubmitting(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await campaignService.update(selectedCampaignId!, {
         name: formName,
@@ -222,8 +217,7 @@ export default function CampaignsPage() {
 
     setDeleting(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await campaignService.remove(deletingCampaignId);
 

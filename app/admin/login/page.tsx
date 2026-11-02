@@ -2,14 +2,8 @@
 
 import PasswordInput from "@/components/PasswordInput";
 import { useAuth } from "@/components/AuthContext";
-import { adminService } from "@/lib/api";
-import { auth } from "@/lib/firebase";
-import {
-  GoogleAuthProvider,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-} from "firebase/auth";
-import { ArrowRight, Chrome, Loader2, Mail } from "lucide-react";
+import { adminService, authService } from "@/lib/api";
+import { ArrowRight, Loader2, Mail } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -17,11 +11,10 @@ import { toast } from "react-toastify";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const { user, loading: authLoading, logout } = useAuth();
+  const { user, loading: authLoading, logout, refreshUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [checking, setChecking] = useState(false);
 
   useEffect(() => {
@@ -34,7 +27,7 @@ export default function AdminLoginPage() {
         await adminService.me();
         if (!cancelled) router.replace("/admin");
       } catch {
-        toast.error("This account does not have admin access.");
+        toast.error("Invalid email or password.");
         await logout();
       } finally {
         if (!cancelled) setChecking(false);
@@ -55,29 +48,17 @@ export default function AdminLoginPage() {
     }
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error: any) {
-      toast.error(
-        error.code === "auth/invalid-credential"
-          ? "Invalid email or password."
-          : "Failed to sign in.",
-      );
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    setGoogleLoading(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: "select_account" });
-      await signInWithPopup(auth, provider);
-    } catch (error: any) {
-      if (error.code !== "auth/popup-closed-by-user") {
-        toast.error("Google sign-in failed.");
+      const res = await authService.adminLogin({ email, password });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || "Invalid email or password.");
+        return;
       }
+      await refreshUser();
+    } catch {
+      toast.error("Invalid email or password.");
     } finally {
-      setGoogleLoading(false);
+      setLoading(false);
     }
   };
 
@@ -107,22 +88,6 @@ export default function AdminLoginPage() {
           Sign in with an owner or admin account. Regular users cannot access this console.
         </p>
 
-        <button
-          type="button"
-          onClick={handleGoogleLogin}
-          disabled={loading || googleLoading}
-          className="w-full flex items-center justify-center gap-3 border border-slate-200 rounded-xl py-3 text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50"
-        >
-          {googleLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Chrome className="w-5 h-5 text-red-400" />}
-          Continue with Google
-        </button>
-
-        <div className="flex items-center my-6">
-          <div className="flex-grow border-t border-slate-200" />
-          <span className="px-3 text-[10px] uppercase tracking-widest text-slate-400">or</span>
-          <div className="flex-grow border-t border-slate-200" />
-        </div>
-
         <form onSubmit={handleCredentialsLogin} className="space-y-4">
           <div>
             <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Email</label>
@@ -132,7 +97,8 @@ export default function AdminLoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-primary"
+                placeholder="Admin email"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-primary placeholder-slate-400"
                 required
               />
             </div>
@@ -143,6 +109,7 @@ export default function AdminLoginPage() {
               <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
                 required
                 autoComplete="current-password"
               />
@@ -150,7 +117,7 @@ export default function AdminLoginPage() {
           </div>
           <button
             type="submit"
-            disabled={loading || googleLoading}
+            disabled={loading}
             className="w-full bg-[#001B50] text-white font-medium py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Sign in to admin <ArrowRight className="w-4 h-4" /></>}

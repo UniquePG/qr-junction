@@ -30,7 +30,7 @@ export const qrService = {
     return apiRequest({
       method: "GET",
       url: endpoints.qrs.publicByShortCode(shortCode),
-      firebaseAuth: false,
+      requireAuth: false,
     });
   },
 };

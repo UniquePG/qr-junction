@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { qrService, reviewService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import Link from 'next/link';
 import { 
@@ -153,8 +152,7 @@ export default function ReviewSuiteView({
 
   const fetchSuiteData = async () => {
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await reviewService.summary();
 
@@ -174,8 +172,7 @@ export default function ReviewSuiteView({
   const fetchWeeklyInsights = async (qrId: string) => {
     setInsightsLoading(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await reviewService.weeklyInsights(qrId);
 
@@ -212,8 +209,7 @@ export default function ReviewSuiteView({
   const handleToggleStatus = async (qr: ReviewCampaign) => {
     const newStatus = qr.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await qrService.update(qr.id, { status: newStatus });
 
@@ -236,8 +232,7 @@ export default function ReviewSuiteView({
 
     setDeleting(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await qrService.remove(deletingQrId);
 
@@ -259,8 +254,7 @@ export default function ReviewSuiteView({
     if (!selectedInboxReview) return;
     setSavingReply(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await reviewService.save({
         id: selectedInboxReview.id,

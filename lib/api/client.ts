@@ -1,5 +1,4 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
-import { auth } from "@/lib/firebase";
 import { ApiError, type ApiRequestConfig, type ApiResult } from "@/lib/api/types";
 
 const NOT_SIGNED_IN = "Not signed in";
@@ -25,7 +24,6 @@ function logRequest(config: InternalAxiosRequestConfig) {
   const id = config.metadata?.requestId ?? "-";
   console.debug(`[api] → ${id} ${config.method?.toUpperCase()} ${config.url}`, {
     params: config.params,
-    auth: config.firebaseAuth !== false,
   });
 }
 
@@ -56,6 +54,7 @@ export const apiClient = axios.create({
   headers: {
     Accept: "application/json",
   },
+  withCredentials: true,
   validateStatus: () => true,
 });
 
@@ -65,21 +64,16 @@ apiClient.interceptors.request.use(async (config) => {
     requestId: requestId(),
   };
   config.headers.set("X-Request-Id", config.metadata.requestId);
+  config.withCredentials = true;
 
   const isFormData = typeof FormData !== "undefined" && config.data instanceof FormData;
   if (isFormData) {
     config.headers.delete("Content-Type");
   }
 
-  if (config.firebaseAuth !== false) {
-    const user = auth.currentUser;
-    if (config.requireAuth && !user) {
-      throw new ApiError(NOT_SIGNED_IN, 401);
-    }
-    if (user) {
-      const token = await user.getIdToken();
-      config.headers.set("Authorization", `Bearer ${token}`);
-    }
+  // Optional one-shot Firebase ID token for Google exchange only
+  if (config.firebaseIdToken) {
+    config.headers.set("Authorization", `Bearer ${config.firebaseIdToken}`);
   }
 
   logRequest(config);

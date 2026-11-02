@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebaseAdmin";
+import { clientIp, rateLimit, rateLimitResponse } from "@/lib/auth/rateLimit";
+import { hashPassword, passwordPolicyError } from "@/lib/password";
 import {
-  RESET_MIN_PASSWORD_LENGTH,
-  hashPasswordForDb,
   hashResetToken,
   normalizeResetToken,
 } from "@/lib/passwordReset";
@@ -10,6 +9,10 @@ import { findResetByHash, markResetUsedAndUpdatePassword } from "@/lib/passwordR
 
 export async function POST(request: Request) {
   try {
+    const ip = clientIp(request);
+    const limited = rateLimit(`password-reset:${ip}`, 10, 15 * 60 * 1000);
+    if (!limited.allowed) return rateLimitResponse(limited.retryAfterSec);
+
     const body = await request.json().catch(() => ({}));
     const token = normalizeResetToken(body?.token);
     const password = typeof body?.password === "string" ? body.password : "";
@@ -19,11 +22,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "This reset link is invalid." }, { status: 400 });
     }
 
-    if (password.length < RESET_MIN_PASSWORD_LENGTH) {
-      return NextResponse.json(
-        { error: `Password must be at least ${RESET_MIN_PASSWORD_LENGTH} characters long.` },
-        { status: 400 },
-      );
+    const policyError = passwordPolicyError(password);
+    if (policyError) {
+      return NextResponse.json({ error: policyError }, { status: 400 });
     }
 
     if (password !== confirmPassword) {
@@ -38,21 +39,11 @@ export async function POST(request: Request) {
       );
     }
 
-    try {
-      await adminAuth.updateUser(record.firebaseUid, { password });
-    } catch (firebaseError: any) {
-      if (firebaseError?.code === "auth/user-not-found" && record.email) {
-        const firebaseUser = await adminAuth.getUserByEmail(record.email);
-        await adminAuth.updateUser(firebaseUser.uid, { password });
-      } else {
-        throw firebaseError;
-      }
-    }
-
+    const passwordHash = await hashPassword(password);
     await markResetUsedAndUpdatePassword({
       tokenId: record.id,
       userId: record.userId,
-      passwordHash: hashPasswordForDb(password),
+      passwordHash,
     });
 
     return NextResponse.json({
@@ -61,8 +52,6 @@ export async function POST(request: Request) {
     });
   } catch (error: unknown) {
     console.error("Error resetting password:", error);
-    const message =
-      error instanceof Error ? error.message : "Failed to reset password.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to reset password." }, { status: 500 });
   }
 }

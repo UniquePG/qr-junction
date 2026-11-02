@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getDecodedTokenFromRequest } from "@/lib/authHelper";
-import { adminAuth } from "@/lib/firebaseAdmin";
+import { getSessionDbUser } from "@/lib/authHelper";
+import { clientIp, rateLimit, rateLimitResponse } from "@/lib/auth/rateLimit";
 import {
   OTP_MAX_ATTEMPTS,
   hashOtp,
@@ -11,16 +11,18 @@ import {
 import {
   deleteOtp,
   findOtpByUserId,
-  getEmailVerified,
   incrementOtpAttempts,
   setEmailVerified,
 } from "@/lib/otpDb";
-import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
-    const decoded = await getDecodedTokenFromRequest(request);
-    if (!decoded?.uid) {
+    const ip = clientIp(request);
+    const limited = rateLimit(`otp-verify:${ip}`, 20, 15 * 60 * 1000);
+    if (!limited.allowed) return rateLimitResponse(limited.retryAfterSec);
+
+    const user = await getSessionDbUser(request);
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -33,20 +35,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { firebaseUid: decoded.uid },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "Account not found." }, { status: 404 });
-    }
-
-    const emailVerified = await getEmailVerified(user.id);
-    if (emailVerified) {
+    if (user.emailVerified) {
       return NextResponse.json({
         success: true,
         alreadyVerified: true,
-        user: publicUser({ ...user, emailVerified: true }),
+        user: publicUser(user),
       });
     }
 
@@ -90,12 +83,6 @@ export async function POST(request: Request) {
 
     await setEmailVerified(user.id, true);
     await deleteOtp(user.id);
-
-    try {
-      await adminAuth.updateUser(decoded.uid, { emailVerified: true });
-    } catch (error) {
-      console.error("Failed to mark Firebase email as verified:", error);
-    }
 
     return NextResponse.json({
       success: true,

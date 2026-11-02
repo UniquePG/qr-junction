@@ -2,12 +2,9 @@
 
 import { useAuth } from "@/components/AuthContext";
 import { needsEmailVerification } from "@/lib/emailVerification";
+import { authService } from "@/lib/api";
 import { auth } from "@/lib/firebase";
-import {
-  GoogleAuthProvider,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-} from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import PasswordInput from "@/components/PasswordInput";
 import { ArrowRight, Chrome, Loader2, Mail } from "lucide-react";
 import Link from "next/link";
@@ -17,14 +14,13 @@ import { toast } from "react-toastify";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshUser } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // Redirect if already logged in
   useEffect(() => {
     if (authLoading || !user) return;
     router.push(needsEmailVerification(user) ? "/verify-email" : "/dashboard");
@@ -39,24 +35,18 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("temp_auth_pwd", password);
+      const res = await authService.login({ email, password });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || "Invalid email or password.");
+        return;
       }
-      await signInWithEmailAndPassword(auth, email, password);
+      await refreshUser();
       toast.success("Successfully logged in!");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Credentials login error:", error);
-      let message = "Failed to sign in. Please check your credentials.";
-      if (
-        error.code === "auth/invalid-credential" ||
-        error.code === "auth/wrong-password" ||
-        error.code === "auth/user-not-found"
-      ) {
-        message = "Invalid email or password.";
-      } else if (error.code === "auth/invalid-email") {
-        message = "Please enter a valid email address.";
-      }
-      toast.error(message);
+      toast.error("Invalid email or password.");
+    } finally {
       setLoading(false);
     }
   };
@@ -65,10 +55,21 @@ export default function LoginPage() {
     setGoogleLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      // Add prompt selection
       provider.setCustomParameters({ prompt: "select_account" });
-
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      const res = await authService.google(idToken);
+      try {
+        await auth.signOut();
+      } catch {
+        /* Firebase client session not needed after cookie exchange */
+      }
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || "Invalid email or password.");
+        return;
+      }
+      await refreshUser();
       toast.success("Signed in with Google successfully!");
       router.push("/dashboard");
     } catch (error: any) {
@@ -91,7 +92,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4 relative overflow-hidden">
-      {/* Background gradients */}
       <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px]" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#001B50]/5 blur-[120px]" />
 
@@ -111,7 +111,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Google OAuth Login */}
         <button
           onClick={handleGoogleLogin}
           disabled={googleLoading || loading}
@@ -134,7 +133,6 @@ export default function LoginPage() {
           <div className="flex-grow border-t border-slate-200" />
         </div>
 
-        {/* Email/Password Login Form */}
         <form onSubmit={handleCredentialsLogin} className="space-y-5">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
@@ -191,7 +189,7 @@ export default function LoginPage() {
         </form>
 
         <p className="text-center text-slate-600 text-sm mt-8">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             href="/register"
             className="text-primary font-medium hover:underline"

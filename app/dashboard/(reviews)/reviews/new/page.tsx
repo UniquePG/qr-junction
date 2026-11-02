@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { campaignService, profileService, qrService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/components/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
   ArrowLeft, 
@@ -18,6 +18,7 @@ import Link from 'next/link';
 
 export default function CreateReviewQrPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
   // General Settings
@@ -51,8 +52,7 @@ export default function CreateReviewQrPage() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const currentUser = auth.currentUser;
-        if (!currentUser) return;
+        if (!user) return;
         
         const res = await campaignService.list();
         if (res.ok) {
@@ -94,7 +94,7 @@ export default function CreateReviewQrPage() {
       }
     };
     fetchInitialData();
-  }, []);
+  }, [user]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,8 +113,7 @@ export default function CreateReviewQrPage() {
 
     setLoading(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) throw new Error('Unauthenticated user.');
+      if (!user) throw new Error('Unauthenticated user.');
 
       const destination = {
         businessName,

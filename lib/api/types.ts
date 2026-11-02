@@ -2,10 +2,13 @@ import type { AxiosRequestConfig } from "axios";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
-    /** Attach the signed-in Firebase ID token. Defaults to true. */
-    firebaseAuth?: boolean;
-    /** Fail before the request when nobody is signed in. */
+    /**
+     * Soft client hint only. Session cookies are always sent via withCredentials;
+     * the server enforces auth. Prefer false for intentionally public endpoints.
+     */
     requireAuth?: boolean;
+    /** One-shot Firebase ID token for Google exchange only (`/api/auth/google`). */
+    firebaseIdToken?: string;
   }
 
   export interface InternalAxiosRequestConfig {

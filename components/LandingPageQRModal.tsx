@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { qrService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/components/AuthContext';
 import { Loader2, Download, ExternalLink, Check, Save, QrCode } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { getQrUrl } from '@/utils/qrUrl';
@@ -19,6 +19,7 @@ interface LandingPageQRModalProps {
 }
 
 export default function LandingPageQRModal({ isOpen, onClose, page }: LandingPageQRModalProps) {
+  const { user } = useAuth();
   const [qrCode, setQrCode] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -31,8 +32,7 @@ export default function LandingPageQRModal({ isOpen, onClose, page }: LandingPag
   const fetchQRDetails = async () => {
     setLoading(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await qrService.list();
       if (!res.ok) throw new Error('Failed to load QR codes list.');
@@ -64,8 +64,7 @@ export default function LandingPageQRModal({ isOpen, onClose, page }: LandingPag
   const handleGenerateQR = async () => {
     setGenerating(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await qrService.create({
         name: `QR - ${page.title}`,
@@ -95,8 +94,7 @@ export default function LandingPageQRModal({ isOpen, onClose, page }: LandingPag
     if (!qrCode) return;
     setSavingColors(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await qrService.update(qrCode.id, {
         fgColor,

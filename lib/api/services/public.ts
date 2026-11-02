@@ -7,7 +7,7 @@ export const publicService = {
       method: "POST",
       url: endpoints.conversions,
       data: body,
-      firebaseAuth: false,
+      requireAuth: false,
     });
   },
 
@@ -17,7 +17,7 @@ export const publicService = {
         method: "POST",
         url: endpoints.public.qrEvents,
         data: body,
-        firebaseAuth: false,
+        requireAuth: false,
         adapter: "fetch",
         fetchOptions: { keepalive: true },
       })

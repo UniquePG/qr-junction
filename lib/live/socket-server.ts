@@ -2,6 +2,7 @@ import { Server, type IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { getDbUserIdFromIdToken } from "@/lib/authHelper";
+import { getSessionUserId } from "@/lib/session";
 import { orderChannel, restaurantChannel, subscribeOrder, type OrderBusEvent } from "@/lib/orders/bus";
 import { prisma } from "@/lib/prisma";
 
@@ -19,6 +20,17 @@ function textOf(data: RawData) {
   if (Buffer.isBuffer(data)) return data.toString("utf8");
   if (Array.isArray(data)) return Buffer.concat(data).toString("utf8");
   return Buffer.from(data).toString("utf8");
+}
+
+async function resolveKitchenUserId(token: unknown, request: IncomingMessage | null) {
+  const fromToken = await getDbUserIdFromIdToken(String(token || ""));
+  if (fromToken) return fromToken;
+  if (!request) return null;
+  const cookieHeader = request.headers.cookie || null;
+  const fakeRequest = new Request("http://localhost/live", {
+    headers: cookieHeader ? { cookie: cookieHeader } : {},
+  });
+  return getSessionUserId(fakeRequest);
 }
 
 async function watchGuest(socket: LiveSocket, tokens: unknown, replace: (unsubscribe: () => void) => void) {
@@ -39,8 +51,13 @@ async function watchGuest(socket: LiveSocket, tokens: unknown, replace: (unsubsc
   send(socket, { type: "ready" });
 }
 
-async function watchKitchen(socket: LiveSocket, token: unknown, replace: (unsubscribe: () => void) => void) {
-  const userId = await getDbUserIdFromIdToken(String(token || ""));
+async function watchKitchen(
+  socket: LiveSocket,
+  token: unknown,
+  request: IncomingMessage | null,
+  replace: (unsubscribe: () => void) => void,
+) {
+  const userId = await resolveKitchenUserId(token, request);
   if (!userId) {
     send(socket, { type: "error", message: "unauthorized" });
     socket.close();
@@ -63,7 +80,7 @@ async function watchKitchen(socket: LiveSocket, token: unknown, replace: (unsubs
   send(socket, { type: "ready", placedCount });
 }
 
-function handleConnection(socket: LiveSocket) {
+function handleConnection(socket: LiveSocket, request: IncomingMessage | null) {
   let role: "kitchen" | "guest" | null = null;
   let unsubscribe = () => {};
   let alive = true;
@@ -108,7 +125,7 @@ function handleConnection(socket: LiveSocket) {
       if (role === "guest") return;
       role = "kitchen";
       clearTimeout(authTimer);
-      void watchKitchen(socket, message.token, replace);
+      void watchKitchen(socket, message.token, request, replace);
       return;
     }
     if (message.type === "watch") {
@@ -126,7 +143,7 @@ export function attachLiveSocket() {
   console.info("Live order socket attached at /live");
 
   const wss = new WebSocketServer({ noServer: true });
-  wss.on("connection", (socket) => handleConnection(socket));
+  wss.on("connection", (socket, request) => handleConnection(socket, request || null));
 
   const emit = Server.prototype.emit;
   Server.prototype.emit = function (this: Server, event: string, ...args: unknown[]) {

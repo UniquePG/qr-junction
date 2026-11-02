@@ -6,12 +6,12 @@ export const leadService = {
     return apiRequest({ method: "GET", url: endpoints.leads.collection });
   },
 
-  create(body: unknown, options?: { auth?: boolean }) {
+  create(body: unknown) {
     return apiRequest({
       method: "POST",
       url: endpoints.leads.collection,
       data: body,
-      firebaseAuth: options?.auth ?? true,
+      requireAuth: false,
     });
   },
 

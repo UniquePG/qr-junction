@@ -2,13 +2,9 @@
 
 import { useAuth } from "@/components/AuthContext";
 import { needsEmailVerification } from "@/lib/emailVerification";
+import { authService } from "@/lib/api";
 import { auth } from "@/lib/firebase";
-import {
-  GoogleAuthProvider,
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-  updateProfile,
-} from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import PasswordInput from "@/components/PasswordInput";
 import { ArrowRight, Chrome, Loader2, Mail, User } from "lucide-react";
 import Link from "next/link";
@@ -18,7 +14,7 @@ import { toast } from "react-toastify";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshUser } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -27,7 +23,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // Redirect if already logged in
   useEffect(() => {
     if (authLoading || !user) return;
     router.push(needsEmailVerification(user) ? "/verify-email" : "/dashboard");
@@ -40,8 +35,8 @@ export default function RegisterPage() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters long.");
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters long.");
       return;
     }
 
@@ -52,33 +47,18 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("temp_auth_pwd", password);
+      const res = await authService.register({ email, password, name });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || "Failed to register.");
+        return;
       }
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
-
-      // Update profile with display name
-      await updateProfile(userCredential.user, {
-        displayName: name,
-      });
-
+      await refreshUser();
       toast.success("Account created. Check your email for a verification code.");
       router.push("/verify-email");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Registration error:", error);
-      let message = "Failed to register. Please check your credentials.";
-      if (error.code === "auth/email-already-in-use") {
-        message = "This email is already in use.";
-      } else if (error.code === "auth/invalid-email") {
-        message = "Please enter a valid email address.";
-      } else if (error.code === "auth/weak-password") {
-        message = "Password is too weak.";
-      }
-      toast.error(message);
+      toast.error("Failed to register. Please check your credentials.");
     } finally {
       setLoading(false);
     }
@@ -89,7 +69,20 @@ export default function RegisterPage() {
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      const res = await authService.google(idToken);
+      try {
+        await auth.signOut();
+      } catch {
+        /* Firebase client session not needed after cookie exchange */
+      }
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || "Invalid email or password.");
+        return;
+      }
+      await refreshUser();
       toast.success("Signed in with Google successfully!");
       router.push("/dashboard");
     } catch (error: any) {
@@ -112,7 +105,6 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4 relative overflow-hidden py-12">
-      {/* Background gradients */}
       <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px]" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#001B50]/5 blur-[120px]" />
 
@@ -132,7 +124,6 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {/* Google OAuth Login */}
         <button
           onClick={handleGoogleLogin}
           disabled={googleLoading || loading}
@@ -155,7 +146,6 @@ export default function RegisterPage() {
           <div className="flex-grow border-t border-slate-200" />
         </div>
 
-        {/* Credentials Register Form */}
         <form onSubmit={handleRegister} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
@@ -198,7 +188,7 @@ export default function RegisterPage() {
             <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Minimum 6 characters"
+              placeholder="Minimum 8 characters"
               required
               autoComplete="new-password"
             />

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { campaignService, qrService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/components/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
   ArrowLeft, 
@@ -26,6 +26,7 @@ export default function EditQrPage({
 }) {
   const { id } = React.use(params);
   const router = useRouter();
+  const { user } = useAuth();
   
   // Data loading states
   const [loading, setLoading] = useState(true);
@@ -80,8 +81,7 @@ export default function EditQrPage({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const currentUser = auth.currentUser;
-        if (!currentUser) return;
+        if (!user) return;
         
         const qrRes = await qrService.get(id);
 
@@ -121,7 +121,7 @@ export default function EditQrPage({
     };
 
     fetchData();
-  }, [id, router]);
+  }, [id, router, user]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,8 +141,7 @@ export default function EditQrPage({
 
     setUpdating(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) throw new Error('Unauthenticated user.');
+      if (!user) throw new Error('Unauthenticated user.');
 
       const res = await qrService.update(id, {
         name,

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/components/AuthContext';
 import { useRouter } from 'next/navigation';
 import { landingPageService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
 import { 
   ArrowLeft, 
   Save, 
@@ -41,6 +41,7 @@ interface ButtonItem {
 
 export default function LandingPageBuilder({ pageId }: LandingPageBuilderProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const isEditMode = !!pageId;
 
   // Data Loading/Saving States
@@ -75,8 +76,7 @@ export default function LandingPageBuilder({ pageId }: LandingPageBuilderProps) 
 
     const fetchPageData = async () => {
       try {
-        const currentUser = auth.currentUser;
-        if (!currentUser) return;
+        if (!user) return;
 
         const res = await landingPageService.get(pageId!);
 
@@ -113,7 +113,7 @@ export default function LandingPageBuilder({ pageId }: LandingPageBuilderProps) 
     };
 
     fetchPageData();
-  }, [pageId, isEditMode, router]);
+  }, [pageId, isEditMode, router, user]);
 
   // Button management
   const handleAddButton = () => {
@@ -175,8 +175,7 @@ export default function LandingPageBuilder({ pageId }: LandingPageBuilderProps) 
 
     setSaving(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) throw new Error('Unauthenticated user.');
+      if (!user) throw new Error('Unauthenticated user.');
 
       const socialLinks = {
         instagram: instagram.trim() || null,

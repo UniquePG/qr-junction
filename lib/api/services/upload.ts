@@ -7,7 +7,7 @@ export const uploadService = {
       method: "POST",
       url: endpoints.upload,
       data: formData,
-      firebaseAuth: false,
+      requireAuth: true,
     });
   },
 };

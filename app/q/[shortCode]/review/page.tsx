@@ -157,7 +157,7 @@ export default function ReviewLandingPage() {
         payload.id = submittedReviewId;
       }
 
-      const res = await reviewService.save(payload, { auth: false });
+      const res = await reviewService.save(payload);
 
       if (res.ok) {
         const json = await res.json();
@@ -242,7 +242,7 @@ export default function ReviewLandingPage() {
         payload.id = submittedReviewId;
       }
 
-      const res = await reviewService.save(payload, { auth: false });
+      const res = await reviewService.save(payload);
 
       if (!res.ok) throw new Error('Submission failed');
 

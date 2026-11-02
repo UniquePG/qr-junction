@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { campaignService, qrService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/components/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
   ArrowLeft, 
@@ -20,6 +20,7 @@ import { getQrUrl } from '@/utils/qrUrl';
 export default function EditReviewQrPage() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,8 +56,7 @@ export default function EditReviewQrPage() {
   useEffect(() => {
     const fetchCampaignDataAndGeneral = async () => {
       try {
-        const currentUser = auth.currentUser;
-        if (!currentUser) return;
+        if (!user) return;
         
         const campaignsRes = await campaignService.list();
         if (campaignsRes.ok) {
@@ -105,7 +105,7 @@ export default function EditReviewQrPage() {
     };
 
     fetchCampaignDataAndGeneral();
-  }, [id, router]);
+  }, [id, router, user]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,8 +124,7 @@ export default function EditReviewQrPage() {
 
     setSaving(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) throw new Error('Unauthenticated user.');
+      if (!user) throw new Error('Unauthenticated user.');
 
       const destination = {
         businessName,

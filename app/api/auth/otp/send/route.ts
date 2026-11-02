@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getDecodedTokenFromRequest } from "@/lib/authHelper";
+import { getSessionDbUser } from "@/lib/authHelper";
+import { clientIp, rateLimit, rateLimitResponse } from "@/lib/auth/rateLimit";
 import { sendOtpEmail } from "@/lib/mailer";
 import {
   OTP_RESEND_COOLDOWN_MS,
@@ -11,50 +12,35 @@ import {
 } from "@/lib/otp";
 import {
   findOtpByUserId,
-  getEmailVerified,
   setEmailVerified,
   upsertOtp,
 } from "@/lib/otpDb";
-import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
-    const decoded = await getDecodedTokenFromRequest(request);
-    if (!decoded?.uid || !decoded.email) {
+    const ip = clientIp(request);
+    const limited = rateLimit(`otp-send:${ip}`, 10, 15 * 60 * 1000);
+    if (!limited.allowed) return rateLimitResponse(limited.retryAfterSec);
+
+    const user = await getSessionDbUser(request);
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const provider = decoded.firebase?.sign_in_provider || "password";
-    const oauthVerified = isOAuthProvider(provider);
-
-    let user = await prisma.user.findUnique({
-      where: { firebaseUid: decoded.uid },
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          firebaseUid: decoded.uid,
-          email: decoded.email,
-          name: decoded.name || decoded.email.split("@")[0] || "User",
-          avatarUrl: decoded.picture || null,
-          provider,
-          providerId: decoded.uid,
-        },
-      });
-    }
-
-    let emailVerified = await getEmailVerified(user.id);
-    if (oauthVerified && !emailVerified) {
+    if (isOAuthProvider(user.provider) && !user.emailVerified) {
       await setEmailVerified(user.id, true);
-      emailVerified = true;
-    }
-
-    if (emailVerified) {
       return NextResponse.json({
         success: true,
         alreadyVerified: true,
         user: publicUser({ ...user, emailVerified: true }),
+      });
+    }
+
+    if (user.emailVerified) {
+      return NextResponse.json({
+        success: true,
+        alreadyVerified: true,
+        user: publicUser(user),
       });
     }
 

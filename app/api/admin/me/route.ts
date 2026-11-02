@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
-import { forbidden, requireAdmin, unauthorized } from "@/lib/adminAuth";
+import { requireAdmin, unauthorized } from "@/lib/adminAuth";
 
 export async function GET(request: Request) {
-  const token = request.headers.get("Authorization");
-  if (!token?.startsWith("Bearer ")) {
-    return unauthorized();
-  }
-
   const admin = await requireAdmin(request);
-  if (!admin) return forbidden();
+  if (!admin) return unauthorized();
 
   return NextResponse.json({
     success: true,

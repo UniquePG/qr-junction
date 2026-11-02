@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { dashboardService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { Globe, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -50,8 +49,7 @@ export default function DashboardOverview() {
   const fetchStats = async (start?: Date | null, end?: Date | null) => {
     setLoading(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await dashboardService.stats(start, end);
 

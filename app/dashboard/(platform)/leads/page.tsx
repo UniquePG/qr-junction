@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { leadService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import { 
   Users, 
@@ -56,8 +55,7 @@ export default function LeadsPage() {
 
   const fetchLeads = async () => {
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await leadService.list();
 
@@ -85,8 +83,7 @@ export default function LeadsPage() {
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await leadService.update(id, { status: newStatus });
 
@@ -107,8 +104,7 @@ export default function LeadsPage() {
 
   const handleSaveNotes = async (id: string) => {
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await leadService.update(id, { notes: tempNotes });
 
@@ -133,8 +129,7 @@ export default function LeadsPage() {
 
     setDeleting(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await leadService.remove(deletingLeadId);
 

@@ -1,21 +1,17 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { 
-  onAuthStateChanged, 
-  signOut, 
-  User as FirebaseUser 
-} from 'firebase/auth';
-import { authService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { authService } from "@/lib/api";
 
-interface AuthUser {
+export interface AuthUser {
   uid: string;
+  id: number;
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
   emailVerified: boolean;
   provider: string | null;
+  role: string;
 }
 
 interface AuthContextType {
@@ -32,19 +28,17 @@ const AuthContext = createContext<AuthContextType>({
   refreshUser: async () => {},
 });
 
-function mapAuthUser(
-  firebaseUser: FirebaseUser,
-  extras?: { emailVerified?: boolean; provider?: string | null },
-): AuthUser {
-  const provider = extras?.provider || firebaseUser.providerData[0]?.providerId || 'password';
-  const oauth = provider === 'google.com' || provider === 'apple.com';
+function mapPublicUser(raw: any): AuthUser {
+  const id = Number(raw?.id) || 0;
   return {
-    uid: firebaseUser.uid,
-    email: firebaseUser.email,
-    displayName: firebaseUser.displayName,
-    photoURL: firebaseUser.photoURL,
-    emailVerified: extras?.emailVerified ?? (oauth || firebaseUser.emailVerified),
-    provider,
+    uid: String(id),
+    id,
+    email: raw?.email ?? null,
+    displayName: raw?.name ?? null,
+    photoURL: raw?.avatarUrl ?? null,
+    emailVerified: Boolean(raw?.emailVerified),
+    provider: raw?.provider ?? "password",
+    role: raw?.role || "USER",
   };
 }
 
@@ -52,86 +46,56 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const syncFirebaseUser = useCallback(async (firebaseUser: FirebaseUser) => {
-    const token = await firebaseUser.getIdToken();
-
-    let tempPassword = null;
-    if (typeof window !== 'undefined') {
-      tempPassword = sessionStorage.getItem('temp_auth_pwd');
-      sessionStorage.removeItem('temp_auth_pwd');
-    }
-
-    document.cookie = `qrj_token=${token}; path=/; max-age=3600; SameSite=Lax; Secure`;
-
-    const syncRes = await authService.sync({
-      password: tempPassword,
-      provider: firebaseUser.providerData[0]?.providerId || 'password',
-    });
-
-    let emailVerified: boolean | undefined;
-    let provider: string | null = firebaseUser.providerData[0]?.providerId || 'password';
-    if (syncRes.ok) {
-      const syncData = await syncRes.json().catch(() => null);
-      if (typeof syncData?.user?.emailVerified === 'boolean') {
-        emailVerified = syncData.user.emailVerified;
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await authService.me();
+      if (!res.ok) {
+        setUser(null);
+        return;
       }
-      if (syncData?.user?.provider) {
-        provider = syncData.user.provider;
+      const data = await res.json().catch(() => null);
+      if (data?.user) {
+        setUser(mapPublicUser(data.user));
+      } else {
+        setUser(null);
       }
+    } catch (error) {
+      console.error("Error refreshing user:", error);
+      setUser(null);
     }
-
-    setUser(mapAuthUser(firebaseUser, { emailVerified, provider }));
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let cancelled = false;
+    (async () => {
       try {
-        if (firebaseUser) {
-          await syncFirebaseUser(firebaseUser);
-        } else {
-          document.cookie = 'qrj_token=; path=/; max-age=0; SameSite=Lax; Secure';
-          setUser(null);
-        }
-      } catch (error) {
-        console.error('Error during auth state change:', error);
-        if (firebaseUser) {
-          setUser(mapAuthUser(firebaseUser));
-        } else {
-          setUser(null);
-        }
+        await refreshUser();
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    });
-
-    return () => unsubscribe();
-  }, [syncFirebaseUser]);
-
-  const refreshUser = useCallback(async () => {
-    const firebaseUser = auth.currentUser;
-    if (!firebaseUser) {
-      setUser(null);
-      return;
-    }
-    try {
-      await firebaseUser.reload();
-      await firebaseUser.getIdToken(true);
-      await syncFirebaseUser(auth.currentUser || firebaseUser);
-    } catch (error) {
-      console.error('Error refreshing user:', error);
-    }
-  }, [syncFirebaseUser]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshUser]);
 
   const logout = async () => {
     try {
-      if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('qrj_otp_lock');
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("qrj_otp_lock");
+        sessionStorage.removeItem("temp_auth_pwd");
       }
-      await signOut(auth);
-      document.cookie = 'qrj_token=; path=/; max-age=0; SameSite=Lax; Secure';
+      await authService.logout();
+      try {
+        const { auth } = await import("@/lib/firebase");
+        await auth.signOut();
+      } catch {
+        /* ignore Firebase client cleanup */
+      }
       setUser(null);
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
+      setUser(null);
     }
   };
 

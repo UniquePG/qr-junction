@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { qrService } from '@/lib/api';
-import { auth } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthContext';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
@@ -73,8 +72,7 @@ export default function QrListPage() {
 
   const fetchQRs = async () => {
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await qrService.list();
 
@@ -104,8 +102,7 @@ export default function QrListPage() {
   const handleToggleStatus = async (qr: QRCodeData) => {
     const newStatus = qr.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await qrService.update(qr.id, { status: newStatus });
 
@@ -134,8 +131,7 @@ export default function QrListPage() {
 
     setDeleting(true);
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      if (!user) return;
 
       const res = await qrService.remove(deletingQrId);
 

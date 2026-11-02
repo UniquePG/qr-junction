@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const SESSION_COOKIE = "qrj_session";
+
 const ADMIN_HOST = (process.env.NEXT_PUBLIC_ADMIN_HOST || "admin.qrjunction.in")
   .replace(/^https?:\/\//, "")
   .split(":")[0]
@@ -28,7 +30,31 @@ function adminResponse(response: NextResponse) {
   return response;
 }
 
+function sessionGate(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl;
+  const hasSession = Boolean(request.cookies.get(SESSION_COOKIE)?.value);
+
+  if (pathname.startsWith("/admin/login")) {
+    return null;
+  }
+
+  if (pathname.startsWith("/admin") && !hasSession) {
+    return NextResponse.redirect(new URL("/admin/login", request.url));
+  }
+
+  if (pathname.startsWith("/dashboard") && !hasSession) {
+    const login = new URL("/login", request.url);
+    login.searchParams.set("next", pathname);
+    return NextResponse.redirect(login);
+  }
+
+  return null;
+}
+
 export function proxy(request: NextRequest) {
+  const gated = sessionGate(request);
+  if (gated) return gated;
+
   const host = request.headers.get("host") || "";
   if (!isAdminHost(host)) {
     return NextResponse.next();
