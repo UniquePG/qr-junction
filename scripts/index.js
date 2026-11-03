@@ -11,11 +11,12 @@
 
 const fs = require("fs");
 const path = require("path");
-const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 const admin = require("firebase-admin");
 const { PrismaClient } = require("@prisma/client");
 
-const MIN_PASSWORD_LENGTH = 6;
+const MIN_PASSWORD_LENGTH = 8;
+const BCRYPT_COST = 12;
 
 function loadEnv() {
   const envPath = path.join(__dirname, "..", ".env");
@@ -57,8 +58,8 @@ function parseArgs(argv) {
   };
 }
 
-function hashPassword(password) {
-  return crypto.createHash("sha256").update(password).digest("hex");
+async function hashPassword(password) {
+  return bcrypt.hash(password, BCRYPT_COST);
 }
 
 function initFirebase() {
@@ -101,7 +102,7 @@ async function upsertFirebaseUser(auth, email, password) {
 }
 
 async function upsertDbUser(prisma, firebaseUser, email, password, role) {
-  const passwordHash = hashPassword(password);
+  const passwordHash = await hashPassword(password);
   const name = email.split("@")[0] || "Admin";
 
   const existing = await prisma.user.findUnique({ where: { email } });

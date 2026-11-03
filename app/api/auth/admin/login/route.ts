@@ -40,6 +40,9 @@ export async function POST(request: Request) {
     return response;
   } catch (error) {
     console.error("Admin login failed:", error);
-    return NextResponse.json({ error: INVALID_CREDENTIALS }, { status: 401 });
+    return NextResponse.json(
+      { error: "Sign-in is temporarily unavailable. Please try again." },
+      { status: 500 },
+    );
   }
 }

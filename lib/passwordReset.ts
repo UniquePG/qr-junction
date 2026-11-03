@@ -47,6 +47,7 @@ export function getAppBaseUrl(): string {
   return "http://localhost:3000";
 }
 
+/** @deprecated Prefer async hashPassword from lib/password (bcrypt). Kept for rare sync callers. */
 export function hashPasswordForDb(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");
 }

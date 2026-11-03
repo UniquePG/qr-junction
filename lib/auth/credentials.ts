@@ -35,18 +35,24 @@ export function userIsAdmin(user: Pick<CredentialUser, "role" | "email">): boole
   return isAdminRole(user.role, user.email);
 }
 
-/** One-time Firebase email/password bridge when DB hash is missing. */
+type FirebaseBridgeResult =
+  | { ok: true; uid: string }
+  | { ok: false };
+
+/**
+ * Verify email/password against Firebase Identity Toolkit.
+ * Accepts when:
+ * - stored firebaseUid matches the signed-in localId, or
+ * - stored firebaseUid is missing (legacy rows) and sign-in succeeds.
+ */
 async function bridgeFirebasePassword(
   email: string,
   password: string,
   firebaseUid: string | null,
-): Promise<boolean> {
-  if (!firebaseUid) return false;
+): Promise<FirebaseBridgeResult> {
   try {
-    // Firebase Admin cannot verify a password directly; use REST signInWithPassword
-    // when API key is available, otherwise reject (user must reset).
     const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
-    if (!apiKey) return false;
+    if (!apiKey) return { ok: false };
 
     const res = await fetch(
       `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
@@ -60,21 +66,63 @@ async function bridgeFirebasePassword(
         }),
       },
     );
-    if (!res.ok) return false;
+    if (!res.ok) return { ok: false };
+
     const data = (await res.json().catch(() => null)) as { localId?: string } | null;
-    if (!data?.localId) return false;
-    return data.localId === firebaseUid;
+    const uid = data?.localId;
+    if (!uid) return { ok: false };
+
+    if (firebaseUid && firebaseUid !== uid) return { ok: false };
+    return { ok: true, uid };
   } catch {
-    return false;
+    return { ok: false };
   }
+}
+
+async function persistUpgradedCredentials(
+  user: CredentialUser,
+  password: string,
+  firebaseUid?: string | null,
+): Promise<CredentialUser> {
+  const nextHash = await hashPassword(password);
+  const data: {
+    passwordHash: string;
+    provider?: string;
+    firebaseUid?: string;
+    providerId?: string;
+  } = {
+    passwordHash: nextHash,
+  };
+
+  if (!user.provider) {
+    data.provider = "password";
+  }
+
+  if (firebaseUid && firebaseUid !== user.firebaseUid) {
+    data.firebaseUid = firebaseUid;
+    data.providerId = firebaseUid;
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data,
+  });
+
+  user.passwordHash = nextHash;
+  if (data.firebaseUid) user.firebaseUid = data.firebaseUid;
+  if (data.provider) user.provider = data.provider;
+  return user;
 }
 
 export type AuthAudience = "public" | "admin";
 
 /**
  * Verifies email/password for the given audience.
- * Returns null on any failure (generic invalid credentials).
- * Never reveals whether the account is admin on the public path.
+ * Order:
+ * 1. bcrypt / legacy SHA-256 in Postgres
+ * 2. Firebase email/password (missing hash, or stale hash that no longer matches)
+ * On Firebase success, upgrades the row to a bcrypt hash.
+ * Returns null on auth failure (generic invalid credentials).
  */
 export async function authenticateEmailPassword(
   email: string,
@@ -95,27 +143,17 @@ export async function authenticateEmailPassword(
 
   if (user.passwordHash) {
     const result = await verifyPassword(password, user.passwordHash);
-    if (!result.ok) return null;
-    if (result.needsRehash) {
-      const nextHash = await hashPassword(password);
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { passwordHash: nextHash },
-      });
-      user.passwordHash = nextHash;
+    if (result.ok) {
+      if (result.needsRehash) {
+        return persistUpgradedCredentials(user, password);
+      }
+      return user;
     }
-    return user;
+    // Stale DB hash: fall through to Firebase before rejecting.
   }
 
-  // Legacy bridge: no DB hash yet
   const bridged = await bridgeFirebasePassword(email, password, user.firebaseUid);
-  if (!bridged) return null;
+  if (!bridged.ok) return null;
 
-  const nextHash = await hashPassword(password);
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { passwordHash: nextHash, provider: user.provider || "password" },
-  });
-  user.passwordHash = nextHash;
-  return user;
+  return persistUpgradedCredentials(user, password, bridged.uid);
 }

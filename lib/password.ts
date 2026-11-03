@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 
 const BCRYPT_COST = 12;
 const MIN_PASSWORD_LENGTH = 8;
+const SHA256_HEX_RE = /^[a-f0-9]{64}$/i;
 
 export function isPasswordPolicyOk(password: string): boolean {
   if (typeof password !== "string") return false;
@@ -38,7 +39,7 @@ export type PasswordVerifyResult = {
   needsRehash: boolean;
 };
 
-/** Verifies bcrypt or legacy SHA-256 hashes. */
+/** Verifies bcrypt or legacy SHA-256 hashes. Unknown formats fail closed. */
 export async function verifyPassword(
   password: string,
   storedHash: string | null | undefined,
@@ -50,11 +51,15 @@ export async function verifyPassword(
     return { ok, needsRehash: false };
   }
 
-  // Legacy SHA-256 from earlier sync/reset paths
+  // Legacy SHA-256 from earlier admin:create / sync paths
+  if (!SHA256_HEX_RE.test(storedHash)) {
+    return { ok: false, needsRehash: false };
+  }
+
   const legacy = sha256Hex(password);
   try {
     const a = Buffer.from(legacy, "hex");
-    const b = Buffer.from(storedHash, "hex");
+    const b = Buffer.from(storedHash.toLowerCase(), "hex");
     if (a.length !== b.length) return { ok: false, needsRehash: false };
     const ok = crypto.timingSafeEqual(a, b);
     return { ok, needsRehash: ok };
