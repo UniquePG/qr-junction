@@ -615,48 +615,101 @@ export default function MenuManagementPage() {
     }
   };
 
+  const fieldClass =
+    'w-full min-w-0 rounded-xl border border-[#E7DDD2] bg-[#FBF8F4] px-3.5 py-2.5 text-sm text-[#1C1410] outline-none transition focus:border-[#C4622D] focus:ring-2 focus:ring-[#C4622D]/15';
+  const iconBtn =
+    'inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border-none bg-transparent text-[#8A7568] transition hover:bg-[#F6F1EA] hover:text-[#1C1410] disabled:cursor-not-allowed disabled:opacity-30';
+
   if (menusLoading && menus.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#C4622D]" />
       </div>
     );
   }
 
   if (menus.length === 0) {
     return (
-      <div className="max-w-xl mx-auto text-center py-12 bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-        <Utensils className="w-12 h-12 text-primary/40 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-[#001B50] mb-2">Setup Restaurant First</h2>
-        <p className="text-slate-500 mb-6">You need to set up your Restaurant profile settings before managing categories and dishes.</p>
-        <a 
-          href="/dashboard/restaurant/profile" 
-          className="bg-primary hover:bg-[#00143c] text-white font-semibold py-2.5 px-6 rounded-xl transition-all shadow-sm"
+      <div className="mx-auto max-w-lg rounded-3xl border border-[#E7DDD2] bg-white px-6 py-12 text-center shadow-[0_1px_0_rgba(28,20,16,0.04)]">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FFF4EC]">
+          <Utensils className="h-7 w-7 text-[#C4622D]" />
+        </div>
+        <h2 className="mt-4 text-xl font-semibold text-[#1C1410]">Set up restaurant first</h2>
+        <p className="mt-2 text-sm text-[#6B5A50]">
+          Create your restaurant profile before managing menus, categories, and dishes.
+        </p>
+        <a
+          href="/dashboard/restaurant/profile"
+          className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[#1C1410] px-5 text-sm font-semibold text-white no-underline"
         >
-          Go to Profile Settings
+          Go to profile
         </a>
       </div>
     );
   }
 
   const activeCategory = categories.find(c => c.id === activeTabCategoryId) || null;
+  const totalDishes = categories.reduce((acc, cat) => acc + (cat.items?.length || 0), 0);
+  const availableDishes = categories.reduce(
+    (acc, cat) => acc + (cat.items?.filter((item) => item.isAvailable).length || 0),
+    0,
+  );
+  const menuScans = currentMenu?.qrCode?.totalScans ?? 0;
 
   return (
-    <div className="pb-12 animate-fade-in max-w-7xl mx-auto">
-      {/* Menu selector and headers row */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 border-b border-slate-200 pb-5">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#001B50] mb-1">Menu Management</h1>
-          <p className="text-slate-500 text-sm">Create and organize multiple menus, categories, and dishes.</p>
+    <div className="mx-auto max-w-6xl animate-fade-in overflow-x-clip pb-28 md:pb-12">
+      <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C4622D]">Kitchen catalog</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#1C1410] sm:text-3xl">Menu Management</h1>
+          <p className="mt-1 max-w-xl text-sm text-[#6B5A50]">
+            Build menus, organize categories, and polish dishes guests see when they scan.
+          </p>
         </div>
+        {currentMenu ? (
+          <a
+            href={currentMenu.isDefault ? `/r/${restaurant?.id}` : `/r/${restaurant?.id}/${currentMenu.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border-none bg-[#1C1410] px-4 text-sm font-semibold text-white no-underline hover:bg-[#2A211C] sm:w-auto"
+          >
+            <Eye className="h-4 w-4" />
+            Live preview
+          </a>
+        ) : null}
+      </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-          <div className="col-span-2 flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 sm:col-span-1">
-            <FolderClosed className="w-4 h-4 text-slate-400" />
+      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="min-w-0 rounded-2xl border border-[#E7DDD2] bg-white px-4 py-3 shadow-[0_1px_0_rgba(28,20,16,0.04)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8A7568]">Categories</p>
+          <p className="mt-1 text-2xl font-semibold tracking-tight text-[#1C1410]">{categories.length}</p>
+        </div>
+        <div className="min-w-0 rounded-2xl border border-[#E7DDD2] bg-white px-4 py-3 shadow-[0_1px_0_rgba(28,20,16,0.04)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8A7568]">Dishes</p>
+          <p className="mt-1 text-2xl font-semibold tracking-tight text-[#1C1410]">{totalDishes}</p>
+          <p className="mt-0.5 truncate text-xs text-[#6B5A50]">{availableDishes} available</p>
+        </div>
+        <div className="min-w-0 rounded-2xl border border-[#E7DDD2] bg-white px-4 py-3 shadow-[0_1px_0_rgba(28,20,16,0.04)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8A7568]">Menus</p>
+          <p className="mt-1 text-2xl font-semibold tracking-tight text-[#1C1410]">{menus.length}</p>
+        </div>
+        <div className="min-w-0 rounded-2xl border border-[#E7DDD2] bg-white px-4 py-3 shadow-[0_1px_0_rgba(28,20,16,0.04)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8A7568]">QR scans</p>
+          <p className="mt-1 text-2xl font-semibold tracking-tight text-[#1C1410]">{menuScans}</p>
+          <p className="mt-0.5 truncate text-xs text-[#6B5A50]">
+            {currentMenu?.qrCode ? `${currentMenu.qrCode.uniqueScans} unique` : 'No QR yet'}
+          </p>
+        </div>
+      </div>
+
+      <div className="mb-5 rounded-3xl border border-[#E7DDD2] bg-white p-3 shadow-[0_1px_0_rgba(28,20,16,0.04)] sm:p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-[#E7DDD2] bg-[#FBF8F4] px-3 py-2.5">
+            <FolderClosed className="h-4 w-4 shrink-0 text-[#8A7568]" />
             <select
               value={selectedMenuId || ''}
               onChange={(e) => setSelectedMenuId(Number(e.target.value))}
-              className="bg-transparent text-sm font-bold text-[#001B50] outline-none cursor-pointer pr-4"
+              className="min-w-0 flex-1 cursor-pointer bg-transparent text-sm font-semibold text-[#1C1410] outline-none"
             >
               {menus.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -666,81 +719,71 @@ export default function MenuManagementPage() {
             </select>
           </div>
 
-          <button
-            onClick={() => {
-              setLayoutPickerMode('live');
-              setShowLayoutPicker(true);
-            }}
-            className="p-2.5 bg-white hover:bg-slate-50 text-[#001B50] rounded-xl transition-colors cursor-pointer border border-slate-200 flex items-center justify-center gap-1.5 text-xs font-bold whitespace-nowrap"
-            title="Preview and change guest menu layout"
-          >
-            <Palette className="w-4 h-4" />
-            Change layout
-          </button>
-
-          <button
-            onClick={() => {
-              setEditingMenu(currentMenu ? { ...currentMenu } : null);
-              setShowMenuModal(true);
-            }}
-            className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors cursor-pointer border border-slate-250 flex items-center justify-center gap-1.5 text-xs font-bold whitespace-nowrap"
-            title="Edit Menu Theme & Details"
-          >
-            <Settings className="w-4 h-4" />
-            Edit Menu Info
-          </button>
-
-          <button
-            onClick={() => {
-              setEditingMenu({
-                name: '',
-                description: '',
-                theme: 'modern',
-                isDefault: false
-              });
-              setShowMenuModal(true);
-            }}
-            className="p-2.5 bg-slate-100 hover:bg-slate-200 text-primary rounded-xl transition-colors cursor-pointer border border-slate-250 flex items-center justify-center gap-1.5 text-xs font-bold whitespace-nowrap"
-            title="Create New Menu"
-          >
-            <Plus className="w-4 h-4" />
-            New Menu
-          </button>
-
-          {menus.length > 1 && (
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             <button
-              onClick={handleDeleteMenu}
-              className="p-2.5 bg-red-50 hover:bg-red-100 text-red-655 rounded-xl transition-colors cursor-pointer border border-red-200 flex items-center justify-center gap-1.5 text-xs font-bold whitespace-nowrap"
-              title="Delete Active Menu"
+              type="button"
+              onClick={() => {
+                setLayoutPickerMode('live');
+                setShowLayoutPicker(true);
+              }}
+              className="inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[#E7DDD2] bg-white px-3 text-xs font-semibold text-[#1C1410]"
+              title="Preview and change guest menu layout"
             >
-              <Trash2 className="w-4 h-4" />
-              Delete Menu
+              <Palette className="h-3.5 w-3.5 text-[#C4622D]" />
+              Layout
             </button>
-          )}
-
-          {currentMenu && (
-            <a
-              href={currentMenu.isDefault ? `/r/${restaurant?.id}` : `/r/${restaurant?.id}/${currentMenu.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary hover:bg-[#001b50] text-white font-bold rounded-xl text-xs transition-colors cursor-pointer border-none whitespace-nowrap"
+            <button
+              type="button"
+              onClick={() => {
+                setEditingMenu(currentMenu ? { ...currentMenu } : null);
+                setShowMenuModal(true);
+              }}
+              className="inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[#E7DDD2] bg-white px-3 text-xs font-semibold text-[#1C1410]"
+              title="Edit menu theme & details"
             >
-              <Eye className="w-4 h-4" />
-              Live Preview
-            </a>
-          )}
+              <Settings className="h-3.5 w-3.5 text-[#8A7568]" />
+              Menu info
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditingMenu({
+                  name: '',
+                  description: '',
+                  theme: 'modern',
+                  isDefault: false,
+                });
+                setShowMenuModal(true);
+              }}
+              className="inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-none bg-[#FFF4EC] px-3 text-xs font-semibold text-[#C4622D]"
+              title="Create new menu"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              New menu
+            </button>
+            {menus.length > 1 ? (
+              <button
+                type="button"
+                onClick={handleDeleteMenu}
+                className="inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-600"
+                title="Delete active menu"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <div className="flex h-64 items-center justify-center rounded-3xl border border-[#E7DDD2] bg-white">
+          <Loader2 className="h-8 w-8 animate-spin text-[#C4622D]" />
         </div>
       ) : (
-        /* Categories Sidebar & Dishes Editor Grid */
-        <div className="space-y-4 lg:space-y-6">
-          {currentMenu && currentMenu.qrCode && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+        <div className="space-y-5">
+          {currentMenu?.qrCode ? (
+            <div className="rounded-3xl border border-[#E7DDD2] bg-white p-4 shadow-[0_1px_0_rgba(28,20,16,0.04)] sm:p-5">
               <div className="hidden">
                 <CustomizableQRCode
                   id={`menu-qr-${currentMenu.qrCode.shortCode}`}
@@ -757,8 +800,8 @@ export default function MenuManagementPage() {
                 />
               </div>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-                <div className="flex items-center gap-4 min-w-0 flex-1">
-                  <div className="h-24 w-24 shrink-0 rounded-xl border border-slate-200 bg-white p-2 flex items-center justify-center">
+                <div className="flex min-w-0 flex-1 items-center gap-4">
+                  <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border border-[#E7DDD2] bg-[#FBF8F4] p-2">
                     <CustomizableQRCode
                       value={getQrUrl(currentMenu.qrCode.shortCode)}
                       fgColor={currentMenu.qrCode.fgColor || '#000000'}
@@ -773,450 +816,506 @@ export default function MenuManagementPage() {
                     />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Menu QR code</p>
-                    <p className="mt-1 font-semibold text-[#001B50] truncate">{currentMenu.name}</p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A7568]">Menu QR code</p>
+                    <p className="mt-1 truncate font-semibold text-[#1C1410]">{currentMenu.name}</p>
+                    <p className="mt-1 text-xs text-[#6B5A50]">
                       {currentMenu.qrCode.totalScans} scans · {currentMenu.qrCode.uniqueScans} unique
                     </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:ml-auto lg:shrink-0">
                   <button
+                    type="button"
                     onClick={() => setSelectedDesignQr(currentMenu.qrCode)}
-                    className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl text-xs border-none cursor-pointer whitespace-nowrap"
+                    className="col-span-2 inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border-none bg-[#1C1410] px-3 py-2.5 text-xs font-semibold text-white sm:col-span-1"
                   >
-                    <Palette className="w-3.5 h-3.5" />
+                    <Palette className="h-3.5 w-3.5" />
                     Customize
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleCopyMenuUrl(currentMenu.qrCode!.shortCode)}
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs border border-slate-200 cursor-pointer whitespace-nowrap"
+                    className="inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-[#E7DDD2] bg-white px-3 py-2.5 text-xs font-semibold text-[#1C1410]"
                   >
-                    {copiedMenuId ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedMenuId ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                     Copy URL
                   </button>
                   <button
+                    type="button"
                     onClick={() => downloadMenuQR(currentMenu.qrCode!, currentMenu.name)}
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-primary hover:bg-[#001b50] text-white font-semibold rounded-xl text-xs border-none cursor-pointer whitespace-nowrap"
+                    className="inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border-none bg-[#C4622D] px-3 py-2.5 text-xs font-semibold text-white"
                   >
-                    <Download className="w-3.5 h-3.5" />
+                    <Download className="h-3.5 w-3.5" />
                     Download
                   </button>
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
 
-        <div className="grid min-w-0 grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
-          {/* Categories Sidebar */}
-          <div className="min-w-0 lg:col-span-1 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col h-fit lg:sticky lg:top-4 lg:self-start">
-            <div className="flex shrink-0 items-center justify-between mb-3 px-2">
-              <h3 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Categories</h3>
-              <button 
-                onClick={() => {
-                  setNewCatName('');
-                  setShowAddCatModal(true);
-                }}
-                className="p-1 text-primary hover:bg-primary/5 rounded-lg"
-                title="Add Category"
-              >
-                <Plus className="w-4.5 h-4.5" />
-              </button>
-            </div>
-            
-            {categories.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
-                <ShoppingBag className="w-8 h-8 mx-auto mb-2 text-slate-350" />
-                <p className="text-xs">No categories created yet.</p>
+          <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-12">
+            {/* Categories — chips on mobile, sticky sidebar on desktop */}
+            <div className="h-fit min-w-0 rounded-3xl border border-[#E7DDD2] bg-white p-4 shadow-[0_1px_0_rgba(28,20,16,0.04)] lg:sticky lg:top-4 lg:col-span-3 lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto">
+              <div className="mb-3 flex shrink-0 items-center justify-between px-1">
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A7568]">Categories</h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewCatName('');
+                    setShowAddCatModal(true);
+                  }}
+                  className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-[#E7DDD2] bg-[#FBF8F4] text-[#C4622D]"
+                  title="Add category"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
               </div>
-            ) : (
-              <div className="max-h-80 space-y-1.5 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] lg:max-h-[calc(100dvh-12rem)]">
-                {categories.map((cat, index) => {
-                  const isSelected = activeTabCategoryId === cat.id;
-                  const isEditing = editingCatId === cat.id;
-                  return (
-                    <div 
-                      key={cat.id} 
-                      className={`min-w-0 rounded-xl p-2.5 transition-all ${
-                        isSelected 
-                          ? 'bg-primary/5 text-primary border border-primary/20' 
-                          : 'hover:bg-slate-50 border border-transparent'
-                      }`}
-                    >
-                      {isEditing ? (
-                        <div className="flex items-center gap-1.5">
-                          <input 
-                            type="text" 
-                            value={editingCatName}
-                            onChange={(e) => setEditingCatName(e.target.value)}
-                            className="min-w-0 flex-1 bg-white border border-slate-300 rounded px-2 py-1 text-sm text-slate-800 focus:outline-none focus:border-primary"
-                            autoFocus
-                          />
-                          <button 
-                            type="button"
-                            aria-label="Save category"
-                            onClick={() => handleEditCategory(cat.id)}
-                            disabled={savingCat}
-                            className="flex h-8 w-8 shrink-0 items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-lg border-none bg-transparent cursor-pointer"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                          <button 
-                            type="button"
-                            aria-label="Cancel rename"
-                            onClick={() => setEditingCatId(null)}
-                            className="flex h-8 w-8 shrink-0 items-center justify-center text-red-500 hover:bg-red-50 rounded-lg border-none bg-transparent cursor-pointer"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => setActiveTabCategoryId(cat.id)}
-                            className="block w-full min-w-0 cursor-pointer border-none bg-transparent p-0 text-left text-sm font-semibold leading-snug break-words"
-                          >
-                            {cat.name}
-                            <span className="ml-1.5 text-[10px] font-normal text-slate-400">({cat.items?.length || 0})</span>
-                          </button>
 
-                          <div className="mt-1.5 flex items-center justify-end">
-                            <button
-                              type="button"
-                              aria-label="Move category up"
-                              onClick={() => handleReorderCategories(index, 'up')}
-                              disabled={index === 0}
-                              className="flex h-7 w-7 items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg disabled:opacity-30 cursor-pointer bg-transparent border-none"
-                            >
-                              <ArrowUp className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              aria-label="Move category down"
-                              onClick={() => handleReorderCategories(index, 'down')}
-                              disabled={index === categories.length - 1}
-                              className="flex h-7 w-7 items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg disabled:opacity-30 cursor-pointer bg-transparent border-none"
-                            >
-                              <ArrowDown className="w-3.5 h-3.5" />
-                            </button>
-                            <button 
-                              type="button"
-                              aria-label="Rename category"
-                              onClick={() => {
-                                setEditingCatId(cat.id);
-                                setEditingCatName(cat.name);
-                              }}
-                              className="flex h-7 w-7 items-center justify-center text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer bg-transparent border-none"
-                            >
-                              <Edit className="w-3.5 h-3.5" />
-                            </button>
-                            <button 
-                              type="button"
-                              aria-label="Delete category"
-                              onClick={() => handleDeleteCategory(cat.id)}
-                              className="flex h-7 w-7 items-center justify-center text-red-500 hover:bg-red-50 rounded-lg cursor-pointer bg-transparent border-none"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Dishes Inventory List */}
-          <div className="min-w-0 lg:col-span-3 space-y-6">
-            {activeCategory ? (
-              <div className="min-w-0 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-6">
-                <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 mb-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <h2 className="text-lg sm:text-xl font-bold text-[#001B50] break-words">{activeCategory.name}</h2>
-                    <p className="text-xs text-slate-500 mt-0.5">{activeCategory.items?.length || 0} items in this category</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setEditingItem({
-                        categoryId: activeCategory.id,
-                        name: '',
-                        description: '',
-                        price: 0,
-                        variants: null,
-                        config: null,
-                        tags: [],
-                        image: '',
-                        isAvailable: true,
-                        isVeg: true,
-                        isNonVeg: false,
-                        isVegan: false,
-                        isPopular: false
-                      });
-                      setCustomTagDraft('');
-                      setShowItemModal(true);
-                    }}
-                    className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 whitespace-nowrap px-3.5 py-2.5 bg-primary/10 hover:bg-primary/15 text-primary font-bold rounded-xl text-sm transition-colors cursor-pointer border-none"
-                  >
-                    <Plus className="w-4 h-4 shrink-0" />
-                    Add menu item
-                  </button>
+              {categories.length === 0 ? (
+                <div className="py-8 text-center text-[#8A7568]">
+                  <ShoppingBag className="mx-auto mb-2 h-8 w-8 text-[#D4C4B5]" />
+                  <p className="text-xs">No categories yet.</p>
                 </div>
-
-                {/* Items List */}
-                {(!activeCategory.items || activeCategory.items.length === 0) ? (
-                  <div className="text-center py-16 text-slate-400 border-2 border-dashed border-slate-200 rounded-2xl">
-                    <ShoppingBag className="w-12 h-12 mx-auto mb-3 text-slate-355" />
-                    <h4 className="font-bold text-slate-705 text-sm">Category is Empty</h4>
-                    <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Click "Add Menu Item" above to create dishes under this category.</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-slate-100">
-                    {activeCategory.items.map((item, index) => (
-                      <div key={item.id} className={`min-w-0 py-4 first:pt-2 ${item.isAvailable ? '' : 'opacity-90'}`}>
-                        <div className="flex items-start gap-3">
-                          <div
-                            className={`h-14 w-14 sm:h-16 sm:w-16 rounded-xl bg-slate-50 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 ${item.image ? 'cursor-zoom-in' : ''} ${item.isAvailable ? '' : 'grayscale'}`}
-                            onClick={() => {
-                              if (item.image) setPreviewImage(item.image);
-                            }}
-                          >
-                            {item.image ? (
-                              <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
-                            ) : (
-                              <Utensils className="w-5 h-5 text-slate-400" />
-                            )}
+              ) : (
+                <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] lg:max-h-[calc(100dvh-8rem)] lg:flex-col lg:overflow-y-auto lg:overflow-x-visible lg:pb-0">
+                  {categories.map((cat, index) => {
+                    const isSelected = activeTabCategoryId === cat.id;
+                    const isEditing = editingCatId === cat.id;
+                    return (
+                      <div
+                        key={cat.id}
+                        className={`min-w-[168px] shrink-0 rounded-2xl border p-2.5 transition lg:min-w-0 ${
+                          isSelected
+                            ? 'border-[#C4622D]/30 bg-[#FFF4EC]'
+                            : 'border-transparent bg-[#FBF8F4] hover:border-[#E7DDD2]'
+                        }`}
+                      >
+                        {isEditing ? (
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              value={editingCatName}
+                              onChange={(e) => setEditingCatName(e.target.value)}
+                              className="min-w-0 flex-1 rounded-lg border border-[#E7DDD2] bg-white px-2 py-1 text-sm outline-none"
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              aria-label="Save category"
+                              onClick={() => handleEditCategory(cat.id)}
+                              disabled={savingCat}
+                              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border-none bg-transparent text-emerald-600"
+                            >
+                              <Check className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="Cancel rename"
+                              onClick={() => setEditingCatId(null)}
+                              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border-none bg-transparent text-red-500"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
                           </div>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTabCategoryId(cat.id)}
+                              className="block w-full min-w-0 cursor-pointer break-words border-none bg-transparent p-0 text-left text-sm font-semibold leading-snug text-[#1C1410]"
+                            >
+                              {cat.name}
+                              <span className="ml-1.5 text-[10px] font-normal text-[#8A7568]">
+                                ({cat.items?.length || 0})
+                              </span>
+                            </button>
+                            <div className="mt-1.5 flex items-center justify-end">
+                              <button type="button" aria-label="Move category up" onClick={() => handleReorderCategories(index, 'up')} disabled={index === 0} className={iconBtn}>
+                                <ArrowUp className="h-3.5 w-3.5" />
+                              </button>
+                              <button type="button" aria-label="Move category down" onClick={() => handleReorderCategories(index, 'down')} disabled={index === categories.length - 1} className={iconBtn}>
+                                <ArrowDown className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                aria-label="Rename category"
+                                onClick={() => {
+                                  setEditingCatId(cat.id);
+                                  setEditingCatName(cat.name);
+                                }}
+                                className={`${iconBtn} hover:text-[#C4622D]`}
+                              >
+                                <Edit className="h-3.5 w-3.5" />
+                              </button>
+                              <button type="button" aria-label="Delete category" onClick={() => handleDeleteCategory(cat.id)} className={`${iconBtn} hover:text-red-500`}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
-                          <div className="min-w-0 flex-1">
-                            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2">
-                              <h4 className={`min-w-0 font-semibold text-sm sm:text-base leading-snug break-words ${item.isAvailable ? 'text-slate-900' : 'text-slate-500'}`}>{item.name}</h4>
-                              {!(item.variants && item.variants.length > 0) ? (
-                                <span className="whitespace-nowrap text-sm font-semibold text-slate-900">{currencySymbol}{Number(item.price).toFixed(2)}</span>
+            <div className="min-w-0 space-y-5 lg:col-span-9">
+              {activeCategory ? (
+                <div className="min-w-0 rounded-3xl border border-[#E7DDD2] bg-white p-4 shadow-[0_1px_0_rgba(28,20,16,0.04)] sm:p-6">
+                  <div className="mb-4 flex flex-col gap-3 border-b border-[#F0E8DF] pb-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <h2 className="break-words text-lg font-semibold text-[#1C1410] sm:text-xl">{activeCategory.name}</h2>
+                      <p className="mt-0.5 text-xs text-[#6B5A50]">
+                        {activeCategory.items?.length || 0} {(activeCategory.items?.length || 0) === 1 ? 'dish' : 'dishes'} in this category
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingItem({
+                          categoryId: activeCategory.id,
+                          name: '',
+                          description: '',
+                          price: 0,
+                          variants: null,
+                          config: null,
+                          tags: [],
+                          image: '',
+                          isAvailable: true,
+                          isVeg: true,
+                          isNonVeg: false,
+                          isVegan: false,
+                          isPopular: false,
+                        });
+                        setCustomTagDraft('');
+                        setShowItemModal(true);
+                      }}
+                      className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border-none bg-[#1C1410] px-4 text-sm font-semibold text-white sm:w-auto"
+                    >
+                      <Plus className="h-4 w-4 shrink-0" />
+                      Add dish
+                    </button>
+                  </div>
+
+                  {!activeCategory.items || activeCategory.items.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-[#E7DDD2] py-14 text-center">
+                      <ShoppingBag className="mx-auto mb-3 h-10 w-10 text-[#D4C4B5]" />
+                      <h4 className="text-sm font-semibold text-[#1C1410]">Category is empty</h4>
+                      <p className="mx-auto mt-1 max-w-xs text-xs text-[#6B5A50]">
+                        Add your first dish to this category.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {activeCategory.items.map((item, index) => (
+                        <div
+                          key={item.id}
+                          className={`min-w-0 rounded-2xl border border-[#E7DDD2] bg-[#FBF8F4] p-3.5 sm:p-4 ${
+                            item.isAvailable ? '' : 'opacity-90'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#E7DDD2] bg-white sm:h-16 sm:w-16 ${
+                                item.image ? 'cursor-zoom-in' : ''
+                              } ${item.isAvailable ? '' : 'grayscale'}`}
+                              onClick={() => {
+                                if (item.image) setPreviewImage(item.image);
+                              }}
+                            >
+                              {item.image ? (
+                                <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                              ) : (
+                                <Utensils className="h-5 w-5 text-[#D4C4B5]" />
+                              )}
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2">
+                                <h4
+                                  className={`min-w-0 break-words text-sm font-semibold leading-snug sm:text-base ${
+                                    item.isAvailable ? 'text-[#1C1410]' : 'text-[#8A7568]'
+                                  }`}
+                                >
+                                  {item.name}
+                                </h4>
+                                {!(item.variants && item.variants.length > 0) ? (
+                                  <span className="whitespace-nowrap text-sm font-semibold text-[#1C1410]">
+                                    {currencySymbol}
+                                    {Number(item.price).toFixed(2)}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <div className="mt-1.5 flex flex-wrap gap-1">
+                                {item.isVeg ? (
+                                  <span className="inline-flex items-center gap-1 rounded-md border border-emerald-100 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                    <VegMark /> Veg
+                                  </span>
+                                ) : null}
+                                {item.isNonVeg ? (
+                                  <span className="inline-flex items-center gap-1 rounded-md border border-red-100 bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
+                                    <NonVegMark /> Non-veg
+                                  </span>
+                                ) : null}
+                                {item.isVegan ? (
+                                  <span className="rounded-md border border-green-100 bg-green-50 px-1.5 py-0.5 text-[10px] font-semibold text-green-700">
+                                    Vegan
+                                  </span>
+                                ) : null}
+                                <ItemTags item={item} />
+                                {!item.isAvailable ? (
+                                  <span className="rounded-md border border-[#E7DDD2] bg-white px-1.5 py-0.5 text-[10px] font-semibold text-[#6B5A50]">
+                                    Not available
+                                  </span>
+                                ) : null}
+                              </div>
+                              {item.description ? (
+                                <p className="mt-1.5 line-clamp-2 text-xs text-[#6B5A50]">{item.description}</p>
+                              ) : null}
+                              {item.variants && item.variants.length > 0 ? (
+                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                  {item.variants.map((v, vi) => (
+                                    <span
+                                      key={vi}
+                                      className="rounded-lg border border-[#E7DDD2] bg-white px-2 py-0.5 text-xs font-semibold text-[#1C1410]"
+                                    >
+                                      {v.label}: {currencySymbol}
+                                      {Number(v.price).toFixed(0)}
+                                    </span>
+                                  ))}
+                                </div>
                               ) : null}
                             </div>
-                            <div className="mt-1.5 flex flex-wrap gap-1">
-                              {item.isVeg && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-semibold border border-emerald-100"><VegMark /> Veg</span>
-                              )}
-                              {item.isNonVeg && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-50 text-red-700 text-[10px] font-semibold border border-red-100"><NonVegMark /> Non-veg</span>
-                              )}
-                              {item.isVegan && (
-                                <span className="px-1.5 py-0.5 rounded bg-green-50 text-green-700 text-[10px] font-semibold border border-green-100">Vegan</span>
-                              )}
-                              <ItemTags item={item} />
-                              {!item.isAvailable && (
-                                <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-semibold border border-slate-200">Not available</span>
-                              )}
-                            </div>
-                            {item.description ? (
-                              <p className="text-slate-500 text-xs mt-1.5 line-clamp-2">{item.description}</p>
-                            ) : null}
-                            {item.variants && item.variants.length > 0 ? (
-                              <div className="mt-2 flex flex-wrap gap-1.5">
-                                {item.variants.map((v, vi) => (
-                                  <span key={vi} className="text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-lg">
-                                    {v.label}: {currencySymbol}{Number(v.price).toFixed(0)}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : null}
                           </div>
-                        </div>
 
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleItemToggle(item)}
-                            disabled={togglingItemId === item.id}
-                            aria-pressed={item.isAvailable}
-                            className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-2 text-xs font-semibold cursor-pointer disabled:opacity-60 ${
-                              item.isAvailable
-                                ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
-                                : 'border-slate-200 bg-white text-slate-600'
-                            }`}
-                          >
-                            <span className={`relative h-4 w-7 shrink-0 rounded-full transition-colors ${item.isAvailable ? 'bg-emerald-500' : 'bg-slate-300'}`}>
-                              <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow-sm transition-all ${item.isAvailable ? 'left-3.5' : 'left-0.5'}`} />
-                            </span>
-                            {togglingItemId === item.id ? 'Saving…' : item.isAvailable ? 'Available' : 'Not available'}
-                          </button>
-                          <div className="ml-auto flex shrink-0 items-center">
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
                             <button
                               type="button"
-                              aria-label="Move up"
-                              onClick={() => handleReorderItems(activeCategory.items, index, 'up')}
-                              disabled={index === 0}
-                              className="flex h-8 w-8 items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg disabled:opacity-30 cursor-pointer bg-transparent border-none"
+                              onClick={() => handleItemToggle(item)}
+                              disabled={togglingItemId === item.id}
+                              aria-pressed={item.isAvailable}
+                              className={`inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-2 text-xs font-semibold disabled:opacity-60 ${
+                                item.isAvailable
+                                  ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                                  : 'border-[#E7DDD2] bg-white text-[#6B5A50]'
+                              }`}
                             >
-                              <ArrowUp className="w-4 h-4" />
+                              <span
+                                className={`relative h-4 w-7 shrink-0 rounded-full transition-colors ${
+                                  item.isAvailable ? 'bg-emerald-500' : 'bg-[#D4C4B5]'
+                                }`}
+                              >
+                                <span
+                                  className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow-sm transition-all ${
+                                    item.isAvailable ? 'left-3.5' : 'left-0.5'
+                                  }`}
+                                />
+                              </span>
+                              {togglingItemId === item.id ? 'Saving…' : item.isAvailable ? 'Available' : 'Unavailable'}
                             </button>
-                            <button
-                              type="button"
-                              aria-label="Move down"
-                              onClick={() => handleReorderItems(activeCategory.items, index, 'down')}
-                              disabled={index === activeCategory.items.length - 1}
-                              className="flex h-8 w-8 items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg disabled:opacity-30 cursor-pointer bg-transparent border-none"
-                            >
-                              <ArrowDown className="w-4 h-4" />
-                            </button>
-                            <button
-                              type="button"
-                              aria-label="Edit item"
-                              onClick={() => {
-                                setEditingItem({ ...item, tags: tagsForItem(item) });
-                                setCustomTagDraft('');
-                                setShowItemModal(true);
-                              }}
-                              className="flex h-8 w-8 items-center justify-center text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer bg-transparent border-none"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              type="button"
-                              aria-label="Delete item"
-                              onClick={() => handleDeleteItem(item.id)}
-                              className="flex h-8 w-8 items-center justify-center text-red-600 hover:bg-red-50 rounded-lg cursor-pointer bg-transparent border-none"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="ml-auto flex shrink-0 items-center">
+                              <button type="button" aria-label="Move up" onClick={() => handleReorderItems(activeCategory.items, index, 'up')} disabled={index === 0} className={iconBtn}>
+                                <ArrowUp className="h-4 w-4" />
+                              </button>
+                              <button type="button" aria-label="Move down" onClick={() => handleReorderItems(activeCategory.items, index, 'down')} disabled={index === activeCategory.items.length - 1} className={iconBtn}>
+                                <ArrowDown className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                aria-label="Edit item"
+                                onClick={() => {
+                                  setEditingItem({ ...item, tags: tagsForItem(item) });
+                                  setCustomTagDraft('');
+                                  setShowItemModal(true);
+                                }}
+                                className={`${iconBtn} hover:text-[#C4622D]`}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button type="button" aria-label="Delete item" onClick={() => handleDeleteItem(item.id)} className={`${iconBtn} hover:text-red-500`}>
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-3xl border border-dashed border-[#E7DDD2] bg-white px-6 py-16 text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FFF4EC]">
+                    <Utensils className="h-7 w-7 text-[#C4622D]" />
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="bg-white rounded-2xl border border-slate-200 p-16 text-center shadow-sm">
-                <Utensils className="w-12 h-12 text-slate-300 mx-auto mb-4 animate-bounce" />
-                <h3 className="font-bold text-[#001B50] text-lg mb-1">Manage Menu Items</h3>
-                <p className="text-slate-500 text-sm max-w-sm mx-auto">Create a menu category on the left to start adding and organizing dishes.</p>
-              </div>
-            )}
+                  <h3 className="mt-4 text-lg font-semibold text-[#1C1410]">Start with a category</h3>
+                  <p className="mx-auto mt-1 max-w-sm text-sm text-[#6B5A50]">
+                    Add a category, then create dishes guests will see on the live menu.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewCatName('');
+                      setShowAddCatModal(true);
+                    }}
+                    className="mt-5 inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl border-none bg-[#C4622D] px-4 text-sm font-semibold text-white"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add category
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+
+          {/* Mobile sticky add dish */}
+          {activeCategory ? (
+            <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 p-4 md:hidden">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingItem({
+                    categoryId: activeCategory.id,
+                    name: '',
+                    description: '',
+                    price: 0,
+                    variants: null,
+                    config: null,
+                    tags: [],
+                    image: '',
+                    isAvailable: true,
+                    isVeg: true,
+                    isNonVeg: false,
+                    isVegan: false,
+                    isPopular: false,
+                  });
+                  setCustomTagDraft('');
+                  setShowItemModal(true);
+                }}
+                className="pointer-events-auto flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-none bg-[#C4622D] text-sm font-semibold text-white shadow-[0_12px_40px_rgba(196,98,45,0.35)]"
+              >
+                <Plus className="h-4 w-4" />
+                Add dish
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
 
-      {/* Add Category Modal */}
-      {showAddCatModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl mx-4 border border-slate-100">
-            <h3 className="text-lg font-bold text-[#001B50] mb-4">Add Menu Category</h3>
-            <input 
-              type="text" 
+      {showAddCatModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1C1410]/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-[#E7DDD2] bg-white p-6 shadow-2xl">
+            <h3 className="text-lg font-semibold text-[#1C1410]">Add category</h3>
+            <p className="mt-1 text-sm text-[#6B5A50]">Group dishes the way guests browse your menu.</p>
+            <input
+              type="text"
               placeholder="e.g. Appetizers, Desserts, Beverages"
               value={newCatName}
               onChange={(e) => setNewCatName(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm mb-4 font-sans focus:outline-none"
+              className={`${fieldClass} mt-4`}
               autoFocus
             />
-            <div className="flex justify-end gap-3">
-              <button 
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
                 onClick={() => setShowAddCatModal(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-600 cursor-pointer"
+                className="h-10 cursor-pointer rounded-xl border border-[#E7DDD2] bg-white px-4 text-xs font-semibold text-[#1C1410]"
               >
                 Cancel
               </button>
-              <button 
+              <button
+                type="button"
                 onClick={handleAddCategory}
                 disabled={savingCat || !newCatName.trim()}
-                className="px-4 py-2 bg-primary hover:bg-[#001b50] rounded-xl text-xs font-semibold text-white disabled:opacity-50 cursor-pointer flex items-center gap-1.5 border-none"
+                className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-xl border-none bg-[#C4622D] px-4 text-xs font-semibold text-white disabled:opacity-50"
               >
-                {savingCat && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Add Category
+                {savingCat ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                Add category
               </button>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Menu Settings Modal */}
-      {showMenuModal && editingMenu && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-[#001B50] mb-6">{editingMenu.id ? 'Edit Menu Details' : 'Create New Menu'}</h3>
-            
-            <div className="space-y-4">
+      {showMenuModal && editingMenu ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1C1410]/50 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-[#E7DDD2] bg-white p-6 shadow-2xl">
+            <h3 className="text-lg font-semibold text-[#1C1410]">
+              {editingMenu.id ? 'Edit menu details' : 'Create new menu'}
+            </h3>
+            <div className="mt-5 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Menu Name</label>
-                <input 
-                  type="text" 
+                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#8A7568]">Menu name</label>
+                <input
+                  type="text"
                   value={editingMenu.name || ''}
-                  onChange={(e) => setEditingMenu(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm focus:outline-none"
+                  onChange={(e) => setEditingMenu((prev) => ({ ...prev, name: e.target.value }))}
+                  className={fieldClass}
                   placeholder="e.g. Dinner Menu, Drinks Specials"
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Description</label>
-                <input 
-                  type="text" 
+                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#8A7568]">Description</label>
+                <input
+                  type="text"
                   value={editingMenu.description || ''}
-                  onChange={(e) => setEditingMenu(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm focus:outline-none"
+                  onChange={(e) => setEditingMenu((prev) => ({ ...prev, description: e.target.value }))}
+                  className={fieldClass}
                   placeholder="e.g. Served from 6:00 PM to 10:00 PM"
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Guest menu layout</label>
-                <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2.5">
-                  <p className="text-xs font-bold text-[#001B50] min-w-0 wrap-anywhere">{getMenuTheme(editingMenu.theme).name}</p>
+                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#8A7568]">Guest menu layout</label>
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-[#E7DDD2] bg-[#FBF8F4] px-3 py-2.5">
+                  <p className="min-w-0 text-xs font-semibold text-[#1C1410] wrap-anywhere">
+                    {getMenuTheme(editingMenu.theme).name}
+                  </p>
                   <button
                     type="button"
                     onClick={() => {
                       setLayoutPickerMode('draft');
                       setShowLayoutPicker(true);
                     }}
-                    className="shrink-0 px-3 py-2 rounded-xl bg-[#001B50] text-white text-[11px] font-bold border-none cursor-pointer"
+                    className="shrink-0 cursor-pointer rounded-xl border-none bg-[#1C1410] px-3 py-2 text-[11px] font-semibold text-white"
                   >
                     Change layout
                   </button>
                 </div>
               </div>
-
-              {/* Is Default Checkbox */}
-              <div className="py-2 border-y border-slate-100">
-                <label className="flex items-center gap-2 cursor-pointer select-none">
-                  <input 
-                    type="checkbox" 
-                    checked={editingMenu.isDefault || false}
-                    onChange={(e) => setEditingMenu(prev => ({ ...prev, isDefault: e.target.checked }))}
-                    className="rounded text-primary focus:ring-primary border-slate-300 w-4 h-4"
-                  />
-                  <span className="text-xs font-semibold text-slate-600">Make this the default menu for my restaurant</span>
-                </label>
-              </div>
+              <label className="flex cursor-pointer select-none items-center gap-2 border-y border-[#F0E8DF] py-3">
+                <input
+                  type="checkbox"
+                  checked={editingMenu.isDefault || false}
+                  onChange={(e) => setEditingMenu((prev) => ({ ...prev, isDefault: e.target.checked }))}
+                  className="h-4 w-4 rounded border-[#E7DDD2] text-[#C4622D]"
+                />
+                <span className="text-xs font-semibold text-[#6B5A50]">Make this the default menu</span>
+              </label>
             </div>
-
-            <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-slate-100">
-              <button 
+            <div className="mt-6 flex justify-end gap-2 border-t border-[#F0E8DF] pt-4">
+              <button
+                type="button"
                 onClick={() => {
                   setShowMenuModal(false);
                   setEditingMenu(null);
                 }}
-                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-650 cursor-pointer"
+                className="h-10 cursor-pointer rounded-xl border border-[#E7DDD2] bg-white px-4 text-xs font-semibold text-[#1C1410]"
               >
                 Cancel
               </button>
-              <button 
+              <button
+                type="button"
                 onClick={handleSaveMenu}
                 disabled={savingMenu || !editingMenu.name?.trim()}
-                className="px-5 py-2.5 bg-primary hover:bg-[#001b50] rounded-xl text-xs font-semibold text-white disabled:opacity-50 cursor-pointer flex items-center gap-1.5 border-none"
+                className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-xl border-none bg-[#C4622D] px-4 text-xs font-semibold text-white disabled:opacity-50"
               >
-                {savingMenu && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                {editingMenu.id ? 'Save Menu Details' : 'Create Menu'}
+                {savingMenu ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                {editingMenu.id ? 'Save details' : 'Create menu'}
               </button>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Add / Edit menu item sidebar */}
       {showItemModal && editingItem && (
@@ -1228,20 +1327,20 @@ export default function MenuManagementPage() {
             onClick={closeItemEditor}
           />
           <aside className="absolute inset-y-0 right-0 flex h-full w-full max-w-[480px] flex-col bg-white shadow-2xl">
-            <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-4 sm:px-5">
+            <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-[#E7DDD2] px-4 sm:px-5">
               <div className="min-w-0">
-                <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                <p className="truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A7568]">
                   {activeCategory?.name || 'Menu'}
                 </p>
-                <h2 id="item-editor-title" className="truncate text-base font-bold text-[#001B50] sm:text-lg">
-                  {editingItem.id ? 'Edit menu item' : 'Add menu item'}
+                <h2 id="item-editor-title" className="truncate text-base font-semibold text-[#1C1410] sm:text-lg">
+                  {editingItem.id ? 'Edit dish' : 'Add dish'}
                 </h2>
               </div>
               <button
                 type="button"
                 aria-label="Close"
                 onClick={closeItemEditor}
-                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-slate-100 text-slate-600 hover:bg-slate-200"
+                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-[#F6F1EA] text-[#6B5A50] hover:bg-[#E7DDD2]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1250,18 +1349,18 @@ export default function MenuManagementPage() {
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-5">
               <div className="space-y-6">
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-600">Dish name</label>
+                  <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#8A7568]">Dish name</label>
                   <input
                     type="text"
                     value={editingItem.name || ''}
                     onChange={(e) => setEditingItem(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className={fieldClass}
                     placeholder="e.g. Butter Chicken"
                   />
                 </div>
 
                 <div>
-                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-600">Availability</p>
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#8A7568]">Availability</p>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
@@ -1269,7 +1368,7 @@ export default function MenuManagementPage() {
                       className={`inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border px-3 text-sm font-semibold ${
                         editingItem.isAvailable !== false
                           ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                          : 'border-slate-200 bg-white text-slate-500'
+                          : 'border-[#E7DDD2] bg-white text-[#8A7568]'
                       }`}
                     >
                       Available
@@ -1279,14 +1378,14 @@ export default function MenuManagementPage() {
                       onClick={() => setEditingItem(prev => ({ ...prev, isAvailable: false }))}
                       className={`inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border px-3 text-sm font-semibold ${
                         editingItem.isAvailable === false
-                          ? 'border-slate-800 bg-slate-800 text-white'
-                          : 'border-slate-200 bg-white text-slate-500'
+                          ? 'border-[#1C1410] bg-[#1C1410] text-white'
+                          : 'border-[#E7DDD2] bg-white text-[#8A7568]'
                       }`}
                     >
-                      Not available
+                      Unavailable
                     </button>
                   </div>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                  <p className="mt-2 text-xs leading-relaxed text-[#6B5A50]">
                     {editingItem.isAvailable === false
                       ? 'Guests will not see this dish until you mark it available again.'
                       : 'Guests can see this dish on the menu.'}
@@ -1294,24 +1393,24 @@ export default function MenuManagementPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-600">Base price ({currencySymbol})</label>
+                  <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#8A7568]">Base price ({currencySymbol})</label>
                   <input
                     type="number"
                     value={editingItem.price === 0 ? '' : editingItem.price}
                     onChange={(e) => setEditingItem(prev => ({ ...prev, price: e.target.value === '' ? 0 : Number(e.target.value) }))}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className={fieldClass}
                     placeholder="0.00"
                     min="0"
                     step="0.01"
                   />
-                  <p className="mt-1.5 text-xs text-slate-500">Used when this dish has no size or portion prices.</p>
+                  <p className="mt-1.5 text-xs text-[#6B5A50]">Used when this dish has no size or portion prices.</p>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="rounded-2xl border border-[#E7DDD2] bg-[#FBF8F4] p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-wide text-slate-700">Size / portion</p>
-                      <p className="mt-1 text-xs leading-relaxed text-slate-500">Optional. Example: Quarter {currencySymbol}80, Half {currencySymbol}150, Full {currencySymbol}250.</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#8A7568]">Size / portion</p>
+                      <p className="mt-1 text-xs leading-relaxed text-[#6B5A50]">Optional. Example: Quarter {currencySymbol}80, Half {currencySymbol}150, Full {currencySymbol}250.</p>
                     </div>
                     <button
                       type="button"
@@ -1322,7 +1421,7 @@ export default function MenuManagementPage() {
                           variants: [...current, { label: '', price: 0 }]
                         }));
                       }}
-                      className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 self-start rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-primary"
+                      className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-1 self-start rounded-xl border border-[#E7DDD2] bg-white px-3 py-2 text-xs font-bold text-[#C4622D]"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       Add size
@@ -1332,7 +1431,7 @@ export default function MenuManagementPage() {
                   {editingItem.variants && editingItem.variants.length > 0 ? (
                     <div className="mt-3 space-y-2">
                       {editingItem.variants.map((variant, vi) => (
-                        <div key={vi} className="rounded-xl border border-slate-200 bg-white p-3">
+                        <div key={vi} className="rounded-xl border border-[#E7DDD2] bg-white p-3">
                           <div className="flex items-center gap-2">
                             <input
                               type="text"
@@ -1343,7 +1442,7 @@ export default function MenuManagementPage() {
                                 setEditingItem(prev => ({ ...prev, variants: updated }));
                               }}
                               placeholder="Size name, e.g. Half"
-                              className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary"
+                              className="min-w-0 flex-1 rounded-lg border border-[#E7DDD2] bg-[#FBF8F4] px-3 py-2 text-sm outline-none focus:border-[#C4622D]"
                             />
                             <button
                               type="button"
@@ -1357,8 +1456,8 @@ export default function MenuManagementPage() {
                               <X className="h-4 w-4" />
                             </button>
                           </div>
-                          <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                            <span className="text-sm text-slate-400">{currencySymbol}</span>
+                          <div className="mt-2 flex items-center gap-2 rounded-lg border border-[#E7DDD2] bg-[#FBF8F4] px-3 py-2">
+                            <span className="text-sm text-[#8A7568]">{currencySymbol}</span>
                             <input
                               type="number"
                               value={variant.price === 0 ? '' : variant.price}
@@ -1370,19 +1469,19 @@ export default function MenuManagementPage() {
                               placeholder="Price"
                               min="0"
                               step="0.01"
-                              className="w-full bg-transparent text-sm font-semibold text-slate-800 outline-none"
+                              className="w-full bg-transparent text-sm font-semibold text-[#1C1410] outline-none"
                             />
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="mt-3 text-center text-xs text-slate-400">No sizes yet. Add one if this dish has more than one price.</p>
+                    <p className="mt-3 text-center text-xs text-[#A89484]">No sizes yet. Add one if this dish has more than one price.</p>
                   )}
                 </div>
 
                 <div>
-                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-600">Dietary type</p>
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#8A7568]">Dietary type</p>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
@@ -1390,7 +1489,7 @@ export default function MenuManagementPage() {
                       className={`inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold ${
                         editingItem.isVeg
                           ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                          : 'border-slate-200 bg-white text-slate-500'
+                          : 'border-[#E7DDD2] bg-white text-[#8A7568]'
                       }`}
                     >
                       <VegMark />
@@ -1402,27 +1501,27 @@ export default function MenuManagementPage() {
                       className={`inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold ${
                         editingItem.isNonVeg
                           ? 'border-red-500 bg-red-50 text-red-600'
-                          : 'border-slate-200 bg-white text-slate-500'
+                          : 'border-[#E7DDD2] bg-white text-[#8A7568]'
                       }`}
                     >
                       <NonVegMark />
                       Non-veg
                     </button>
                   </div>
-                  <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3">
+                  <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-xl border border-[#E7DDD2] bg-white px-3 py-3">
                     <input
                       type="checkbox"
                       checked={editingItem.isVegan || false}
                       onChange={(e) => setEditingItem(prev => ({ ...prev, isVegan: e.target.checked }))}
-                      className="h-4 w-4 rounded border-slate-300 text-primary"
+                      className="h-4 w-4 rounded border-[#E7DDD2] text-[#C4622D]"
                     />
-                    <span className="text-sm font-semibold text-slate-700">Vegan</span>
+                    <span className="text-sm font-semibold text-[#1C1410]">Vegan</span>
                   </label>
                 </div>
 
                 <div>
-                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-600">Tags</p>
-                  <p className="mb-3 text-xs leading-5 text-slate-400">
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#8A7568]">Tags</p>
+                  <p className="mb-3 text-xs leading-5 text-[#A89484]">
                     Pick ready tags guests will notice, or add your own. Popular also feeds the Bestsellers filter.
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -1435,8 +1534,8 @@ export default function MenuManagementPage() {
                           onClick={() => toggleEditingTag(preset.id)}
                           className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
                             selected
-                              ? 'border-[#001B50] bg-[#001B50]/5 text-[#001B50]'
-                              : 'border-slate-200 bg-white text-slate-500'
+                              ? 'border-[#C4622D]/40 bg-[#FFF4EC] text-[#C4622D]'
+                              : 'border-[#E7DDD2] bg-white text-[#6B5A50]'
                           }`}
                         >
                           {preset.id === 'popular' ? <Sparkles className="h-3.5 w-3.5 fill-amber-500 text-amber-500" /> : null}
@@ -1454,7 +1553,7 @@ export default function MenuManagementPage() {
                             key={tag}
                             type="button"
                             onClick={() => toggleEditingTag(tag)}
-                            className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600"
+                            className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-[#E7DDD2] bg-[#FBF8F4] px-3 py-1.5 text-xs font-semibold text-[#6B5A50]"
                           >
                             {tag} ×
                           </button>
@@ -1472,37 +1571,37 @@ export default function MenuManagementPage() {
                         }
                       }}
                       placeholder="Add a custom tag"
-                      className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-primary"
+                      className={`${fieldClass} flex-1`}
                     />
                     <button
                       type="button"
                       onClick={addCustomEditingTag}
-                      className="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-[#001B50]"
+                      className="cursor-pointer rounded-xl border border-[#E7DDD2] bg-white px-3 py-2 text-sm font-semibold text-[#1C1410]"
                     >
                       Add
                     </button>
                   </div>
-                  <p className="mt-2 text-[11px] text-slate-400">{editingTags.length}/{MAX_ITEM_TAGS} tags</p>
+                  <p className="mt-2 text-[11px] text-[#A89484]">{editingTags.length}/{MAX_ITEM_TAGS} tags</p>
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-600">Description</label>
+                  <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#8A7568]">Description</label>
                   <textarea
                     value={editingItem.description || ''}
                     onChange={(e) => setEditingItem(prev => ({ ...prev, description: e.target.value }))}
                     rows={4}
-                    className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className={`${fieldClass} resize-none`}
                     placeholder="Ingredients, preparation style, spice level"
                   />
                 </div>
 
                 <div>
-                  <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-600">Dish photo</p>
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#8A7568]">Dish photo</p>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
                     <div className="relative h-24 w-24 shrink-0">
                       <button
                         type="button"
-                        className={`flex h-full w-full items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 ${editingItem.image ? 'cursor-zoom-in' : 'cursor-default'}`}
+                        className={`flex h-full w-full items-center justify-center overflow-hidden rounded-2xl border border-[#E7DDD2] bg-[#FBF8F4] ${editingItem.image ? 'cursor-zoom-in' : 'cursor-default'}`}
                         onClick={() => {
                           if (editingItem.image) setPreviewImage(editingItem.image);
                         }}
@@ -1510,7 +1609,7 @@ export default function MenuManagementPage() {
                         {editingItem.image ? (
                           <img src={editingItem.image} alt="" className="h-full w-full object-cover" />
                         ) : (
-                          <ImageIcon className="h-8 w-8 text-slate-300" />
+                          <ImageIcon className="h-8 w-8 text-[#D4C4B5]" />
                         )}
                       </button>
                       {editingItem.image ? (
@@ -1518,7 +1617,7 @@ export default function MenuManagementPage() {
                           type="button"
                           aria-label="Remove photo"
                           onClick={() => setEditingItem(prev => ({ ...prev, image: null }))}
-                          className="absolute -right-1.5 -top-1.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border-none bg-slate-900 text-white shadow-sm"
+                          className="absolute -right-1.5 -top-1.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border-none bg-[#1C1410] text-white shadow-sm"
                         >
                           <X className="h-3.5 w-3.5" />
                         </button>
@@ -1536,7 +1635,7 @@ export default function MenuManagementPage() {
                       <div className="grid grid-cols-1 gap-2">
                         <label
                           htmlFor="item-img-upload"
-                          className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-700 ${(uploadingItemImage || generatingAiImage) ? 'pointer-events-none opacity-50' : ''}`}
+                          className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[#E7DDD2] bg-white px-4 py-2.5 text-xs font-semibold text-[#1C1410] ${(uploadingItemImage || generatingAiImage) ? 'pointer-events-none opacity-50' : ''}`}
                         >
                           {uploadingItemImage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
                           Upload photo
@@ -1545,26 +1644,26 @@ export default function MenuManagementPage() {
                           type="button"
                           onClick={handleGenerateAiImage}
                           disabled={uploadingItemImage || generatingAiImage}
-                          className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border-none bg-primary/10 px-4 py-2.5 text-xs font-bold text-primary disabled:opacity-50"
+                          className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border-none bg-[#FFF4EC] px-4 py-2.5 text-xs font-bold text-[#C4622D] disabled:opacity-50"
                         >
                           {generatingAiImage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
                           {generatingAiImage ? 'Generating…' : 'Generate with AI'}
                         </button>
                       </div>
-                      <p className="mt-2 text-xs text-slate-400">Square photo works best. Maximum 1MB.</p>
+                      <p className="mt-2 text-xs text-[#A89484]">Square photo works best. Maximum 1MB.</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <footer className="shrink-0 border-t border-slate-200 bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
+            <footer className="shrink-0 border-t border-[#E7DDD2] bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={closeItemEditor}
                   disabled={savingItem || uploadingItemImage || generatingAiImage}
-                  className="h-11 cursor-pointer rounded-xl border-none bg-slate-100 text-sm font-semibold text-slate-700 disabled:opacity-50"
+                  className="h-11 cursor-pointer rounded-xl border border-[#E7DDD2] bg-white text-sm font-semibold text-[#1C1410] disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -1572,9 +1671,9 @@ export default function MenuManagementPage() {
                   type="button"
                   onClick={handleSaveItem}
                   disabled={savingItem || uploadingItemImage || generatingAiImage}
-                  className="inline-flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-none bg-primary text-sm font-semibold text-white disabled:opacity-50"
+                  className="inline-flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-none bg-[#C4622D] text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  {savingItem && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {savingItem ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   {editingItem.id ? 'Save changes' : 'Save dish'}
                 </button>
               </div>
