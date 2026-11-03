@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { planErrorResponse } from '@/lib/billing/errors';
 import { requireEnabled, requireWritable } from '@/lib/billing/guard';
+import { syncCategoryTranslations } from '@/lib/menu/i18n/sync';
 
 async function getRestaurantByUserId(userId: number) {
   return await prisma.restaurant.findUnique({
@@ -56,6 +57,10 @@ export async function POST(request: Request) {
         name,
         order: order !== undefined ? Number(order) : nextOrder,
       },
+    });
+
+    void syncCategoryTranslations(restaurant.id, category.id).catch((error) => {
+      console.error('Category translation sync failed:', error);
     });
 
     return NextResponse.json({ success: true, category });
@@ -119,6 +124,12 @@ export async function PUT(request: Request) {
         order: order !== undefined ? Number(order) : undefined,
       },
     });
+
+    if (name !== undefined && name !== existing.name) {
+      void syncCategoryTranslations(restaurant.id, category.id).catch((error) => {
+        console.error('Category translation sync failed:', error);
+      });
+    }
 
     return NextResponse.json({ success: true, category });
   } catch (error: any) {

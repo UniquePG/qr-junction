@@ -399,6 +399,7 @@ model Restaurant {
   fssai           String?
   openingHours     Json?        @map("opening_hours")
   showOpeningHours Boolean     @default(false) @map("show_opening_hours")
+  i18n             Json?        // { "hi": { "name": "...", "description": "..." }, ... }
 
   createdAt    DateTime        @default(now()) @map("created_at")
   updatedAt    DateTime        @updatedAt @map("updated_at")
@@ -409,9 +410,28 @@ model Restaurant {
   tables       RestaurantTable[]
   qrCodes      QRCode[]
   orders       MenuOrder[]
+  locales      RestaurantLocale[]
 
   @@index([createdAt])
   @@map("restaurants")
+}
+
+model RestaurantLocale {
+  id               Int       @id @default(autoincrement())
+  restaurantId     Int       @map("restaurant_id")
+  code             String    // en|hi|mr|gu|bn|ta|te
+  active           Boolean   @default(true)
+  status           String    @default("ready") // ready | pending | failed
+  lastError        String?   @map("last_error") @db.Text
+  lastTranslatedAt DateTime? @map("last_translated_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, code])
+  @@index([restaurantId, active])
+  @@map("restaurant_locales")
 }
 
 model Menu {
@@ -421,7 +441,8 @@ model Menu {
   description  String?         @db.Text
   theme        String          @default("modern") // modern, minimal, premium, cafe
   isDefault    Boolean         @default(false) @map("is_default")
-  
+  i18n         Json?           // { "hi": { "name": "...", "description": "..." }, ... }
+
   createdAt    DateTime        @default(now()) @map("created_at")
   updatedAt    DateTime        @updatedAt @map("updated_at")
 
@@ -439,6 +460,7 @@ model MenuCategory {
   menuId       Int          @map("menu_id")
   name         String
   order        Int          @default(0)
+  i18n         Json?        // { "hi": { "name": "..." }, ... }
   createdAt    DateTime     @default(now()) @map("created_at")
   updatedAt    DateTime     @updatedAt @map("updated_at")
 
@@ -457,6 +479,7 @@ model MenuItem {
   price        Decimal      @db.Decimal(10, 2)
   variants     Json?        // [{ "label": "Half", "price": 120 }, { "label": "Full", "price": 200 }]
   config       Json?        // { "tags": ["spicy", "signature"], ...future knobs }
+  i18n         Json?        // { "hi": { "name": "...", "description": "...", "variants": [{ "label": "..." }] }, ... }
   image        String?
   isAvailable  Boolean      @default(true) @map("is_available")
   isVeg        Boolean      @default(true) @map("is_veg")

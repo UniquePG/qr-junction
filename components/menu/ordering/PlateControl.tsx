@@ -3,6 +3,7 @@
 import { Minus, Plus } from "lucide-react";
 import type { MenuItem } from "@/components/menu/types";
 import { usePlate } from "@/components/menu/ordering/PlateContext";
+import { useMenuLocaleOptional } from "@/components/menu/i18n/MenuLocaleProvider";
 
 export function PlateControl({
   label,
@@ -15,6 +16,7 @@ export function PlateControl({
   onAdd: () => void;
   onChange: (next: number) => void;
 }) {
+  const i18n = useMenuLocaleOptional();
   if (quantity <= 0) {
     return (
       <button
@@ -26,7 +28,7 @@ export function PlateControl({
         className="inline-flex h-8 max-w-full shrink-0 cursor-pointer items-center gap-1 rounded-full border border-current/15 bg-white/90 px-2.5 text-xs font-semibold text-slate-800 shadow-sm sm:px-3"
       >
         <Plus className="h-3.5 w-3.5 shrink-0" />
-        <span className="truncate sm:hidden">Add</span>
+        <span className="truncate sm:hidden">{i18n?.t("add") || "Add"}</span>
         <span className="hidden truncate sm:inline">{label}</span>
       </button>
     );
@@ -70,6 +72,7 @@ export function DishOrderActions({
   currencySymbol: string;
 }) {
   const plate = usePlate();
+  const i18n = useMenuLocaleOptional();
   if (!plate?.enabled) return null;
   const variants = item.variants?.length ? item.variants : null;
   const active = variants ? (variantLabel || variants[0]?.label || null) : null;
@@ -78,7 +81,7 @@ export function DishOrderActions({
     <div className="space-y-3 border-t border-current/10 pt-4">
       {variants ? (
         <div className="space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Choose portion</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{i18n?.t("choosePortion") || "Choose portion"}</p>
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             {variants.map((variant) => {
               const selected = active === variant.label;

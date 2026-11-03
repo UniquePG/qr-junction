@@ -6,6 +6,7 @@ import { waitingLine } from "@/lib/orders/banter";
 import { customerStatusCopy } from "@/lib/orders/status";
 import { waitLabel } from "@/lib/orders/eta";
 import type { LiveOrder, PlateLine } from "@/components/menu/ordering/PlateContext";
+import { useMenuLocaleOptional } from "@/components/menu/i18n/MenuLocaleProvider";
 
 type QuoteLine = {
   menuItemId: number;
@@ -26,13 +27,7 @@ type Quote = {
   taxRate: number;
 };
 
-const STEPS = [
-  { id: "PLACED", label: "Sent" },
-  { id: "ACCEPTED", label: "Accepted" },
-  { id: "PREPARING", label: "Cooking" },
-  { id: "READY", label: "On the way" },
-  { id: "SERVED", label: "At the table" },
-];
+const STEP_IDS = ["PLACED", "ACCEPTED", "PREPARING", "READY", "SERVED"] as const;
 
 function money(symbol: string, value: number) {
   return `${symbol}${Number(value).toFixed(2)}`;
@@ -120,6 +115,24 @@ export function PlateChrome({
   onCancelIdentity: () => void;
   onSend: () => void;
 }) {
+  const i18n = useMenuLocaleOptional();
+  const t = i18n?.t;
+  const statusCopy = (status: string, rejectReason?: string | null) =>
+    i18n?.statusCopy(status, rejectReason) ?? customerStatusCopy(status, rejectReason);
+  const steps = STEP_IDS.map((id) => ({
+    id,
+    label:
+      id === "PLACED"
+        ? t?.("stepSent") || "Sent"
+        : id === "ACCEPTED"
+          ? t?.("stepAccepted") || "Accepted"
+          : id === "PREPARING"
+            ? t?.("stepCooking") || "Cooking"
+            : id === "READY"
+              ? t?.("stepOnTheWay") || "On the way"
+              : t?.("stepAtTable") || "At the table",
+  }));
+
   const active = liveOrders.filter((order) => !["SERVED", "REJECTED"].includes(order.status));
   const featured = active[0];
   const featuredWait = featured ? waitLabel(featured.expectedReadyAt, now) : null;
@@ -128,14 +141,38 @@ export function PlateChrome({
   const showDock = (count > 0 && !cartOpen) || (Boolean(featured) && !trackerOpen && !cartOpen) || showOrders;
   const identityReady = customer.name.trim().length > 0 && phoneDigits(customer.phone).length >= 10;
   const showIdentityFields = !identityLocked && (!hasSavedIdentity || editingIdentity);
-  const displayLines: QuoteLine[] = quote?.lines || lines.map((line) => ({
+  function matchPlateLine(line: { menuItemId: number; variantLabel: string | null; unitPrice: number; quantity: number }) {
+    return (
+      lines.find(
+        (row) =>
+          row.item.id === line.menuItemId &&
+          Math.abs(row.unitPrice - line.unitPrice) < 0.001 &&
+          (row.variantLabel || "") === (line.variantLabel || ""),
+      ) ||
+      lines.find(
+        (row) =>
+          row.item.id === line.menuItemId &&
+          Math.abs(row.unitPrice - line.unitPrice) < 0.001,
+      ) ||
+      lines.find((row) => row.item.id === line.menuItemId)
+    );
+  }
+
+  const displayLines: QuoteLine[] = (quote?.lines || lines.map((line) => ({
     menuItemId: line.item.id,
     name: line.item.name,
     variantLabel: line.variantLabel,
     unitPrice: line.unitPrice,
     quantity: line.quantity,
     lineTotal: line.unitPrice * line.quantity,
-  }));
+  }))).map((line) => {
+    const source = matchPlateLine(line);
+    return {
+      ...line,
+      name: source?.item.name || line.name,
+      variantLabel: source?.variantLabel || line.variantLabel,
+    };
+  });
   const subtotal = quote?.subtotal ?? lines.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0);
   const total = quote?.total ?? subtotal;
 
@@ -154,7 +191,7 @@ export function PlateChrome({
               className="pointer-events-auto flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 rounded-2xl border border-[#E7DDD2] bg-white/95 px-4 py-3 text-left shadow-[0_12px_40px_rgba(28,20,16,0.18)] backdrop-blur"
             >
               <span className="min-w-0">
-                <span className="block text-sm font-semibold text-[#1C1410]">Your orders</span>
+                <span className="block text-sm font-semibold text-[#1C1410]">{t?.("yourOrders") || "Your orders"}</span>
                 <span className="block truncate text-xs text-[#6B5A50]">Earlier plates, times, and payment</span>
               </span>
               <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-[#1C1410] px-1.5 text-[11px] font-bold text-white">{liveOrders.length}</span>
@@ -173,7 +210,7 @@ export function PlateChrome({
               <span className="min-w-0 flex-1">
                 <span className="flex items-center justify-between gap-2">
                   <span className="text-[11px] font-semibold uppercase tracking-wide text-[#C4622D]">
-                    {customerStatusCopy(featured.status)}
+                    {statusCopy(featured.status)}
                   </span>
                   {featuredWait ? <span className="shrink-0 text-[11px] font-semibold text-[#1C1410]">{featuredWait.short}</span> : null}
                 </span>
@@ -200,7 +237,7 @@ export function PlateChrome({
 
       {cartOpen ? (
         <Drawer
-          title="Your plate"
+          title={t?.("yourPlate") || "Your plate"}
           subtitle={tableNumber ? `Table ${tableNumber}` : "Counter"}
           onClose={onCloseCart}
           busy={sending}
@@ -213,14 +250,14 @@ export function PlateChrome({
                 onClick={onSend}
                 className="h-12 w-full cursor-pointer rounded-2xl border-none bg-[#C4622D] text-sm font-semibold text-white disabled:opacity-50"
               >
-                {sending ? "Sending…" : "Send to the kitchen"}
+                {sending ? "Sending…" : t?.("sendKitchen") || "Send to the kitchen"}
               </button>
             </div>
           }
         >
           <div className="space-y-3">
             {displayLines.map((line) => {
-              const source = lines.find((row) => row.item.id === line.menuItemId && (row.variantLabel || "") === (line.variantLabel || ""));
+              const source = matchPlateLine(line);
               return (
                 <div key={`${line.menuItemId}:${line.variantLabel || ""}`} className="flex items-center gap-3 rounded-2xl bg-white p-3">
                   <div className="min-w-0 flex-1">
@@ -238,7 +275,7 @@ export function PlateChrome({
                 </div>
               );
             })}
-            {lines.length === 0 ? <p className="rounded-2xl bg-white px-4 py-8 text-center text-sm text-[#6B5A50]">Your plate is empty.</p> : null}
+            {lines.length === 0 ? <p className="rounded-2xl bg-white px-4 py-8 text-center text-sm text-[#6B5A50]">{t?.("emptyPlate") || "Your plate is empty"}.</p> : null}
           </div>
 
           <div className="mt-4 space-y-1 rounded-2xl bg-white px-4 py-3 text-sm text-[#6B5A50]">
@@ -296,7 +333,7 @@ export function PlateChrome({
                 onChange={(event) => onNote(event.target.value.slice(0, 160))}
                 rows={3}
                 maxLength={160}
-                placeholder="Less spice, no onion, pack separately…"
+                placeholder={t?.("notePlaceholder") || "Less spice, no onion, pack separately…"}
                 className="mt-2 w-full resize-none rounded-xl border border-[#E7DDD2] bg-[#F6F1EA] px-3 py-2 text-sm font-normal normal-case tracking-normal text-[#1C1410] outline-none placeholder:text-[#6B5A50]/70"
               />
             </label>
@@ -307,20 +344,20 @@ export function PlateChrome({
       ) : null}
 
       {trackerOpen ? (
-        <Drawer title="Your orders" subtitle={active.length ? `${active.length} with the kitchen` : "Earlier plates from this visit"} onClose={onCloseTracker}>
+        <Drawer title={t?.("yourOrders") || "Your orders"} subtitle={active.length ? `${active.length} with the kitchen` : "Earlier plates from this visit"} onClose={onCloseTracker}>
           <div className="space-y-4">
             {liveOrders.map((order) => {
               const wait = waitLabel(order.expectedReadyAt, now);
               const terminal = order.status === "SERVED" || order.status === "REJECTED";
               const servedAt = eventTime(order, "SERVED");
               const payment = order.status === "SERVED" ? (order.paidAt ? "Paid" : "Unpaid") : null;
-              const stepIndex = STEPS.findIndex((step) => step.id === order.status);
+              const stepIndex = steps.findIndex((step) => step.id === order.status);
               return (
                 <article key={order.publicId} className="rounded-3xl bg-white p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-mono text-[11px] font-semibold text-[#C4622D]">{order.publicId}</p>
-                      <p className="mt-1 text-base font-semibold text-[#1C1410]">{customerStatusCopy(order.status, order.rejectReason)}</p>
+                      <p className="mt-1 text-base font-semibold text-[#1C1410]">{statusCopy(order.status, order.rejectReason)}</p>
                     </div>
                     {payment ? (
                       <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${order.paidAt ? "bg-emerald-50 text-emerald-700" : "bg-[#F6F1EA] text-[#C4622D]"}`}>{payment}</span>
@@ -339,7 +376,7 @@ export function PlateChrome({
                   <p className="mt-3 text-sm leading-relaxed text-[#2A211C]">{waitingLine(order.status, order.publicId, dishName(order), order.rejectReason)}</p>
                   {order.status === "REJECTED" ? null : (
                     <ol className="mt-4 flex items-center gap-1">
-                      {STEPS.map((step, index) => {
+                      {steps.map((step, index) => {
                         const done = stepIndex >= index && stepIndex >= 0;
                         const current = step.id === order.status;
                         return (

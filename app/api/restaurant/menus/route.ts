@@ -4,6 +4,7 @@ import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { generateUniqueShortCode } from '@/utils/shortCode';
 import { planErrorResponse } from '@/lib/billing/errors';
 import { requireAllowed, requireEnabled, requireQuota, requireWritable } from '@/lib/billing/guard';
+import { syncMenuTranslations } from '@/lib/menu/i18n/sync';
 import { QRType, QRStatus } from '@prisma/client';
 
 // Helper to verify restaurant ownership
@@ -155,6 +156,10 @@ export async function POST(request: Request) {
       }
     });
 
+    void syncMenuTranslations(restaurant.id, newMenu.id).catch((error) => {
+      console.error('Menu translation sync failed:', error);
+    });
+
     const menuWithQr = {
       ...newMenu,
       qrCode: {
@@ -252,6 +257,16 @@ export async function PUT(request: Request) {
           }
         });
       }
+    }
+
+    const textChanged =
+      (name !== undefined && name !== existingMenu.name) ||
+      (description !== undefined &&
+        (description ?? null) !== (existingMenu.description ?? null));
+    if (textChanged) {
+      void syncMenuTranslations(restaurant.id, updatedMenu.id).catch((error) => {
+        console.error('Menu translation sync failed:', error);
+      });
     }
 
     // Fetch the updated menu with its QR code to return consistent model

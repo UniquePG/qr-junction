@@ -108,13 +108,44 @@ function broadcast(order: OrderRow, type: "order.placed" | "order.updated", coun
 
 type Variant = { label?: string; price?: number };
 
-function resolveUnitPrice(item: { price: Prisma.Decimal; variants: Prisma.JsonValue; name: string }, variantLabel: string | null) {
+function variantIndexFromI18n(i18n: Prisma.JsonValue | null | undefined, variantLabel: string) {
+  if (!i18n || typeof i18n !== "object" || Array.isArray(i18n)) return -1;
+  for (const entry of Object.values(i18n as Record<string, unknown>)) {
+    if (!entry || typeof entry !== "object") continue;
+    const variants = (entry as { variants?: unknown }).variants;
+    if (!Array.isArray(variants)) continue;
+    const index = variants.findIndex(
+      (row) =>
+        row &&
+        typeof row === "object" &&
+        String((row as { label?: unknown }).label || "").trim() === variantLabel,
+    );
+    if (index >= 0) return index;
+  }
+  return -1;
+}
+
+function resolveUnitPrice(
+  item: {
+    price: Prisma.Decimal;
+    variants: Prisma.JsonValue;
+    name: string;
+    i18n?: Prisma.JsonValue | null;
+  },
+  variantLabel: string | null,
+) {
   const variants = Array.isArray(item.variants) ? (item.variants as Variant[]) : [];
   if (variants.length > 0) {
-    const match = variants.find((variant) => String(variant.label || "").trim() === variantLabel);
+    const wanted = (variantLabel || "").trim();
+    let matchIndex = variants.findIndex((variant) => String(variant.label || "").trim() === wanted);
+    if (matchIndex < 0 && wanted) {
+      matchIndex = variantIndexFromI18n(item.i18n, wanted);
+    }
+    const match = matchIndex >= 0 ? variants[matchIndex] : null;
     if (!match || match.price === undefined || Number.isNaN(Number(match.price))) {
       throw new OrderError(400, "VARIANT_REQUIRED", `Choose a size for ${item.name}.`);
     }
+    // Always snapshot the English canonical label for the owner kitchen.
     return { unitPrice: Number(match.price), variantLabel: String(match.label).trim() };
   }
   if (variantLabel) {

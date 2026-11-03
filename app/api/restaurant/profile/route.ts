@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { planErrorResponse } from '@/lib/billing/errors';
 import { requireAllowed, requireQuota, requireWritable } from '@/lib/billing/guard';
+import { ensureEnglishLocale, syncRestaurantBrandTranslations } from '@/lib/menu/i18n/sync';
 import { parseProfileBody, type ProfilePatch } from '@/lib/restaurant/profile';
 
 function hoursValue(patch: ProfilePatch): Prisma.InputJsonValue | undefined {
@@ -78,11 +79,18 @@ export async function POST(request: Request) {
       await requireWritable(userId);
     }
 
+    const before = await prisma.restaurant.findUnique({
+      where: { userId },
+      select: { id: true, name: true, description: true },
+    });
+
     const restaurant = await prisma.restaurant.upsert({
       where: { userId },
       update: { ...parsed.patch, openingHours: hoursValue(parsed.patch) },
       create: createData(userId, parsed.patch),
     });
+
+    await ensureEnglishLocale(restaurant.id);
 
     const menuCount = await prisma.menu.count({
       where: { restaurantId: restaurant.id },
@@ -98,6 +106,17 @@ export async function POST(request: Request) {
           theme: 'modern',
           isDefault: true,
         },
+      });
+    }
+
+    const brandChanged =
+      !before ||
+      (parsed.patch.name !== undefined && parsed.patch.name !== before.name) ||
+      (parsed.patch.description !== undefined &&
+        (parsed.patch.description ?? null) !== (before.description ?? null));
+    if (brandChanged) {
+      void syncRestaurantBrandTranslations(restaurant.id).catch((error) => {
+        console.error('Restaurant brand translation sync failed:', error);
       });
     }
 

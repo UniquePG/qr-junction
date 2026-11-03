@@ -20,6 +20,7 @@ import {
   type TagTone,
 } from "@/lib/menu/item-config";
 import type { MenuItem } from "@/components/menu/types";
+import { useMenuLocaleOptional } from "@/components/menu/i18n/MenuLocaleProvider";
 
 const TONE_CLASS: Record<TagTone, string> = {
   amber: "border-amber-200 bg-amber-50 text-amber-800",
@@ -76,6 +77,7 @@ export function ItemTags({
   size?: "sm" | "md";
   className?: string;
 }) {
+  const i18n = useMenuLocaleOptional();
   const tags = displayTags(item, { hidePopular });
   if (!tags.length) return null;
   const pad = size === "md" ? "px-2.5 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]";
@@ -84,14 +86,15 @@ export function ItemTags({
       {tags.map((tag) => {
         const preset = presetForTag(tag);
         const tone = preset?.tone || "slate";
+        const label = i18n?.tagLabel(tag, tagLabel(tag)) || tagLabel(tag);
         return (
           <span
             key={tag}
-            title={preset?.vibe || tagLabel(tag)}
+            title={preset?.vibe || label}
             className={`inline-flex items-center gap-1 rounded-full border font-semibold ${pad} ${TONE_CLASS[tone]}`}
           >
             {preset ? <TagIcon name={preset.icon} className={size === "md" ? "h-3.5 w-3.5" : "h-3 w-3"} /> : null}
-            {tagLabel(tag)}
+            {label}
           </span>
         );
       })}

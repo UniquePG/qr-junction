@@ -28,6 +28,11 @@ import { PlateProvider } from '@/components/menu/ordering/PlateContext';
 import { DishOrderActions, PlateSlot } from '@/components/menu/ordering/PlateControl';
 import { MenuPlaceDetails } from '@/components/menu/PlaceDetails';
 import { ItemTags } from '@/components/menu/ItemTags';
+import {
+  MenuLocaleProvider,
+  useMenuLocale,
+  type GuestLocaleOption,
+} from '@/components/menu/i18n/MenuLocaleProvider';
 
 interface MenuItem {
   id: number;
@@ -36,6 +41,7 @@ interface MenuItem {
   price: any; // Decimal type from Prisma
   variants?: { label: string; price: number }[] | null;
   config?: { tags?: string[] } | null;
+  i18n?: unknown;
   image: string | null;
   isAvailable: boolean;
   isVeg: boolean;
@@ -47,6 +53,7 @@ interface MenuItem {
 interface MenuCategory {
   id: number;
   name: string;
+  i18n?: unknown;
   items: MenuItem[];
 }
 
@@ -54,6 +61,7 @@ interface Restaurant {
   id: number;
   name: string;
   description: string | null;
+  i18n?: unknown;
   logoUrl: string | null;
   coverImage: string | null;
   currency: string;
@@ -74,6 +82,7 @@ interface Menu {
   name: string;
   description: string | null;
   theme: string;
+  i18n?: unknown;
   categories: MenuCategory[];
 }
 
@@ -82,9 +91,33 @@ interface CustomerMenuViewProps {
   menu: Menu;
   tableNumber: string | null;
   layoutPreview?: string | null;
+  locales?: GuestLocaleOption[];
 }
 
-export default function CustomerMenuView({ restaurant, menu, tableNumber, layoutPreview }: CustomerMenuViewProps) {
+export default function CustomerMenuView(props: CustomerMenuViewProps) {
+  return (
+    <MenuLocaleProvider
+      restaurantId={props.restaurant.id}
+      locales={props.locales || []}
+      restaurant={props.restaurant}
+      menu={props.menu}
+    >
+      <CustomerMenuViewInner
+        tableNumber={props.tableNumber}
+        layoutPreview={props.layoutPreview}
+      />
+    </MenuLocaleProvider>
+  );
+}
+
+function CustomerMenuViewInner({
+  tableNumber,
+  layoutPreview,
+}: {
+  tableNumber: string | null;
+  layoutPreview?: string | null;
+}) {
+  const { restaurant, menu, t, locales, locale, setLocale } = useMenuLocale();
   const [search, setSearch] = useState('');
   const [dietFilter, setDietFilter] = useState<'ALL' | 'VEG' | 'NON_VEG'>('ALL');
   const [popularFilter, setPopularFilter] = useState(false);
@@ -612,7 +645,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
 
                   <div className="mt-auto space-y-2 border-t border-orange-50 pt-2">
                     {item.isVegan ? (
-                      <span className="inline-flex text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">Vegan</span>
+                      <span className="inline-flex text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">{t('vegan')}</span>
                     ) : null}
                     <ItemTags item={item} hidePopular />
                     <PlateSlot item={item} />
@@ -714,7 +747,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Search dishes, drinks, appetizers..."
+              placeholder={t('searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className={`w-full min-w-0 rounded-2xl py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 transition-all font-sans ${chrome.input}`}
@@ -730,7 +763,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                   chrome.dietPill('ALL', dietFilter === 'ALL')
                 }`}
               >
-                All
+                {t('filterAll')}
               </button>
               <button
                 onClick={() => setDietFilter('VEG')}
@@ -743,7 +776,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                     ? (isGourmet || isCafe ? 'bg-emerald-300' : 'bg-white')
                     : 'bg-emerald-500'
                 }`} />
-                Veg
+                {t('filterVeg')}
               </button>
               <button
                 onClick={() => setDietFilter('NON_VEG')}
@@ -756,19 +789,40 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
                     ? (isGourmet || isCafe ? 'bg-red-300' : 'bg-white')
                     : 'bg-red-500'
                 }`} />
-                Non-Veg
+                {t('filterNonVeg')}
               </button>
             </div>
 
-            <button
-              onClick={() => setPopularFilter(!popularFilter)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer select-none flex items-center gap-1 border border-transparent shrink-0 ${
-                chrome.popularPill(popularFilter)
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              Bestsellers
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {locales.length > 1 ? (
+                <label className="sr-only" htmlFor="menu-locale">
+                  {t('language')}
+                </label>
+              ) : null}
+              {locales.length > 1 ? (
+                <select
+                  id="menu-locale"
+                  value={locale}
+                  onChange={(event) => setLocale(event.target.value as typeof locale)}
+                  className={`rounded-xl border border-transparent px-2.5 py-1.5 text-xs font-black ${chrome.input}`}
+                >
+                  {locales.map((option) => (
+                    <option key={option.code} value={option.code}>
+                      {option.nativeLabel}
+                    </option>
+                  ))}
+                </select>
+              ) : null}
+              <button
+                onClick={() => setPopularFilter(!popularFilter)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer select-none flex items-center gap-1 border border-transparent shrink-0 ${
+                  chrome.popularPill(popularFilter)
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                {t('filterBestsellers')}
+              </button>
+            </div>
           </div>
 
           {/* Sticky horizontal Category slider */}
@@ -795,8 +849,8 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
         {filteredCategories.length === 0 ? (
           <div className={`text-center py-20 border rounded-3xl p-8 ${chrome.empty}`}>
             <Utensils className="w-12 h-12 text-slate-300 mx-auto mb-4 animate-pulse" />
-            <h3 className="font-bold text-lg mb-1">No Items Found</h3>
-            <p className="text-slate-500 text-sm max-w-sm mx-auto">Try modifying your search queries or diet toggles to view available dishes.</p>
+            <h3 className="font-bold text-lg mb-1">{t('emptyTitle')}</h3>
+            <p className="text-slate-500 text-sm max-w-sm mx-auto">{t('emptyBody')}</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -932,7 +986,7 @@ export default function CustomerMenuView({ restaurant, menu, tableNumber, layout
 
               {selectedItem.description && (
                 <div className="space-y-1.5 border-t border-current/10 pt-4">
-                  <h5 className={`text-xs font-bold uppercase tracking-wider ${chrome.modalMuted}`}>Dish Description</h5>
+                  <h5 className={`text-xs font-bold uppercase tracking-wider ${chrome.modalMuted}`}>{t('dishDescription')}</h5>
                   <p className="text-sm leading-relaxed font-sans">{selectedItem.description}</p>
                 </div>
               )}

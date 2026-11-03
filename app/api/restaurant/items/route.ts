@@ -6,6 +6,7 @@ import { planErrorResponse } from '@/lib/billing/errors';
 import { requireEnabled, requireQuota, requireWritable } from '@/lib/billing/guard';
 import { itemsOnMenu } from '@/lib/billing/resolve';
 import { isPopularFromTags, normalizeTags, parseItemConfig, withTags } from '@/lib/menu/item-config';
+import { syncItemTranslations } from '@/lib/menu/i18n/sync';
 
 function configFromBody(body: { tags?: unknown; config?: unknown }, existing?: unknown) {
   if (body.tags !== undefined) {
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
 
     const category = await prisma.menuCategory.findFirst({
       where: { id: Number(categoryId), restaurant: { userId } },
-      select: { menuId: true },
+      select: { menuId: true, restaurantId: true },
     });
     if (!category) {
       return NextResponse.json({ error: 'Category not found or access denied' }, { status: 403 });
@@ -113,6 +114,10 @@ export async function POST(request: Request) {
         isPopular: popular,
         order: nextOrder,
       },
+    });
+
+    void syncItemTranslations(category.restaurantId, item.id).catch((error) => {
+      console.error('Item translation sync failed:', error);
     });
 
     return NextResponse.json({ success: true, item });
@@ -177,7 +182,14 @@ export async function PUT(request: Request) {
 
     const existing = await prisma.menuItem.findFirst({
       where: { id: Number(id), category: { restaurant: { userId } } },
-      select: { id: true, config: true },
+      select: {
+        id: true,
+        config: true,
+        name: true,
+        description: true,
+        variants: true,
+        category: { select: { restaurantId: true } },
+      },
     });
     if (!existing) {
       return NextResponse.json({ error: 'Item not found or access denied' }, { status: 403 });
@@ -216,6 +228,16 @@ export async function PUT(request: Request) {
         order: order !== undefined ? Number(order) : undefined,
       },
     });
+
+    const textChanged =
+      (name !== undefined && name !== existing.name) ||
+      (description !== undefined && (description ?? null) !== (existing.description ?? null)) ||
+      variants !== undefined;
+    if (textChanged) {
+      void syncItemTranslations(existing.category.restaurantId, item.id).catch((error) => {
+        console.error('Item translation sync failed:', error);
+      });
+    }
 
     return NextResponse.json({ success: true, item });
   } catch (error: any) {

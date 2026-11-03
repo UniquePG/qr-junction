@@ -15,6 +15,7 @@ import {
   type WeekHours,
   type WeekdayKey,
 } from '@/lib/restaurant/profile';
+import MenuLanguagesPanel from '@/components/restaurant/MenuLanguagesPanel';
 import { Image as ImageIcon, Loader2, Store } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -425,7 +426,7 @@ export default function RestaurantProfilePage() {
               </Field>
               <Field
                 label="Primary language"
-                hint="Menus can offer more languages later. This is the restaurant default."
+                hint="Owner default. Guest language options are managed in Menu languages below."
                 className="sm:col-span-2"
               >
                 <select
@@ -844,6 +845,8 @@ export default function RestaurantProfilePage() {
               </div>
             </Section>
           ) : null}
+
+          <MenuLanguagesPanel />
         </div>
         </div>
       </div>

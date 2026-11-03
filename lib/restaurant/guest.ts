@@ -3,6 +3,7 @@ export const guestRestaurantSelect = {
   id: true,
   name: true,
   description: true,
+  i18n: true,
   logoUrl: true,
   coverImage: true,
   currency: true,

@@ -5,6 +5,7 @@ import CustomerMenuView from './CustomerMenuView';
 import { Metadata } from 'next';
 import { isMenuTheme } from '@/components/menu/themeCatalog';
 import { guestRestaurantSelect } from '@/lib/restaurant/guest';
+import { loadGuestLocales } from '@/lib/menu/i18n/guestLocales';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -90,6 +91,8 @@ export default async function RestaurantMenuPage({ params, searchParams }: PageP
     notFound(); // No menus created yet
   }
 
+  const locales = await loadGuestLocales(restaurantId);
+
   // Serialize to plain JSON objects to prevent Next.js from throwing errors about passing Prisma Decimal/Date objects to Client Components
   const serializedRestaurant = JSON.parse(JSON.stringify(restaurant));
   const serializedMenu = JSON.parse(JSON.stringify(menu));
@@ -100,6 +103,7 @@ export default async function RestaurantMenuPage({ params, searchParams }: PageP
       menu={layoutPreview ? { ...serializedMenu, theme: layoutPreview } : serializedMenu}
       tableNumber={table || null}
       layoutPreview={layoutPreview}
+      locales={locales}
     />
   );
 }

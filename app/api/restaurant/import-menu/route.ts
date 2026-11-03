@@ -4,6 +4,7 @@ import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { planErrorResponse } from '@/lib/billing/errors';
 import { requireEnabled, requireQuota, requireWritable } from '@/lib/billing/guard';
 import { itemsOnMenu } from '@/lib/billing/resolve';
+import { retranslateActiveLocales } from '@/lib/menu/i18n/sync';
 
 export async function POST(request: Request) {
   try {
@@ -123,6 +124,10 @@ export async function POST(request: Request) {
           }
         }
       }
+    });
+
+    void retranslateActiveLocales(restaurant.id).catch((error) => {
+      console.error('Import menu translation sync failed:', error);
     });
 
     return NextResponse.json({ success: true, message: 'Menu imported successfully' });
