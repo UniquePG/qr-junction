@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Check, Pencil, ShoppingBag, X } from "lucide-react";
 import { waitingLine } from "@/lib/orders/banter";
+import { orderCallCode } from "@/lib/orders/displayId";
 import { customerStatusCopy } from "@/lib/orders/status";
 import { waitLabel } from "@/lib/orders/eta";
 import type { LiveOrder, PlateLine } from "@/components/menu/ordering/PlateContext";
@@ -356,7 +357,9 @@ export function PlateChrome({
                 <article key={order.publicId} className="rounded-3xl bg-white p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-mono text-[11px] font-semibold text-[#C4622D]">{order.publicId}</p>
+                      <p className="font-mono text-sm font-semibold tracking-wide text-[#C4622D]">
+                        {orderCallCode(order.publicId, order.tableNumber)}
+                      </p>
                       <p className="mt-1 text-base font-semibold text-[#1C1410]">{statusCopy(order.status, order.rejectReason)}</p>
                     </div>
                     {payment ? (

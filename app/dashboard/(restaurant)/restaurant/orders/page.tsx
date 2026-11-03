@@ -3,6 +3,7 @@
 import { Eye } from "lucide-react";
 import { useOrderAlerts } from "@/components/orders/OrderAlerts";
 import { restaurantService } from "@/lib/api";
+import { orderCallCode } from "@/lib/orders/displayId";
 import { waitLabel } from "@/lib/orders/eta";
 import { customerStatusCopy, ownerStage } from "@/lib/orders/status";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -361,7 +362,7 @@ function TableDrawer({
   onHistory: (order: Ticket) => void;
   onPayments: () => void;
 }) {
-  const rows = [...spot.orders].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const rows = [...spot.orders].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   return (
     <div className="fixed inset-0 z-[80] flex justify-end bg-black/45" onClick={onClose}>
       <aside className="flex h-full w-full max-w-md flex-col bg-[#F6F1EA] shadow-2xl" onClick={(event) => event.stopPropagation()} role="dialog" aria-label={spot.title}>
@@ -379,20 +380,32 @@ function TableDrawer({
               <p className="text-sm text-[#6B5A50]">Nothing open here.</p>
               <button type="button" onClick={onPayments} className="mt-3 cursor-pointer border-none bg-transparent text-sm font-semibold text-[#C4622D]">Open payments</button>
             </div>
-          ) : rows.map((order) => {
+          ) : rows.map((order, seqIndex) => {
             const stage = ownerStage(order.status);
             const wait = waitLabel(order.stageDueAt, now);
             const working = busy.startsWith(order.publicId);
+            const callCode = orderCallCode(order.publicId, order.tableNumber);
+            const confirmingReject = rejecting === order.publicId;
+            const canReject = order.status === "PLACED" || order.status === "ACCEPTED" || order.status === "PREPARING" || order.status === "READY";
             return (
-              <article key={order.publicId} className="rounded-2xl bg-white p-4">
-                <div className="flex items-start justify-between gap-3">
+              <article key={order.publicId} className="relative overflow-hidden rounded-2xl bg-white p-4 pt-5">
+                <div
+                  className="absolute left-0 top-0 rounded-br-2xl bg-[#1C1410] px-3 py-2 text-white shadow-[2px_2px_0_rgba(196,98,45,0.25)]"
+                  aria-label={`Sequence ${seqIndex + 1}`}
+                >
+                  <span className="text-2xl font-semibold leading-none tracking-tight tabular-nums">
+                    {String(seqIndex + 1).padStart(2, "0")}
+                  </span>
+                </div>
+
+                <div className="flex items-start justify-between gap-3 pl-14">
                   <div className="min-w-0">
-                    <p className="text-base font-semibold text-[#1C1410]">{order.customerName}</p>
-                    <p className="break-all font-mono text-[11px] text-[#6B5A50]">{order.customerPublicId}</p>
-                    <p className="break-all font-mono text-[11px] text-[#C4622D]">{order.publicId}</p>
+                    <p className="truncate text-base font-semibold text-[#1C1410]">{order.customerName}</p>
+                    <p className="mt-1 font-mono text-sm font-semibold tracking-wide text-[#C4622D]">{callCode}</p>
                   </div>
                   <p className="shrink-0 text-base font-bold text-[#1C1410]">{money(order.currency, order.total)}</p>
                 </div>
+
                 <ul className="mt-3 space-y-1 text-sm text-[#2A211C]">
                   {order.items.map((item, index) => (
                     <li key={`${order.publicId}-${index}`} className="flex justify-between gap-3">
@@ -413,18 +426,55 @@ function TableDrawer({
                       {working ? "Saving…" : stage.action}
                     </button>
                     <StageLine order={order} label={stage.title} waitText={wait ? `${wait.short} · by ${wait.clock}` : "Set this step"} onSave={(minutes) => onStage(order.publicId, minutes)} />
-                    {order.status === "PLACED" ? (
-                      <button type="button" onClick={() => onReject(order.publicId)} className="mt-2 cursor-pointer border-none bg-transparent p-0 text-xs font-semibold text-[#6B5A50]">Reject this plate</button>
+                  </div>
+                ) : null}
+
+                {confirmingReject ? (
+                  <div className="mt-3 rounded-2xl border border-red-200 bg-red-50/70 p-3">
+                    <p className="text-sm font-semibold text-[#1C1410]">Reject this plate?</p>
+                    <p className="mt-1 text-xs leading-relaxed text-[#6B5A50]">
+                      Guest will be told the plate was cancelled. This cannot be undone from here.
+                    </p>
+                    <input
+                      value={reason}
+                      onChange={(event) => onReason(event.target.value)}
+                      placeholder="Reason (optional)"
+                      className="mt-3 h-10 w-full rounded-xl border border-[#E7DDD2] bg-white px-3 text-sm outline-none focus:border-[#C4622D]"
+                    />
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onReject(null)}
+                        className="h-10 cursor-pointer rounded-xl border border-[#E7DDD2] bg-white text-sm font-semibold text-[#1C1410]"
+                      >
+                        Keep plate
+                      </button>
+                      <button
+                        type="button"
+                        disabled={working}
+                        onClick={() => void onMove(order.publicId, "REJECTED", reason)}
+                        className="h-10 cursor-pointer rounded-xl border-none bg-red-600 text-sm font-semibold text-white disabled:opacity-50"
+                      >
+                        {working ? "Rejecting…" : "Yes, reject"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#F0E8DF] pt-3">
+                    <button type="button" onClick={() => onHistory(order)} className="cursor-pointer border-none bg-transparent p-0 text-sm font-semibold text-[#C4622D]">
+                      Earlier plates
+                    </button>
+                    {canReject ? (
+                      <button
+                        type="button"
+                        onClick={() => onReject(order.publicId)}
+                        className="cursor-pointer border-none bg-transparent p-0 text-sm font-semibold text-[#8A7568] underline decoration-[#E7DDD2] underline-offset-4 hover:text-red-600"
+                      >
+                        Reject plate
+                      </button>
                     ) : null}
                   </div>
-                ) : null}
-                {rejecting === order.publicId ? (
-                  <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                    <input value={reason} onChange={(event) => onReason(event.target.value)} placeholder="Short reason" className="h-10 min-w-0 flex-1 rounded-xl border border-[#E7DDD2] px-3 text-sm" />
-                    <button type="button" onClick={() => void onMove(order.publicId, "REJECTED", reason)} className="h-10 cursor-pointer rounded-xl border-none bg-[#1C1410] px-3 text-sm font-semibold text-white">Send</button>
-                  </div>
-                ) : null}
-                <button type="button" onClick={() => onHistory(order)} className="mt-3 cursor-pointer border-none bg-transparent p-0 text-sm font-semibold text-[#C4622D]">Earlier plates</button>
+                )}
               </article>
             );
           })}
@@ -478,7 +528,9 @@ function EarlierDialog({ order, history, onClose }: { order: Ticket; history: Ti
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wide text-[#C4622D]">Earlier plates</p>
             <h3 className="mt-1 text-lg font-semibold text-[#1C1410]">{order.customerName}</h3>
-            <p className="break-all font-mono text-xs text-[#6B5A50]">{order.customerPublicId}</p>
+            <p className="mt-0.5 font-mono text-sm font-semibold tracking-wide text-[#C4622D]">
+              {orderCallCode(order.publicId, order.tableNumber)}
+            </p>
           </div>
           <button type="button" onClick={onClose} className="h-10 cursor-pointer rounded-full border-none bg-white px-4 text-sm font-semibold">Close</button>
         </div>
@@ -487,7 +539,9 @@ function EarlierDialog({ order, history, onClose }: { order: Ticket; history: Ti
             <article key={past.publicId} className="rounded-2xl bg-white p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="break-all font-mono text-xs text-[#C4622D]">{past.publicId}</p>
+                  <p className="font-mono text-sm font-semibold tracking-wide text-[#C4622D]">
+                    {orderCallCode(past.publicId, past.tableNumber)}
+                  </p>
                   <p className="mt-1 text-sm font-semibold text-[#1C1410]">{customerStatusCopy(past.status)}</p>
                   <p className="text-xs text-[#6B5A50]">{whenLabel(past.createdAt)} · {placeLabel(past.tableNumber)}</p>
                 </div>
@@ -674,20 +728,16 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
                         {order.status === "REJECTED" ? "Rejected" : order.paidAt ? "Paid" : "Unpaid"}
                       </p>
                     </div>
-                    <button type="button" onClick={() => setDetail(order)} aria-label={`View ${order.publicId}`} className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#E7DDD2] bg-white text-[#1C1410]">
+                    <button type="button" onClick={() => setDetail(order)} aria-label={`View ${orderCallCode(order.publicId, order.tableNumber)}`} className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#E7DDD2] bg-white text-[#1C1410]">
                       <Eye className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2">
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6B5A50]">Customer</p>
-                    <p className="break-all font-mono text-xs text-[#2A211C]">{order.customerPublicId}</p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6B5A50]">Order</p>
-                    <p className="break-all font-mono text-xs text-[#C4622D]">{order.publicId}</p>
-                  </div>
+                <div className="mt-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6B5A50]">Order</p>
+                  <p className="mt-0.5 font-mono text-sm font-semibold tracking-wide text-[#C4622D]">
+                    {orderCallCode(order.publicId, order.tableNumber)}
+                  </p>
                 </div>
                 <p className="mt-3 text-sm text-[#2A211C]">{order.items.map((item) => `${item.quantity} × ${item.name}${item.variantLabel ? ` (${item.variantLabel})` : ""}`).join(", ")}</p>
                 {order.customerNote ? (
@@ -734,15 +784,11 @@ function PaymentDetail({ order, onClose }: { order: Ticket; onClose: () => void 
             </div>
             <button type="button" onClick={onClose} className="h-9 shrink-0 cursor-pointer rounded-full border border-[#E7DDD2] bg-white px-3 text-sm font-semibold text-[#1C1410]">Close</button>
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-x-4">
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6B5A50]">Order</p>
-              <p className="break-all font-mono text-sm font-semibold text-[#C4622D]">{order.publicId}</p>
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6B5A50]">Customer</p>
-              <p className="break-all font-mono text-sm text-[#2A211C]">{order.customerPublicId}</p>
-            </div>
+          <div className="mt-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6B5A50]">Order</p>
+            <p className="mt-0.5 font-mono text-base font-semibold tracking-wide text-[#C4622D]">
+              {orderCallCode(order.publicId, order.tableNumber)}
+            </p>
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 pt-4">

@@ -1,6 +1,7 @@
 "use client";
 
 import { openLiveSocket, type LiveEvent } from "@/lib/live/client";
+import { orderCallCode } from "@/lib/orders/displayId";
 import { toast } from "react-toastify";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
@@ -38,7 +39,7 @@ export function OrderAlertsProvider({ children }: { children: React.ReactNode })
   }, []);
 
   const enableSound = useCallback(() => {
-    const player = audio.current ?? new Audio("/sounds/new-order.mp3");
+    const player = audio.current ?? new Audio("/sounds/Notification3.mp3");
     audio.current = player;
     player.volume = 1;
     void player.play().then(() => {
@@ -70,9 +71,12 @@ export function OrderAlertsProvider({ children }: { children: React.ReactNode })
       if (!key || seen.current.has(key)) return;
       seen.current.add(key);
       const where = event.order?.tableNumber ? `Table ${event.order.tableNumber}` : "Counter";
+      const callCode = event.order?.publicId
+        ? orderCallCode(event.order.publicId, event.order.tableNumber)
+        : "";
       toast.info(`New plate from ${where}`);
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-        new Notification("New plate", { body: `${where} · ${event.order?.publicId || ""}` });
+        new Notification("New plate", { body: callCode ? `${where} · ${callCode}` : where });
       }
       if (sessionStorage.getItem("qj-kitchen-sound") === "1") play();
     };
