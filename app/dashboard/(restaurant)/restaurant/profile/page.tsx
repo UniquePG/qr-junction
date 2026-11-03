@@ -15,7 +15,6 @@ import {
   type WeekHours,
   type WeekdayKey,
 } from '@/lib/restaurant/profile';
-import MenuLanguagesPanel from '@/components/restaurant/MenuLanguagesPanel';
 import { Image as ImageIcon, Loader2, Store } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -846,7 +845,6 @@ export default function RestaurantProfilePage() {
             </Section>
           ) : null}
 
-          <MenuLanguagesPanel />
         </div>
         </div>
       </div>

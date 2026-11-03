@@ -6,6 +6,7 @@ import { newCustomerPublicId, newOrderPublicId, newPublicToken } from "@/lib/ord
 import { estimatePrepMinutes, stageWindowMinutes } from "@/lib/orders/eta";
 import { quoteLines, type PriceQuote } from "@/lib/orders/pricing";
 import { canMoveStatus, type OrderStatus } from "@/lib/orders/status";
+import { isDigitalBillEffective } from "@/lib/restaurant/digitalBill";
 
 const ACTIVE = ["PLACED", "ACCEPTED", "PREPARING", "READY"] as const;
 
@@ -57,7 +58,10 @@ export function normalizeCustomerNote(raw: unknown) {
   return note || null;
 }
 
-export function toOrderDto(order: OrderRow, extras?: { publicToken?: boolean; history?: unknown[] }) {
+export function toOrderDto(
+  order: OrderRow,
+  extras?: { publicToken?: boolean; history?: unknown[]; digitalBillEnabled?: boolean },
+) {
   return {
     publicId: order.publicId,
     status: order.status,
@@ -93,6 +97,9 @@ export function toOrderDto(order: OrderRow, extras?: { publicToken?: boolean; hi
     })),
     ...(extras?.publicToken ? { publicToken: order.publicToken } : {}),
     ...(extras?.history ? { history: extras.history } : {}),
+    ...(typeof extras?.digitalBillEnabled === "boolean"
+      ? { digitalBillEnabled: extras.digitalBillEnabled }
+      : {}),
   };
 }
 
@@ -164,7 +171,16 @@ export async function quoteOrder(input: {
 
   const restaurant = await prisma.restaurant.findUnique({
     where: { id: input.restaurantId },
-    select: { id: true, userId: true, orderingEnabled: true, taxRate: true, taxName: true, currency: true, prepMinutes: true },
+    select: {
+      id: true,
+      userId: true,
+      orderingEnabled: true,
+      taxRate: true,
+      taxName: true,
+      currency: true,
+      prepMinutes: true,
+      settings: true,
+    },
   });
   if (!restaurant) throw new OrderError(404, "NOT_FOUND", "Restaurant not found.");
   if (!restaurant.orderingEnabled || !(await allows(restaurant.userId, "restaurant.ordering"))) {
@@ -248,9 +264,11 @@ export async function createOrder(input: {
     where: { restaurantId_idempotencyKey: { restaurantId: input.restaurantId, idempotencyKey } },
     include: orderInclude,
   });
-  if (existing) return { order: toOrderDto(existing, { publicToken: true }), created: false };
-
   const priced = await quoteOrder(input);
+  const digitalBillEnabled = await isDigitalBillEffective(priced.restaurant.userId, priced.restaurant.settings);
+  if (existing) {
+    return { order: toOrderDto(existing, { publicToken: true, digitalBillEnabled }), created: false };
+  }
   let tableNumber: string | null = null;
   const requestedTable = String(input.tableNumber || "").trim().slice(0, 40);
   if (requestedTable) {
@@ -314,16 +332,22 @@ export async function createOrder(input: {
 
   const count = await placedCount(order.restaurantId);
   broadcast(order, "order.placed", count);
-  return { order: toOrderDto(order, { publicToken: true }), created: true };
+  return { order: toOrderDto(order, { publicToken: true, digitalBillEnabled }), created: true };
 }
 
 export async function getOrderByToken(token: string) {
   const order = await prisma.menuOrder.findUnique({
     where: { publicToken: token },
-    include: orderInclude,
+    include: {
+      ...orderInclude,
+      restaurant: {
+        select: { taxName: true, currency: true, userId: true, settings: true },
+      },
+    },
   });
   if (!order) return null;
-  return toOrderDto(order, { publicToken: true });
+  const digitalBillEnabled = await isDigitalBillEffective(order.restaurant.userId, order.restaurant.settings);
+  return toOrderDto(order, { publicToken: true, digitalBillEnabled });
 }
 
 async function loadOwned(userId: number, publicId: string) {
@@ -337,9 +361,10 @@ async function loadOwned(userId: number, publicId: string) {
 export async function listRestaurantOrders(userId: number) {
   const restaurant = await prisma.restaurant.findUnique({
     where: { userId },
-    select: { id: true, orderingEnabled: true, prepMinutes: true },
+    select: { id: true, orderingEnabled: true, prepMinutes: true, settings: true },
   });
   if (!restaurant) throw new OrderError(404, "NOT_FOUND", "Restaurant not found.");
+  const digitalBillEnabled = await isDigitalBillEffective(userId, restaurant.settings);
   const finishedWhere: Prisma.MenuOrderWhereInput = { restaurantId: restaurant.id, status: { in: ["SERVED", "REJECTED"] } };
   const [active, finished, finishedCount] = await Promise.all([
     prisma.menuOrder.findMany({
@@ -358,10 +383,11 @@ export async function listRestaurantOrders(userId: number) {
   return {
     orderingEnabled: restaurant.orderingEnabled,
     prepMinutes: restaurant.prepMinutes,
+    digitalBillEnabled,
     placedCount: await placedCount(restaurant.id),
     unpaidCount: await prisma.menuOrder.count({ where: { restaurantId: restaurant.id, status: "SERVED", paidAt: null } }),
     finishedCount,
-    orders: [...active, ...finished].map((order) => toOrderDto(order)),
+    orders: [...active, ...finished].map((order) => toOrderDto(order, { digitalBillEnabled })),
   };
 }
 
@@ -392,8 +418,12 @@ export async function listFinishedOrders(
   userId: number,
   input: { q?: string; from?: string; to?: string; status?: string; place?: string; page?: number; pageSize?: number },
 ) {
-  const restaurant = await prisma.restaurant.findUnique({ where: { userId }, select: { id: true } });
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { userId },
+    select: { id: true, settings: true },
+  });
   if (!restaurant) throw new OrderError(404, "NOT_FOUND", "Restaurant not found.");
+  const digitalBillEnabled = await isDigitalBillEffective(userId, restaurant.settings);
   const q = String(input.q || "").trim().slice(0, 80);
   const createdAt: Prisma.DateTimeFilter = {};
   const from = parseDay(input.from);
@@ -437,7 +467,8 @@ export async function listFinishedOrders(
     take: pageSize,
   });
   return {
-    orders: orders.map((order) => toOrderDto(order)),
+    orders: orders.map((order) => toOrderDto(order, { digitalBillEnabled })),
+    digitalBillEnabled,
     page,
     pageSize,
     total,

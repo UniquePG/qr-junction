@@ -120,7 +120,15 @@ export const restaurantService = {
   },
 
   listOrders() {
-    return apiRequest<{ orders: any[]; placedCount: number; unpaidCount: number; finishedCount: number; orderingEnabled: boolean; prepMinutes: number }>({
+    return apiRequest<{
+      orders: any[];
+      placedCount: number;
+      unpaidCount: number;
+      finishedCount: number;
+      orderingEnabled: boolean;
+      prepMinutes: number;
+      digitalBillEnabled: boolean;
+    }>({
       method: "GET",
       url: endpoints.restaurant.orders,
     });
@@ -129,6 +137,7 @@ export const restaurantService = {
   listFinishedOrders(params: { q?: string; from?: string; to?: string; status?: string; place?: string; page?: number; pageSize?: number }) {
     return apiRequest<{
       orders: any[];
+      digitalBillEnabled: boolean;
       page: number;
       pageSize: number;
       total: number;
@@ -162,5 +171,38 @@ export const restaurantService = {
       url: endpoints.restaurant.order(id),
       data: body,
     });
+  },
+
+  getSettings() {
+    return apiRequest<{
+      settings: { digitalBill: boolean; orderSound: boolean };
+      entitlements: { digitalBill: boolean };
+    }>({
+      method: "GET",
+      url: endpoints.restaurant.settings,
+    });
+  },
+
+  patchSettings(body: { digitalBill?: boolean; orderSound?: boolean }) {
+    return apiRequest<{
+      settings: { digitalBill: boolean; orderSound: boolean };
+      entitlements: { digitalBill: boolean };
+    }>({
+      method: "PATCH",
+      url: endpoints.restaurant.settings,
+      data: body,
+    });
+  },
+
+  async downloadOrderBill(id: string) {
+    const res = await fetch(endpoints.restaurant.orderBill(id), {
+      method: "GET",
+      credentials: "include",
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => null);
+      throw new Error(json?.error || "Could not download bill.");
+    }
+    return res.blob();
   },
 };

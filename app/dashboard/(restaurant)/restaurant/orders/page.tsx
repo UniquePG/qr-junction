@@ -1,12 +1,16 @@
 "use client";
 
-import { Eye } from "lucide-react";
+import { Download, Eye, Printer, X } from "lucide-react";
+import BillReceiptView from "@/components/orders/BillReceiptView";
 import { useOrderAlerts } from "@/components/orders/OrderAlerts";
 import { restaurantService } from "@/lib/api";
+import { endpoints } from "@/lib/api/endpoints";
+import type { BillOrder, BillRestaurant } from "@/lib/orders/bill";
 import { orderCallCode } from "@/lib/orders/displayId";
 import { waitLabel } from "@/lib/orders/eta";
 import { customerStatusCopy, ownerStage } from "@/lib/orders/status";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "react-toastify";
 
 type OrderItem = {
   name: string;
@@ -151,6 +155,7 @@ export default function RestaurantOrdersPage() {
   const [unpaidCount, setUnpaidCount] = useState(0);
   const [orderingEnabled, setOrderingEnabled] = useState(true);
   const [view, setView] = useState<"floor" | "payments">("floor");
+  const showSoundUnlock = alerts.orderSoundPreferred && !alerts.soundReady;
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [historyFor, setHistoryFor] = useState<Ticket | null>(null);
   const [history, setHistory] = useState<Ticket[]>([]);
@@ -271,6 +276,17 @@ export default function RestaurantOrdersPage() {
         <div className="sm:hidden">
           <KitchenTimeCard draft={prepDraft} onChange={setPrepDraft} onSave={() => void savePrep()} />
         </div>
+      ) : null}
+
+      {showSoundUnlock ? (
+        <button
+          type="button"
+          onClick={() => alerts.enableSound()}
+          className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border border-[#E7DDD2] bg-white px-4 py-3 text-left"
+        >
+          <span className="text-sm text-[#6B5A50]">Order sound is on, but this browser still needs a tap to unlock audio.</span>
+          <span className="shrink-0 text-sm font-semibold text-[#C4622D]">Enable sound</span>
+        </button>
       ) : null}
 
       {servedNote && view === "floor" ? (
@@ -596,6 +612,9 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [detail, setDetail] = useState<Ticket | null>(null);
+  const [digitalBillEnabled, setDigitalBillEnabled] = useState(false);
+  const [billPreview, setBillPreview] = useState<{ restaurant: BillRestaurant; order: BillOrder } | null>(null);
+  const [billBusy, setBillBusy] = useState("");
   const requestSeq = useRef(0);
   const alerts = useOrderAlerts();
   const seenTick = useRef(alerts.liveTick);
@@ -608,11 +627,47 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
     setLoading(false);
     if (!result.ok) return;
     setRows(result.data.orders || []);
+    setDigitalBillEnabled(Boolean(result.data.digitalBillEnabled));
     setTotal(Number(result.data.total || 0));
     setUnpaidTotal(Number(result.data.unpaidTotal || 0));
     setCounts(result.data.counts || { unpaid: 0, paid: 0, rejected: 0, all: 0 });
     if (result.data.page && result.data.page !== page) setPage(result.data.page);
   }, [from, page, pageSize, pay, place, q, to]);
+
+  const openBill = async (order: Ticket) => {
+    setBillBusy(order.publicId + ":view");
+    try {
+      const res = await fetch(`${endpoints.restaurant.orderBill(order.publicId)}?format=json`, {
+        credentials: "include",
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.error || "Could not load bill");
+      setBillPreview({ restaurant: json.restaurant, order: json.order });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not load bill");
+    } finally {
+      setBillBusy("");
+    }
+  };
+
+  const downloadBill = async (order: Ticket) => {
+    setBillBusy(order.publicId + ":pdf");
+    try {
+      const blob = await restaurantService.downloadOrderBill(order.publicId);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `bill-${order.publicId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not download bill");
+    } finally {
+      setBillBusy("");
+    }
+  };
 
   useEffect(() => {
     void load(false);
@@ -751,6 +806,28 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
                     {order.paidAt ? "Mark unpaid" : "Mark paid"}
                   </button>
                 ) : null}
+                {digitalBillEnabled && order.status === "SERVED" ? (
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      disabled={Boolean(billBusy)}
+                      onClick={() => void openBill(order)}
+                      className="inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[#E7DDD2] bg-white text-xs font-semibold text-[#1C1410] disabled:opacity-50"
+                    >
+                      <Printer className="h-3.5 w-3.5 text-[#C4622D]" />
+                      {billBusy === order.publicId + ":view" ? "…" : "View / Print"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={Boolean(billBusy)}
+                      onClick={() => void downloadBill(order)}
+                      className="inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-none bg-[#C4622D] text-xs font-semibold text-white disabled:opacity-50"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      {billBusy === order.publicId + ":pdf" ? "…" : "PDF"}
+                    </button>
+                  </div>
+                ) : null}
               </article>
             );
           })}
@@ -767,6 +844,41 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
         </div>
       ) : null}
       {detail ? <PaymentDetail order={detail} onClose={() => setDetail(null)} /> : null}
+      {billPreview ? (
+        <div className="fixed inset-0 z-[95] flex items-end justify-center bg-black/45 sm:items-center sm:p-6" onClick={() => setBillPreview(null)}>
+          <div
+            className="flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-[#F6F1EA] shadow-2xl sm:rounded-3xl"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-label="Bill preview"
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-[#E7DDD2] px-4 py-3">
+              <p className="text-sm font-semibold text-[#1C1410]">Bill preview</p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full border-none bg-[#C4622D] px-3 text-xs font-semibold text-white"
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  Print
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBillPreview(null)}
+                  className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-none bg-white text-[#1C1410]"
+                  aria-label="Close"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 print:p-0">
+              <BillReceiptView restaurant={billPreview.restaurant} order={billPreview.order} />
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

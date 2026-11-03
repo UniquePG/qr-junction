@@ -1,7 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { Check, Pencil, ShoppingBag, X } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { Check, Download, Pencil, ShoppingBag, X } from "lucide-react";
 import { waitingLine } from "@/lib/orders/banter";
 import { orderCallCode } from "@/lib/orders/displayId";
 import { customerStatusCopy } from "@/lib/orders/status";
@@ -118,8 +118,36 @@ export function PlateChrome({
 }) {
   const i18n = useMenuLocaleOptional();
   const t = i18n?.t;
+  const [billBusyId, setBillBusyId] = useState<string | null>(null);
   const statusCopy = (status: string, rejectReason?: string | null) =>
     i18n?.statusCopy(status, rejectReason) ?? customerStatusCopy(status, rejectReason);
+
+  async function downloadGuestBill(order: LiveOrder) {
+    if (!order.publicToken || !order.paidAt || !order.digitalBillEnabled) return;
+    setBillBusyId(order.publicId);
+    try {
+      const res = await fetch(
+        `/api/public/orders/${encodeURIComponent(order.publicId)}/bill?token=${encodeURIComponent(order.publicToken)}`,
+      );
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        throw new Error(json?.error || "Could not download bill");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `bill-${order.publicId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      // Quiet fail — guest UI stays calm
+    } finally {
+      setBillBusyId(null);
+    }
+  }
   const steps = STEP_IDS.map((id) => ({
     id,
     label:
@@ -400,6 +428,17 @@ export function PlateChrome({
                     ))}
                   </ul>
                   <p className="mt-3 text-right text-sm font-bold text-[#1C1410]">{money(currencySymbol, order.total)}</p>
+                  {order.paidAt && order.digitalBillEnabled ? (
+                    <button
+                      type="button"
+                      disabled={billBusyId === order.publicId}
+                      onClick={() => void downloadGuestBill(order)}
+                      className="mt-3 inline-flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border-none bg-[#1C1410] text-sm font-semibold text-white disabled:opacity-50"
+                    >
+                      <Download className="h-4 w-4" />
+                      {billBusyId === order.publicId ? "Preparing…" : "Download bill"}
+                    </button>
+                  ) : null}
                 </article>
               );
             })}

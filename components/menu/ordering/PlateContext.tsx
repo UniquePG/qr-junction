@@ -29,6 +29,7 @@ export type LiveOrder = {
   rejectReason: string | null;
   expectedReadyAt: string | null;
   paidAt?: string | null;
+  digitalBillEnabled?: boolean;
   items: Array<{ name: string; variantLabel: string | null; unitPrice: number; quantity: number; lineTotal: number }>;
   events?: Array<{ status: string; note: string | null; createdAt: string }>;
   createdAt: string;

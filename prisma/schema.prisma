@@ -400,6 +400,7 @@ model Restaurant {
   openingHours     Json?        @map("opening_hours")
   showOpeningHours Boolean     @default(false) @map("show_opening_hours")
   i18n             Json?        // { "hi": { "name": "...", "description": "..." }, ... }
+  settings         Json?        // { digitalBill?, orderSound?, ... } — see lib/restaurant/settings.ts
 
   createdAt    DateTime        @default(now()) @map("created_at")
   updatedAt    DateTime        @updatedAt @map("updated_at")

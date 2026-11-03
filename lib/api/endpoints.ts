@@ -66,6 +66,8 @@ export const endpoints = {
     importMenu: "/api/restaurant/import-menu",
     orders: "/api/restaurant/orders",
     order: (id: string) => `/api/restaurant/orders/${id}`,
+    orderBill: (id: string) => `/api/restaurant/orders/${id}/bill`,
+    settings: "/api/restaurant/settings",
   },
   admin: {
     me: "/api/admin/me",

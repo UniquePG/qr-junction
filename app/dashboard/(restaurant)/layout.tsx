@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   QrCode,
   ScanLine,
+  Settings,
   Store,
   UtensilsCrossed,
 } from "lucide-react";
@@ -57,6 +58,7 @@ const items: SuiteNavItem[] = [
   { name: "Scanner", href: "/dashboard/restaurant/scanner", icon: ScanLine },
   { name: "Analytics", href: "/dashboard/restaurant/analytics", icon: BarChart3 },
   { name: "Plan", href: "/dashboard/restaurant/billing", icon: CreditCard },
+  { name: "Settings", href: "/dashboard/restaurant/settings", icon: Settings },
 ];
 
 export default function RestaurantSuiteLayout({ children }: { children: React.ReactNode }) {
