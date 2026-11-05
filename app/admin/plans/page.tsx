@@ -8,7 +8,13 @@ import ConfirmModal from "@/components/ConfirmModal";
 import { adminService } from "@/lib/api";
 import { asConfig } from "@/lib/billing/config";
 import { formatRupees, rupeeInputValue } from "@/lib/billing/money";
-import { SUITE_LABELS, asHighlights } from "@/lib/billing/present";
+import {
+  SUITE_LABELS,
+  emptyPlanHighlights,
+  parsePlanHighlights,
+  serializePlanHighlights,
+  type PlanHighlights,
+} from "@/lib/billing/present";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
@@ -26,7 +32,7 @@ type Draft = {
   isPublic: boolean;
   active: boolean;
   sortOrder: string;
-  highlights: string[];
+  highlights: PlanHighlights;
   limits: Record<string, LimitDraft>;
 };
 
@@ -82,10 +88,15 @@ export default function AdminPlansPage() {
       isPublic: plan.isPublic !== false,
       active: plan.active !== false,
       sortOrder: String(plan.sortOrder ?? 0),
-      highlights: asHighlights(plan.highlights),
+      highlights: parsePlanHighlights(plan.highlights),
       limits,
     });
     setMessage("");
+  };
+
+  const patchHighlights = (patch: Partial<PlanHighlights>) => {
+    if (!draft) return;
+    setDraft({ ...draft, highlights: { ...draft.highlights, ...patch } });
   };
 
   const save = async () => {
@@ -101,7 +112,7 @@ export default function AdminPlansPage() {
         isPublic: draft.isPublic,
         active: draft.active,
         sortOrder: Number(draft.sortOrder),
-        highlights: draft.highlights.map((line) => line.trim()).filter(Boolean),
+        highlights: serializePlanHighlights(draft.highlights),
         limits: Object.entries(draft.limits).map(([featureKey, limit]) => ({ featureKey, ...limit })),
       });
       setMessage("Plan saved. Prices are stored in paise.");
@@ -212,37 +223,96 @@ export default function AdminPlansPage() {
         />
         <section className="rounded-3xl border border-slate-200 bg-white p-5">
           <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-[#001B50]">What customers see</h2>
-          <p className="mt-2 text-sm text-slate-500">Write each line the way it should appear on the pricing card. This can be any language. It does not change the limits below.</p>
-          <div className="mt-4 space-y-2">
-            {draft.highlights.map((line, index) => (
-              <div key={index} className="flex gap-2">
-                <input
-                  value={line}
-                  onChange={(event) => {
-                    const highlights = [...draft.highlights];
-                    highlights[index] = event.target.value;
-                    setDraft({ ...draft, highlights });
-                  }}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700"
-                />
-                <button
-                  type="button"
-                  aria-label="Remove line"
-                  onClick={() => setDraft({ ...draft, highlights: draft.highlights.filter((_, item) => item !== index) })}
-                  className="rounded-xl border border-slate-200 px-3 text-slate-400"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => setDraft({ ...draft, highlights: [...draft.highlights, ""] })}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-[#001B50]"
-            >
-              <Plus className="h-4 w-4" /> Add line
-            </button>
+          <p className="mt-2 max-w-3xl text-sm text-slate-500">
+            Fill only the parts you want on the card. Empty fields stay hidden. Feature bullets are optional — leave them blank if the description alone is enough.
+          </p>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <Field
+              label="Section badge"
+              hint='Short audience label, e.g. "For growing businesses". Shown as a small pill near the plan name.'
+              placeholder="For growing businesses"
+              value={draft.highlights.section}
+              onChange={(section) => patchHighlights({ section })}
+            />
+            <Field
+              label="Catchy line"
+              hint="One short line under the price. Tone can be bold or warm."
+              placeholder="Make every scan count. Make every customer experience better."
+              value={draft.highlights.subtitle}
+              onChange={(subtitle) => patchHighlights({ subtitle })}
+            />
           </div>
+          <label className="mt-4 block text-xs font-semibold text-slate-500">
+            Plan description
+            <textarea
+              value={draft.highlights.description}
+              onChange={(event) => patchHighlights({ description: event.target.value })}
+              rows={4}
+              placeholder="Take complete control of your digital customer journey…"
+              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 placeholder:font-normal placeholder:text-slate-300"
+            />
+            <span className="mt-1 block font-normal leading-5 text-slate-400">
+              Longer pitch shown under the catchy line. Skip it if the feature list carries the story.
+            </span>
+          </label>
+          <div className="mt-5">
+            <p className="text-xs font-semibold text-slate-500">Features to display</p>
+            <p className="mt-1 text-xs leading-5 text-slate-400">Bullet lines on the pricing card. Order is the order customers see.</p>
+            <div className="mt-3 space-y-2">
+              {draft.highlights.features.map((line, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    value={line}
+                    onChange={(event) => {
+                      const features = [...draft.highlights.features];
+                      features[index] = event.target.value;
+                      patchHighlights({ features });
+                    }}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700"
+                    placeholder="Unlimited dynamic QR codes"
+                  />
+                  <button
+                    type="button"
+                    aria-label="Remove feature line"
+                    onClick={() =>
+                      patchHighlights({
+                        features: draft.highlights.features.filter((_, item) => item !== index),
+                      })
+                    }
+                    className="rounded-xl border border-slate-200 px-3 text-slate-400"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => patchHighlights({ features: [...draft.highlights.features, ""] })}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-[#001B50]"
+              >
+                <Plus className="h-4 w-4" /> Add feature line
+              </button>
+            </div>
+          </div>
+          <label className="mt-5 block text-xs font-semibold text-slate-500">
+            Best for
+            <input
+              value={draft.highlights.bestFor}
+              onChange={(event) => patchHighlights({ bestFor: event.target.value })}
+              placeholder="Established restaurants, premium cafes, high-volume outlets…"
+              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 placeholder:font-normal placeholder:text-slate-300"
+            />
+            <span className="mt-1 block font-normal leading-5 text-slate-400">
+              Who this plan fits. Shown at the bottom of the card when filled in.
+            </span>
+          </label>
+          <button
+            type="button"
+            onClick={() => setDraft({ ...draft, highlights: emptyPlanHighlights() })}
+            className="mt-4 text-xs font-semibold text-slate-400 hover:text-slate-600"
+          >
+            Clear all customer copy
+          </button>
         </section>
         <section className="rounded-3xl border border-slate-200 bg-white p-5">
           <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-[#001B50]">Price and access</h2>

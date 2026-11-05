@@ -38,7 +38,7 @@ export default async function PricingPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-[#F7F8FB] text-slate-700">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#F4F7FC_0%,#F7F8FB_40%,#EEF2F8_100%)] text-slate-700">
       <PageViewTracker />
       <Script id="pricing-offers" type="application/ld+json">
         {JSON.stringify({

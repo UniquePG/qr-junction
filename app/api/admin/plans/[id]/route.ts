@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { forbidden, requireAdmin } from "@/lib/adminAuth";
 import { prisma } from "@/lib/prisma";
 import { configForFeature } from "@/lib/billing/config";
-import { asHighlights } from "@/lib/billing/present";
+import { serializePlanHighlights } from "@/lib/billing/present";
 import { parseRupees } from "@/lib/billing/money";
 
 type LimitInput = {
@@ -39,7 +39,10 @@ export async function PATCH(
       isPublic: typeof body.isPublic === "boolean" ? body.isPublic : undefined,
       active: typeof body.active === "boolean" ? body.active : undefined,
       sortOrder: Number.isFinite(Number(body.sortOrder)) ? Number(body.sortOrder) : undefined,
-      highlights: Array.isArray(body.highlights) ? asHighlights(body.highlights) : undefined,
+      highlights:
+        body.highlights !== undefined
+          ? (serializePlanHighlights(body.highlights) as Prisma.InputJsonValue)
+          : undefined,
     },
   });
 

@@ -69,9 +69,67 @@ export function usageLabel(feature: FeatureView) {
   return `${feature.used.toLocaleString("en-IN")} of ${feature.quota.toLocaleString("en-IN")}`;
 }
 
-export function asHighlights(value: unknown) {
+/** Structured marketing copy for a plan card. All fields optional — omit empty ones in UI. */
+export type PlanHighlights = {
+  section: string;
+  subtitle: string;
+  description: string;
+  features: string[];
+  bestFor: string;
+};
+
+export function emptyPlanHighlights(): PlanHighlights {
+  return { section: "", subtitle: "", description: "", features: [], bestFor: "" };
+}
+
+function trimText(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function asFeatureLines(value: unknown) {
   if (!Array.isArray(value)) return [];
   return value.map((item) => String(item).trim()).filter(Boolean);
+}
+
+/**
+ * Accepts legacy `string[]` and the structured object shape.
+ * Alternate keys (sub_title, best_for, etc.) are normalized on read.
+ */
+export function parsePlanHighlights(value: unknown): PlanHighlights {
+  if (Array.isArray(value)) {
+    return { ...emptyPlanHighlights(), features: asFeatureLines(value) };
+  }
+  if (!value || typeof value !== "object") return emptyPlanHighlights();
+  const row = value as Record<string, unknown>;
+  return {
+    section: trimText(row.section),
+    subtitle: trimText(row.subtitle ?? row.sub_title ?? row.catchyLine ?? row.catchy_line),
+    description: trimText(row.description ?? row.planDescription ?? row.plan_description),
+    features: asFeatureLines(row.features ?? row.featuresToDisplay ?? row.lines ?? row.highlights),
+    bestFor: trimText(row.bestFor ?? row.best_for ?? row.bestForLine),
+  };
+}
+
+/** Persist a clean object (still valid Json for the plans.highlights column). */
+export function serializePlanHighlights(value: unknown): PlanHighlights {
+  const parsed = parsePlanHighlights(value);
+  return {
+    section: parsed.section,
+    subtitle: parsed.subtitle,
+    description: parsed.description,
+    features: parsed.features,
+    bestFor: parsed.bestFor,
+  };
+}
+
+export function planHighlightsHasContent(value: PlanHighlights | unknown) {
+  const h = parsePlanHighlights(value);
+  return Boolean(h.section || h.subtitle || h.description || h.features.length || h.bestFor);
+}
+
+/** @deprecated Prefer parsePlanHighlights — returns feature bullets only for older callers. */
+export function asHighlights(value: unknown) {
+  return parsePlanHighlights(value).features;
 }
 
 export const SUITE_LABELS: Record<string, string> = {

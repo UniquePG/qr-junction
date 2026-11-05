@@ -1,8 +1,8 @@
 "use client";
 
+import PlanHighlightsContent from "@/components/billing/PlanHighlightsContent";
 import { formatRupees } from "@/lib/billing/money";
-import { asHighlights } from "@/lib/billing/present";
-import { Check } from "lucide-react";
+import { parsePlanHighlights } from "@/lib/billing/present";
 import React from "react";
 
 export type PlanLimitRow = {
@@ -63,7 +63,7 @@ export default function PlanGrid({
   return (
     <div className={`grid items-stretch gap-4 ${columns}`}>
       {plans.map((plan) => {
-        const lines = asHighlights(plan.highlights);
+        const content = parsePlanHighlights(plan.highlights);
         const price = interval === "YEAR" ? plan.yearlyPricePaise : plan.monthlyPricePaise;
         const other = interval === "YEAR" ? plan.monthlyPricePaise : plan.yearlyPricePaise;
         const recommended = plan.code === "growth";
@@ -115,6 +115,15 @@ export default function PlanGrid({
               </div>
               {headerAction ? headerAction(plan) : null}
             </div>
+            {content.section ? (
+              <span
+                className={`mt-3 inline-flex w-fit rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${
+                  suite ? "bg-[#FFF4EC] text-[#C4622D]" : "bg-[#E8F0FE] text-[#0046a1]"
+                }`}
+              >
+                {content.section}
+              </span>
+            ) : null}
             <p className={`mt-4 text-4xl font-black tracking-tight ${suite ? "text-[#1C1410]" : "text-[#001B50]"}`}>
               {formatRupees(price)}
               <span className={`ml-1 text-sm font-semibold ${suite ? "text-[#6B5A50]" : "text-slate-400"}`}>
@@ -125,18 +134,29 @@ export default function PlanGrid({
               {other > 0 ? `${formatRupees(other)} a ${interval === "YEAR" ? "month" : "year"}` : "\u00a0"}
               {months > 0 && interval === "MONTH" ? ` · save ${months} ${months === 1 ? "month" : "months"}` : ""}
             </p>
-            <ul className="mt-5 space-y-2">
-              {lines.length === 0 ? (
-                <li className={`text-sm ${suite ? "text-[#6B5A50]" : "text-slate-400"}`}>
-                  {audience === "admin" ? "Write the lines customers should see." : "Details coming soon."}
-                </li>
-              ) : lines.map((line) => (
-                <li key={line} className="flex items-start gap-2 text-sm leading-snug">
-                  <Check className={`mt-0.5 h-4 w-4 shrink-0 ${suite ? "text-[#C4622D]" : "text-emerald-600"}`} />
-                  <span className={suite ? "text-[#1C1410]" : "text-slate-700"}>{line}</span>
-                </li>
-              ))}
-            </ul>
+            {content.subtitle ? (
+              <p
+                className={`mt-3 border-l-2 pl-3 text-[15px] italic leading-relaxed ${
+                  suite ? "border-[#C4622D]/40 text-[#4A3B32]" : "border-[#0046a1]/35 text-slate-700"
+                }`}
+              >
+                {content.subtitle}
+              </p>
+            ) : null}
+            {content.description || content.features.length || content.bestFor ? (
+              <div className="mt-5">
+                <PlanHighlightsContent
+                  value={content}
+                  tone={suite ? "suite" : "public"}
+                  hideSection
+                  hideSubtitle
+                />
+              </div>
+            ) : !content.section && !content.subtitle ? (
+              <p className={`mt-5 text-sm ${suite ? "text-[#6B5A50]" : "text-slate-400"}`}>
+                {audience === "admin" ? "Write the plan story customers should see." : "Details coming soon."}
+              </p>
+            ) : null}
             {renderAction ? <div className="mt-auto pt-5">{renderAction(plan)}</div> : null}
           </article>
         );
