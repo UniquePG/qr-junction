@@ -19,6 +19,8 @@ export type ChatRequest = {
   timeoutMs?: number;
   capability?: ChatCapability;
   model?: string;
+  /** OpenAI reasoning models (gpt-5.x / o-series). Prefer "none" for fast vision/JSON jobs. */
+  reasoningEffort?: "none" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
   /** Restrict or reorder providers for this call. Reviews omit this and use AI_PROVIDERS. */
   providers?: string[];
 };

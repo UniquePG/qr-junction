@@ -29,6 +29,12 @@ function extractMessageText(data: any): string {
   return "";
 }
 
+/** gpt-5.x / gpt-6.x / o-series need max_completion_tokens (and often reject temperature). */
+function isReasoningStyleModel(model: string) {
+  const id = model.trim().toLowerCase();
+  return /^(o[1-9]|gpt-5|gpt-6)/.test(id) || id.includes("gpt-5.") || id.includes("gpt-6.");
+}
+
 async function completeOnce(
   options: OpenAiCompatibleOptions,
   request: ChatRequest,
@@ -36,6 +42,23 @@ async function completeOnce(
 ): Promise<ChatResult> {
   const timeoutMs = request.timeoutMs ?? 20000;
   const useJsonMode = Boolean(request.jsonMode) && options.supportsJsonMode !== false;
+  const maxTokens = request.maxTokens ?? 1024;
+  const reasoning = isReasoningStyleModel(model);
+
+  const body: Record<string, unknown> = {
+    model,
+    messages: request.messages,
+    stream: false,
+    ...(useJsonMode ? { response_format: { type: "json_object" } } : {}),
+  };
+
+  if (reasoning) {
+    body.max_completion_tokens = maxTokens;
+    body.reasoning_effort = request.reasoningEffort ?? "none";
+  } else {
+    body.max_tokens = maxTokens;
+    body.temperature = request.temperature ?? 0.3;
+  }
 
   const response = await fetch(`${options.baseUrl}/chat/completions`, {
     method: "POST",
@@ -44,14 +67,7 @@ async function completeOnce(
       "Content-Type": "application/json",
       ...(options.extraHeaders || {}),
     },
-    body: JSON.stringify({
-      model,
-      messages: request.messages,
-      temperature: request.temperature ?? 0.3,
-      max_tokens: request.maxTokens ?? 1024,
-      stream: false,
-      ...(useJsonMode ? { response_format: { type: "json_object" } } : {}),
-    }),
+    body: JSON.stringify(body),
     signal: AbortSignal.timeout(timeoutMs),
   });
 

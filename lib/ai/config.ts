@@ -75,22 +75,23 @@ export function openaiHeaders(): Record<string, string> {
 }
 
 export const aiConfig = {
-  textModel: envFirst("AI_TEXT_MODEL") || "gpt-4o-mini",
-  visionModel: envFirst("AI_VISION_MODEL") || "gpt-4o-mini",
+  textModel: envFirst("AI_TEXT_MODEL") || "gpt-5.6-luna",
+  visionModel: envFirst("AI_VISION_MODEL") || "gpt-5.6-luna",
   defaultSystemPrompt:
     "You are a highly experienced SaaS developer, business consultant, and assistant for QR Junction, a QR code marketing platform. Answer strictly in JSON format if requested, and follow all constraints.",
   openai: {
     apiKey: envFirst("OPENAI_API_KEY"),
     baseUrl: (envFirst("OPENAI_BASE_URL") || "https://api.openai.com/v1").replace(/\/$/, ""),
+    // gpt-4.1-nano shut down Oct 2026 → gpt-5.6-luna; gpt-4o-mini kept as backup until Jan 2027
     textModels: uniqueModels(
-      envFirst("OPENAI_TEXT_MODEL") || "gpt-4o-mini",
+      envFirst("OPENAI_TEXT_MODEL") || "gpt-5.6-luna",
       envList("OPENAI_TEXT_MODELS"),
-      ["gpt-4.1-nano"],
+      ["gpt-4o-mini"],
     ),
     visionModels: uniqueModels(
-      envFirst("OPENAI_VISION_MODEL") || "gpt-4o-mini",
+      envFirst("OPENAI_VISION_MODEL") || "gpt-5.6-luna",
       envList("OPENAI_VISION_MODELS"),
-      ["gpt-4.1-nano"],
+      ["gpt-4o-mini"],
     ),
     imageModel: envFirst("OPENAI_IMAGE_MODEL") || "gpt-image-2.5-flare",
     imageQuality: envFirst("OPENAI_IMAGE_QUALITY") || "low",
