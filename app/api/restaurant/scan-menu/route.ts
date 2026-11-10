@@ -172,7 +172,8 @@ IMPORTANT: If no size variants exist for an item, omit the 'variants' field or s
         jsonMode: true,
         temperature: 0.1,
         maxTokens: 8192,
-        timeoutMs: 25000,
+        timeoutMs: 60000,
+        reasoningEffort: 'none',
         capability: isImage ? 'vision' : 'text',
         providers: ['openai', 'sarvam', 'openrouter', 'nvidia', 'groq'],
       });
