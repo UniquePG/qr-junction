@@ -33,6 +33,7 @@ import {
   useMenuLocale,
   type GuestLocaleOption,
 } from '@/components/menu/i18n/MenuLocaleProvider';
+import { formatTableLabel } from '@/lib/orders/displayId';
 
 interface MenuItem {
   id: number;
@@ -723,7 +724,7 @@ function CustomerMenuViewInner({
           {tableNumber && (
             <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-100 shrink-0">
               <Compass className="w-4 h-4 animate-spin-slow" />
-              Dining at Table {tableNumber}
+              Dining at {formatTableLabel(tableNumber)}
             </div>
           )}
           </div>

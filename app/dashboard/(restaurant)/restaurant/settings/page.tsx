@@ -60,7 +60,7 @@ function ToggleRow({
 }
 
 export default function RestaurantSettingsPage() {
-  const { soundReady, enableSound } = useOrderAlerts();
+  const { soundReady, enableSound, setOrderSoundPreferred } = useOrderAlerts();
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<SettingsState>({ digitalBill: false, orderSound: false });
   const [digitalBillAllowed, setDigitalBillAllowed] = useState(false);
@@ -107,11 +107,10 @@ export default function RestaurantSettingsPage() {
       });
       setDigitalBillAllowed(Boolean(res.data.entitlements?.digitalBill));
       if (typeof partial.orderSound === "boolean") {
+        setOrderSoundPreferred(partial.orderSound);
         if (partial.orderSound) {
-          sessionStorage.setItem("qj-kitchen-sound", "1");
-          if (!soundReady) enableSound();
-        } else {
-          sessionStorage.removeItem("qj-kitchen-sound");
+          // Same click that toggled the switch — unlock autoplay for this browser tab.
+          enableSound();
         }
       }
       toast.success("Setting saved");

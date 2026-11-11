@@ -3,6 +3,14 @@
  * Derived from existing `publicId` + `tableNumber` — never stored.
  */
 
+/** "Table 1" / "TBL 2" stay as-is; bare "1" becomes "Table 1". Empty → "Counter". */
+export function formatTableLabel(tableNumber?: string | null): string {
+  const raw = String(tableNumber || "").trim();
+  if (!raw) return "Counter";
+  if (/^(table|tbl)\b/i.test(raw)) return raw;
+  return `Table ${raw}`;
+}
+
 export function normalizePlaceToken(tableNumber?: string | null): string {
   const raw = String(tableNumber || "").trim();
   if (!raw) return "CTR";

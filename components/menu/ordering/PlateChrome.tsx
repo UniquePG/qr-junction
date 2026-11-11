@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { Check, Download, Pencil, ShoppingBag, X } from "lucide-react";
 import { waitingLine } from "@/lib/orders/banter";
-import { orderCallCode } from "@/lib/orders/displayId";
+import { formatTableLabel, orderCallCode } from "@/lib/orders/displayId";
 import { customerStatusCopy } from "@/lib/orders/status";
 import { waitLabel } from "@/lib/orders/eta";
 import type { LiveOrder, PlateLine } from "@/components/menu/ordering/PlateContext";
@@ -267,7 +267,7 @@ export function PlateChrome({
       {cartOpen ? (
         <Drawer
           title={t?.("yourPlate") || "Your plate"}
-          subtitle={tableNumber ? `Table ${tableNumber}` : "Counter"}
+          subtitle={formatTableLabel(tableNumber)}
           onClose={onCloseCart}
           busy={sending}
           footer={

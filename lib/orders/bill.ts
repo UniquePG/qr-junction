@@ -1,4 +1,4 @@
-import { orderCallCode } from "@/lib/orders/displayId";
+import { formatTableLabel, orderCallCode } from "@/lib/orders/displayId";
 
 export type BillLine = {
   name: string;
@@ -93,12 +93,7 @@ export function buildBillPayload(restaurant: BillRestaurant, order: BillOrder): 
   return {
     title: hasTaxId ? "Tax Invoice" : "Bill Receipt",
     callCode: orderCallCode(order.publicId, order.tableNumber),
-    placeLabel: (() => {
-      const raw = order.tableNumber?.trim();
-      if (!raw) return "Counter";
-      if (/^(table|tbl)\b/i.test(raw)) return raw;
-      return `Table ${raw}`;
-    })(),
+    placeLabel: formatTableLabel(order.tableNumber),
     humour: pickHumour(order.publicId),
     restaurant,
     order,

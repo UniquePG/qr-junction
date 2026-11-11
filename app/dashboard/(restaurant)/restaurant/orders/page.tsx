@@ -6,7 +6,7 @@ import { useOrderAlerts } from "@/components/orders/OrderAlerts";
 import { restaurantService } from "@/lib/api";
 import { endpoints } from "@/lib/api/endpoints";
 import type { BillOrder, BillRestaurant } from "@/lib/orders/bill";
-import { orderCallCode } from "@/lib/orders/displayId";
+import { formatTableLabel, orderCallCode } from "@/lib/orders/displayId";
 import { waitLabel } from "@/lib/orders/eta";
 import { customerStatusCopy, ownerStage } from "@/lib/orders/status";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -62,8 +62,7 @@ function money(currency: string, value: number) {
 }
 
 function placeLabel(tableNumber: string | null) {
-  if (!tableNumber) return "Counter";
-  return /^table\b/i.test(tableNumber) ? tableNumber : `Table ${tableNumber}`;
+  return formatTableLabel(tableNumber);
 }
 
 function whenLabel(iso: string | null | undefined) {
