@@ -13,6 +13,7 @@ import {
   LogOut,
   Menu,
   QrCode,
+  Settings,
   Star,
   Users,
   Utensils,
@@ -36,6 +37,7 @@ const NAV = [
   { name: "Landing Pages", href: "/admin/pages", icon: Layout },
   { name: "Leads", href: "/admin/leads", icon: Users },
   { name: "Scans", href: "/admin/scans", icon: Globe },
+  { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {

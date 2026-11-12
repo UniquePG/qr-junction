@@ -16,6 +16,7 @@ import {
   FolderOpen,
   User as UserIcon,
   Layout,
+  Settings,
   Star,
   Utensils,
 } from 'lucide-react';
@@ -30,6 +31,7 @@ const navLinks = [
   { name: 'My QR Codes', href: '/dashboard/qrs', icon: QrCode },
   { name: 'Collected Leads', href: '/dashboard/leads', icon: Users },
   { name: 'Plan', href: '/dashboard/billing', icon: CreditCard },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
 const suites = [
@@ -54,6 +56,8 @@ function pageTitle(pathname: string) {
   if (pathname.includes('/pages')) return 'Landing Pages';
   if (pathname.includes('/qrs')) return 'QR Codes';
   if (pathname.includes('/leads')) return 'Collected Leads';
+  if (pathname.includes('/billing')) return 'Plan';
+  if (pathname.includes('/settings')) return 'Settings';
   return 'Dashboard';
 }
 
@@ -164,6 +168,27 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
               </button>
             </div>
             <nav className="flex-1 space-y-1.5 overflow-y-auto">{nav(() => setMobileMenuOpen(false))}</nav>
+            <div className="pt-4 mt-auto border-t border-slate-200">
+              <Link
+                href="/dashboard/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block mb-3 no-underline"
+              >
+                <p className="text-sm font-semibold text-[#001B50] truncate">{user?.displayName || 'User'}</p>
+                <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+              </Link>
+              <button
+                type="button"
+                onClick={async () => {
+                  setMobileMenuOpen(false);
+                  await handleLogout();
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-red-50 text-sm cursor-pointer bg-white"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
       )}

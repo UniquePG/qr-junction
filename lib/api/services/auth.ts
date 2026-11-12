@@ -106,4 +106,16 @@ export const authService = {
       requireAuth: false,
     });
   },
+
+  changePassword(body: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) {
+    return apiRequest({
+      method: "POST",
+      url: endpoints.auth.passwordChange,
+      data: body,
+    });
+  },
 };

@@ -12,6 +12,7 @@ export const endpoints = {
     passwordForgot: "/api/auth/password/forgot",
     passwordReset: "/api/auth/password/reset",
     passwordValidate: "/api/auth/password/validate",
+    passwordChange: "/api/auth/password/change",
   },
   dashboard: {
     stats: "/api/dashboard/stats",

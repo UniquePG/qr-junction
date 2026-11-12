@@ -117,6 +117,31 @@ async function persistUpgradedCredentials(
 export type AuthAudience = "public" | "admin";
 
 /**
+ * Confirms a known user's current password (session password-change flows).
+ * Same order as login: local hash, then Firebase bridge with bcrypt upgrade.
+ */
+export async function confirmUserPassword(
+  user: CredentialUser,
+  password: string,
+): Promise<CredentialUser | null> {
+  if (user.passwordHash) {
+    const result = await verifyPassword(password, user.passwordHash);
+    if (result.ok) {
+      if (result.needsRehash) {
+        return persistUpgradedCredentials(user, password);
+      }
+      return user;
+    }
+    // Stale DB hash: fall through to Firebase before rejecting.
+  }
+
+  const bridged = await bridgeFirebasePassword(user.email, password, user.firebaseUid);
+  if (!bridged.ok) return null;
+
+  return persistUpgradedCredentials(user, password, bridged.uid);
+}
+
+/**
  * Verifies email/password for the given audience.
  * Order:
  * 1. bcrypt / legacy SHA-256 in Postgres
@@ -141,19 +166,5 @@ export async function authenticateEmailPassword(
     return null;
   }
 
-  if (user.passwordHash) {
-    const result = await verifyPassword(password, user.passwordHash);
-    if (result.ok) {
-      if (result.needsRehash) {
-        return persistUpgradedCredentials(user, password);
-      }
-      return user;
-    }
-    // Stale DB hash: fall through to Firebase before rejecting.
-  }
-
-  const bridged = await bridgeFirebasePassword(email, password, user.firebaseUid);
-  if (!bridged.ok) return null;
-
-  return persistUpgradedCredentials(user, password, bridged.uid);
+  return confirmUserPassword(user, password);
 }

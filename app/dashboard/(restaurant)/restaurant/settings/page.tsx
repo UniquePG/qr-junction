@@ -1,9 +1,10 @@
 "use client";
 
+import ChangePasswordForm from "@/components/auth/ChangePasswordForm";
 import MenuLanguagesPanel from "@/components/restaurant/MenuLanguagesPanel";
 import { useOrderAlerts } from "@/components/orders/OrderAlerts";
 import { restaurantService } from "@/lib/api";
-import { Bell, FileText, Languages, Loader2, Volume2 } from "lucide-react";
+import { Bell, FileText, KeyRound, Languages, Loader2, Volume2 } from "lucide-react";
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -196,6 +197,14 @@ export default function RestaurantSettingsPage() {
           <h2 className="text-sm font-semibold text-[#1C1410]">Guest menu languages</h2>
         </div>
         <MenuLanguagesPanel />
+      </section>
+
+      <section className="mt-8 space-y-3">
+        <div className="mb-1 flex items-center gap-2 px-1">
+          <KeyRound className="h-4 w-4 text-[#C4622D]" />
+          <h2 className="text-sm font-semibold text-[#1C1410]">Account security</h2>
+        </div>
+        <ChangePasswordForm tone="suite" />
       </section>
     </div>
   );

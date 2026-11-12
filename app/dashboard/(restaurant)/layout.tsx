@@ -55,10 +55,10 @@ const items: SuiteNavItem[] = [
   { name: "Tables", href: "/dashboard/restaurant/tables", icon: QrCode, mobile: true },
   { name: "Orders", href: "/dashboard/restaurant/orders", icon: ClipboardList, mobile: true, center: true },
   { name: "Profile", href: "/dashboard/restaurant/profile", icon: Store },
+  { name: "Settings", href: "/dashboard/restaurant/settings", icon: Settings },
   { name: "Scanner", href: "/dashboard/restaurant/scanner", icon: ScanLine },
   { name: "Analytics", href: "/dashboard/restaurant/analytics", icon: BarChart3 },
   { name: "Plan", href: "/dashboard/restaurant/billing", icon: CreditCard },
-  { name: "Settings", href: "/dashboard/restaurant/settings", icon: Settings },
 ];
 
 export default function RestaurantSuiteLayout({ children }: { children: React.ReactNode }) {
