@@ -130,6 +130,8 @@ export async function POST(request: Request) {
       console.error('Import menu translation sync failed:', error);
     });
 
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(restaurant.id, { menu: Number(menuId), menusIndex: true, overview: true });
     return NextResponse.json({ success: true, message: 'Menu imported successfully' });
   } catch (error: any) {
     const denied = planErrorResponse(error);

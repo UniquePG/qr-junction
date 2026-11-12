@@ -29,11 +29,21 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Create your restaurant profile first." }, { status: 400 });
     }
 
+    const { cacheGetJson, cacheSetJson } = await import("@/lib/cache/redis");
+    const { restaurantCacheKey, TTL } = await import("@/lib/cache/keys");
+    const cacheKey = restaurantCacheKey(restaurant.id, "settings");
+    const cached = await cacheGetJson<{
+      success: true;
+      settings: RestaurantSettings & { digitalBill: boolean };
+      entitlements: { digitalBill: boolean };
+    }>(cacheKey);
+    if (cached) return NextResponse.json(cached);
+
     const settings = getRestaurantSettings(restaurant.settings);
     const digitalBillAllowed = await allows(userId, "restaurant.orders.digital_bill");
 
-    return NextResponse.json({
-      success: true,
+    const payload = {
+      success: true as const,
       settings: {
         ...settings,
         // Force off visually when plan does not allow
@@ -42,7 +52,9 @@ export async function GET(request: Request) {
       entitlements: {
         digitalBill: digitalBillAllowed,
       },
-    });
+    };
+    await cacheSetJson(cacheKey, payload, TTL.settings);
+    return NextResponse.json(payload);
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -93,6 +105,8 @@ export async function PATCH(request: Request) {
     });
 
     const digitalBillAllowed = await allows(userId, "restaurant.orders.digital_bill");
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(restaurant.id, { settings: true });
     return NextResponse.json({
       success: true,
       settings: {

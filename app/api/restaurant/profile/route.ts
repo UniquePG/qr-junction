@@ -52,9 +52,21 @@ export async function GET(request: Request) {
 
     const restaurant = await prisma.restaurant.findUnique({
       where: { userId },
+      select: { id: true },
     });
+    if (restaurant) {
+      const { cacheGetJson, cacheSetJson } = await import("@/lib/cache/redis");
+      const { restaurantCacheKey, TTL } = await import("@/lib/cache/keys");
+      const cacheKey = restaurantCacheKey(restaurant.id, "profile");
+      const cached = await cacheGetJson<{ success: true; restaurant: unknown }>(cacheKey);
+      if (cached) return NextResponse.json(cached);
+      const full = await prisma.restaurant.findUnique({ where: { id: restaurant.id } });
+      const payload = { success: true as const, restaurant: full };
+      await cacheSetJson(cacheKey, payload, TTL.profile);
+      return NextResponse.json(payload);
+    }
 
-    return NextResponse.json({ success: true, restaurant });
+    return NextResponse.json({ success: true, restaurant: null });
   } catch (error: unknown) {
     console.error('Error fetching restaurant profile:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -120,6 +132,8 @@ export async function POST(request: Request) {
       });
     }
 
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(restaurant.id, { profile: true, menusIndex: true, overview: true });
     return NextResponse.json({ success: true, restaurant });
   } catch (error: unknown) {
     const denied = planErrorResponse(error);

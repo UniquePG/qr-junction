@@ -122,12 +122,18 @@ export default function TablesManagementPage() {
   const fetchData = async () => {
     try {
       if (!user) return;
-      const tablesRes = await restaurantService.listTables();
-      const menusRes = await restaurantService.listMenus();
+      const [tablesRes, menusRes] = await Promise.all([
+        restaurantService.listTables(),
+        restaurantService.listMenus(),
+      ]);
 
       if (tablesRes.ok && menusRes.ok) {
-        const tablesJson = await tablesRes.json();
-        const menusJson = await menusRes.json();
+        const tablesJson = tablesRes.data?.tables
+          ? tablesRes.data
+          : await tablesRes.json();
+        const menusJson = menusRes.data?.menus
+          ? menusRes.data
+          : await menusRes.json();
         setTables(tablesJson.tables || []);
         setMenus(menusJson.menus || []);
       }

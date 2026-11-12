@@ -209,44 +209,45 @@ export function PlateChrome({
     <>
       {showDock ? (
         <div
-          className="pointer-events-none fixed inset-x-0 z-[60] flex justify-end px-4"
+          className="pointer-events-none fixed inset-x-0 z-[60] flex items-end justify-between gap-3 px-4"
           style={{ bottom: "max(1rem, env(safe-area-inset-bottom))" }}
         >
-          <div className="pointer-events-none flex w-full max-w-md items-end justify-end gap-3">
-          {showOrders ? (
-            <button
-              type="button"
-              onClick={onOpenTracker}
-              className="pointer-events-auto flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 rounded-2xl border border-[#E7DDD2] bg-white/95 px-4 py-3 text-left shadow-[0_12px_40px_rgba(28,20,16,0.18)] backdrop-blur"
-            >
-              <span className="min-w-0">
-                <span className="block text-sm font-semibold text-[#1C1410]">{t?.("yourOrders") || "Your orders"}</span>
-                <span className="block truncate text-xs text-[#6B5A50]">Earlier plates, times, and payment</span>
-              </span>
-              <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-[#1C1410] px-1.5 text-[11px] font-bold text-white">{liveOrders.length}</span>
-            </button>
-          ) : null}
-          {featured && !trackerOpen && !cartOpen ? (
-            <button
-              type="button"
-              onClick={onOpenTracker}
-              className="pointer-events-auto flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-2xl border border-[#E7DDD2] bg-white/95 px-3 py-2.5 text-left shadow-[0_12px_40px_rgba(28,20,16,0.18)] backdrop-blur"
-            >
-              <span className="relative flex h-2.5 w-2.5 shrink-0">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C4622D] opacity-60" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#C4622D]" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-[#C4622D]">
-                    {statusCopy(featured.status)}
-                  </span>
-                  {featuredWait ? <span className="shrink-0 text-[11px] font-semibold text-[#1C1410]">{featuredWait.short}</span> : null}
+          <div className="pointer-events-none flex min-w-0 flex-1 items-end justify-start">
+            {showOrders ? (
+              <button
+                type="button"
+                onClick={onOpenTracker}
+                className="pointer-events-auto flex max-w-[min(100%,16rem)] cursor-pointer items-center justify-between gap-3 rounded-2xl border border-[#E7DDD2] bg-white/95 px-4 py-3 text-left shadow-[0_12px_40px_rgba(28,20,16,0.18)] backdrop-blur"
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-[#1C1410]">{t?.("yourOrders") || "Your orders"}</span>
+                  <span className="block truncate text-xs text-[#6B5A50]">Earlier plates, times, and payment</span>
                 </span>
-                <span className="mt-0.5 block truncate text-sm text-[#1C1410]">{featuredLine}</span>
-              </span>
-            </button>
-          ) : null}
+                <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-[#1C1410] px-1.5 text-[11px] font-bold text-white">{liveOrders.length}</span>
+              </button>
+            ) : null}
+            {featured && !trackerOpen && !cartOpen ? (
+              <button
+                type="button"
+                onClick={onOpenTracker}
+                className="pointer-events-auto flex min-w-0 max-w-[min(100%,18rem)] cursor-pointer items-center gap-3 rounded-2xl border border-[#E7DDD2] bg-white/95 px-3 py-2.5 text-left shadow-[0_12px_40px_rgba(28,20,16,0.18)] backdrop-blur"
+              >
+                <span className="relative flex h-2.5 w-2.5 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C4622D] opacity-60" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#C4622D]" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-[#C4622D]">
+                      {statusCopy(featured.status)}
+                    </span>
+                    {featuredWait ? <span className="shrink-0 text-[11px] font-semibold text-[#1C1410]">{featuredWait.short}</span> : null}
+                  </span>
+                  <span className="mt-0.5 block truncate text-sm text-[#1C1410]">{featuredLine}</span>
+                </span>
+              </button>
+            ) : null}
+          </div>
           {count > 0 && !cartOpen ? (
             <button
               type="button"
@@ -260,7 +261,6 @@ export function PlateChrome({
               </span>
             </button>
           ) : null}
-          </div>
         </div>
       ) : null}
 

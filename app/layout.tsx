@@ -1,4 +1,5 @@
 import { AuthProvider } from "@/components/AuthContext";
+import QueryProvider from "@/components/providers/QueryProvider";
 import { ToastProvider } from "@/components/ToastProvider";
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
@@ -167,9 +168,11 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="antialiased" suppressHydrationWarning>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </QueryProvider>
         <ToastProvider />
         <Analytics />
       </body>

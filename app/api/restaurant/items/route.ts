@@ -120,6 +120,8 @@ export async function POST(request: Request) {
       console.error('Item translation sync failed:', error);
     });
 
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(category.restaurantId, { menu: category.menuId, menusIndex: true });
     return NextResponse.json({ success: true, item });
   } catch (error: any) {
     const denied = planErrorResponse(error);
@@ -155,6 +157,14 @@ export async function PUT(request: Request) {
         })
       );
       await prisma.$transaction(updates);
+      const restaurant = await prisma.restaurant.findUnique({
+        where: { userId },
+        select: { id: true },
+      });
+      if (restaurant) {
+        const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+        await invalidateRestaurant(restaurant.id, { menu: "all", menusIndex: true });
+      }
       return NextResponse.json({ success: true, message: 'Items reordered successfully' });
     }
 
@@ -239,6 +249,8 @@ export async function PUT(request: Request) {
       });
     }
 
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(existing.category.restaurantId, { menu: "all", menusIndex: true });
     return NextResponse.json({ success: true, item });
   } catch (error: any) {
     const denied = planErrorResponse(error);
@@ -264,8 +276,11 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Item ID is required' }, { status: 400 });
     }
 
-    const hasAccess = await checkItemOwnership(Number(id), userId);
-    if (!hasAccess) {
+    const existing = await prisma.menuItem.findFirst({
+      where: { id: Number(id), category: { restaurant: { userId } } },
+      select: { id: true, category: { select: { restaurantId: true, menuId: true } } },
+    });
+    if (!existing) {
       return NextResponse.json({ error: 'Item not found or access denied' }, { status: 403 });
     }
 
@@ -273,6 +288,11 @@ export async function DELETE(request: Request) {
       where: { id: Number(id) },
     });
 
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(existing.category.restaurantId, {
+      menu: existing.category.menuId,
+      menusIndex: true,
+    });
     return NextResponse.json({ success: true, message: 'Item deleted' });
   } catch (error: any) {
     const denied = planErrorResponse(error);

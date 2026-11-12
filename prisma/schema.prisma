@@ -2,8 +2,11 @@
 // Streamlined for Phase 1 and optimized for local PostgreSQL
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Supabase: use the transaction pooler for DATABASE_URL and the direct
+  // (session) connection string for migrations / prisma db push.
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -206,6 +209,7 @@ model QRCode {
   @@index([shortCode])
   @@index([userId])
   @@index([landingPageId])
+  @@index([restaurantId])
   @@index([createdAt])
   @@index([type, status])
   @@map("qr_codes")
@@ -452,6 +456,8 @@ model Menu {
   tables       RestaurantTable[]
   orders       MenuOrder[]
 
+  @@index([restaurantId])
+  @@index([restaurantId, isDefault])
   @@map("menus")
 }
 
@@ -469,6 +475,9 @@ model MenuCategory {
   menu         Menu         @relation(fields: [menuId], references: [id], onDelete: Cascade)
   items        MenuItem[]
 
+  @@index([menuId])
+  @@index([menuId, order])
+  @@index([restaurantId, menuId])
   @@map("menu_categories")
 }
 
@@ -493,6 +502,8 @@ model MenuItem {
 
   category     MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
+  @@index([categoryId])
+  @@index([categoryId, order])
   @@map("menu_items")
 }
 
@@ -510,6 +521,8 @@ model RestaurantTable {
   menu         Menu?      @relation(fields: [menuId], references: [id], onDelete: SetNull)
   qrCode       QRCode?    @relation(fields: [qrCodeId], references: [id], onDelete: SetNull)
 
+  @@index([restaurantId])
+  @@index([restaurantId, tableNumber])
   @@map("restaurant_tables")
 }
 
@@ -586,6 +599,7 @@ model MenuOrder {
 
   @@unique([restaurantId, idempotencyKey])
   @@index([restaurantId, status, createdAt])
+  @@index([restaurantId, status, paidAt])
   @@index([customerId, restaurantId])
   @@map("menu_orders")
 }

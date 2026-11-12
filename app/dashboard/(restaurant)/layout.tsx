@@ -3,6 +3,9 @@
 import { OrderAlertsProvider } from "@/components/orders/OrderAlerts";
 import { restaurantService } from "@/lib/api/services/restaurant";
 import { SuiteShell, type SuiteNavItem, type SuitePlace, type SuiteTheme } from "@/components/suites/SuiteShell";
+import { RESTAURANT_PROFILE_EVENT } from "@/lib/restaurant/events";
+import { restaurantKeys } from "@/lib/restaurant/queryKeys";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BarChart3,
   CreditCard,
@@ -14,9 +17,7 @@ import {
   Store,
   UtensilsCrossed,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-
-export const RESTAURANT_PROFILE_EVENT = "qrj-restaurant-profile";
+import { useEffect, useMemo } from "react";
 
 const theme: SuiteTheme = {
   background: "#F6F1EA",
@@ -62,35 +63,37 @@ const items: SuiteNavItem[] = [
 ];
 
 export default function RestaurantSuiteLayout({ children }: { children: React.ReactNode }) {
-  const [place, setPlace] = useState<SuitePlace>({
-    name: "Restaurant",
-    logoUrl: null,
-    detail: "Restaurant",
-    href: "/dashboard/restaurant/profile",
+  const queryClient = useQueryClient();
+  const profileQuery = useQuery({
+    queryKey: restaurantKeys.profile(),
+    staleTime: 120_000,
+    queryFn: async () => {
+      const res = await restaurantService.getProfile();
+      const json = (res.data?.restaurant ? res.data : await res.json().catch(() => null)) as {
+        restaurant?: Parameters<typeof placeFromRestaurant>[0];
+      } | null;
+      if (!res.ok) throw new Error("Failed to load restaurant profile");
+      return json?.restaurant ?? null;
+    },
   });
 
   useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const res = await restaurantService.getProfile();
-        const json = (await res.json().catch(() => null)) as {
-          restaurant?: Parameters<typeof placeFromRestaurant>[0];
-        } | null;
-        const restaurant = json?.restaurant;
-        if (!res.ok || cancelled || !restaurant) return;
-        setPlace(placeFromRestaurant(restaurant));
-      } catch {
-        // The header keeps the quiet restaurant label until the profile loads.
-      }
+    const onProfile = () => {
+      void queryClient.invalidateQueries({ queryKey: restaurantKeys.profile() });
     };
-    void load();
-    window.addEventListener(RESTAURANT_PROFILE_EVENT, load);
-    return () => {
-      cancelled = true;
-      window.removeEventListener(RESTAURANT_PROFILE_EVENT, load);
+    window.addEventListener(RESTAURANT_PROFILE_EVENT, onProfile);
+    return () => window.removeEventListener(RESTAURANT_PROFILE_EVENT, onProfile);
+  }, [queryClient]);
+
+  const place: SuitePlace = useMemo(() => {
+    if (profileQuery.data) return placeFromRestaurant(profileQuery.data);
+    return {
+      name: "Restaurant",
+      logoUrl: null,
+      detail: "Restaurant",
+      href: "/dashboard/restaurant/profile",
     };
-  }, []);
+  }, [profileQuery.data]);
 
   return (
     <OrderAlertsProvider>

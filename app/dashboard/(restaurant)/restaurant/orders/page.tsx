@@ -12,6 +12,7 @@ import { customerStatusCopy, ownerStage } from "@/lib/orders/status";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
+
 type OrderItem = {
   name: string;
   variantLabel: string | null;
@@ -166,6 +167,20 @@ export default function RestaurantOrdersPage() {
   const [prepReady, setPrepReady] = useState(false);
   const [prepOpen, setPrepOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const [boardLoading, setBoardLoading] = useState(true);
+  const [layoutReady, setLayoutReady] = useState(false);
+
+  const loadOrdersOnly = useCallback(async () => {
+    const orderResult = await restaurantService.listOrders();
+    if (!orderResult.ok) return;
+    setOrders(orderResult.data.orders || []);
+    setUnpaidCount(Number(orderResult.data.unpaidCount || 0));
+    setOrderingEnabled(Boolean(orderResult.data.orderingEnabled));
+    if (!prepReady && typeof orderResult.data.prepMinutes === "number") {
+      setPrepDraft(String(orderResult.data.prepMinutes));
+      setPrepReady(true);
+    }
+  }, [prepReady]);
 
   const load = useCallback(async () => {
     const [orderResult, tableResult, menuResult] = await Promise.all([
@@ -173,23 +188,33 @@ export default function RestaurantOrdersPage() {
       restaurantService.listTables(),
       restaurantService.listMenus(),
     ]);
-    if (orderResult.ok) {
-      setOrders(orderResult.data.orders || []);
-      setUnpaidCount(Number(orderResult.data.unpaidCount || 0));
-      setOrderingEnabled(Boolean(orderResult.data.orderingEnabled));
-      if (!prepReady && typeof orderResult.data.prepMinutes === "number") {
-        setPrepDraft(String(orderResult.data.prepMinutes));
-        setPrepReady(true);
-      }
-    }
+
+    let tablesData: TableRow[] = [];
+    let menusData: MenuRow[] = [];
     if (tableResult.ok) {
-      const body = await tableResult.json();
-      setTables(Array.isArray(body.tables) ? body.tables : []);
+      const body = (tableResult.data?.tables ? tableResult.data : await tableResult.json()) as {
+        tables?: TableRow[];
+      };
+      tablesData = Array.isArray(body.tables) ? body.tables : [];
     }
     if (menuResult.ok) {
-      const body = await menuResult.json();
-      setMenus(Array.isArray(body.menus) ? body.menus : []);
+      const body = (menuResult.data?.menus ? menuResult.data : await menuResult.json()) as {
+        menus?: MenuRow[];
+      };
+      menusData = Array.isArray(body.menus) ? body.menus : [];
     }
+
+    setOrders(orderResult.ok ? orderResult.data.orders || [] : []);
+    setUnpaidCount(orderResult.ok ? Number(orderResult.data.unpaidCount || 0) : 0);
+    setOrderingEnabled(orderResult.ok ? Boolean(orderResult.data.orderingEnabled) : true);
+    setTables(tablesData);
+    setMenus(menusData);
+    if (!prepReady && orderResult.ok && typeof orderResult.data.prepMinutes === "number") {
+      setPrepDraft(String(orderResult.data.prepMinutes));
+      setPrepReady(true);
+    }
+    setLayoutReady(true);
+    setBoardLoading(false);
   }, [prepReady]);
 
   const seenTick = useRef(alerts.liveTick);
@@ -206,21 +231,52 @@ export default function RestaurantOrdersPage() {
   useEffect(() => {
     if (seenTick.current === alerts.liveTick) return;
     seenTick.current = alerts.liveTick;
-    void load();
-  }, [alerts.liveTick, load]);
+    // Live ticks only need fresh orders — tables/menus rarely change mid-shift.
+    void loadOrdersOnly();
+  }, [alerts.liveTick, loadOrdersOnly]);
 
   const spots = useMemo(() => buildSpots(tables, menus, orders), [tables, menus, orders]);
   const openSpot = spots.find((spot) => spot.key === openKey) || null;
 
   const move = async (publicId: string, status: string, note?: string) => {
+    const previous = orders;
     setBusy(publicId + status);
+    setOrders((current) =>
+      current.map((order) =>
+        order.publicId === publicId
+          ? {
+              ...order,
+              status,
+              rejectReason: status === "REJECTED" ? note || order.rejectReason : order.rejectReason,
+              updatedAt: new Date().toISOString(),
+            }
+          : order,
+      ),
+    );
     const result = await restaurantService.updateOrder(publicId, { status, reason: note });
     setBusy("");
-    if (!result.ok) return;
+    if (!result.ok) {
+      setOrders(previous);
+      toast.error((result.data as { error?: string })?.error || "Could not update order.");
+      return;
+    }
+    const updated = result.data?.order as Ticket | undefined;
+    if (updated?.publicId) {
+      setOrders((current) => {
+        const next = current.map((order) => (order.publicId === updated.publicId ? { ...order, ...updated } : order));
+        if (status === "SERVED" || status === "REJECTED") {
+          // Keep a short finished preview; active filter handles the floor.
+          return next;
+        }
+        return next;
+      });
+      if (typeof result.data?.placedCount === "number") {
+        // placedCount is owned by OrderAlerts via WS; no local field here.
+      }
+    }
     setRejecting(null);
     setReason("");
     if (status === "SERVED") setServedNote("Plate served. It is waiting in Payments.");
-    await load();
   };
 
   const savePrep = async () => {
@@ -232,8 +288,20 @@ export default function RestaurantOrdersPage() {
   };
 
   const saveStage = async (publicId: string, minutes: number) => {
+    const previous = orders;
     const result = await restaurantService.updateOrder(publicId, { stageMinutes: minutes });
-    if (result.ok) await load();
+    if (!result.ok) {
+      setOrders(previous);
+      return;
+    }
+    const updated = result.data?.order as Ticket | undefined;
+    if (updated?.publicId) {
+      setOrders((current) =>
+        current.map((order) => (order.publicId === updated.publicId ? { ...order, ...updated } : order)),
+      );
+    } else {
+      await loadOrdersOnly();
+    }
   };
 
   const openHistory = async (order: Ticket) => {
@@ -296,32 +364,62 @@ export default function RestaurantOrdersPage() {
       ) : null}
 
       {view === "floor" ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {spots.map((spot) => {
-            const summary = counts(spot.orders);
-            const clear = spot.orders.length === 0;
-            const needsAction = summary.fresh > 0;
-            const tone = clear ? "bg-[#1F7A4D] text-white" : needsAction ? "bg-[#C4622D] text-white" : "bg-[#1C1410] text-white";
-            const total = spot.orders.reduce((sum, order) => sum + order.total, 0);
-            const bits = [
-              summary.fresh ? `${summary.fresh} new` : "",
-              summary.cooking ? `${summary.cooking} cooking` : "",
-              summary.ready ? `${summary.ready} ready` : "",
-            ].filter(Boolean);
-            return (
-              <button key={spot.key} type="button" onClick={() => setOpenKey(spot.key)} className={`flex min-h-28 cursor-pointer flex-col items-start justify-between rounded-2xl border-none p-3 text-left shadow-sm ${tone}`}>
-                <span className="w-full">
-                  <span className="block truncate text-base font-semibold">{spot.title}</span>
-                  {spot.subtitle ? <span className="mt-0.5 block truncate text-[11px] opacity-80">{spot.subtitle}</span> : null}
-                </span>
-                <span className="mt-3 w-full">
-                  <span className="block text-sm font-semibold">{clear ? "Clear" : money(spot.orders[0]?.currency || "INR", total)}</span>
-                  <span className="mt-0.5 block text-[11px] leading-snug opacity-90">{clear ? "No plates" : bits.join(" · ")}</span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        boardLoading || !layoutReady ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div
+                key={`skel-${index}`}
+                className="min-h-28 animate-pulse rounded-2xl bg-[#E7DDD2]/70 p-3"
+              >
+                <div className="h-4 w-2/3 rounded bg-white/60" />
+                <div className="mt-2 h-3 w-1/3 rounded bg-white/40" />
+                <div className="mt-8 h-4 w-1/2 rounded bg-white/50" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {spots.map((spot) => {
+              const summary = counts(spot.orders);
+              const clear = spot.orders.length === 0;
+              const needsAction = summary.fresh > 0;
+              const tone = clear
+                ? "bg-[#1F7A4D] text-white"
+                : needsAction
+                  ? "bg-[#C4622D] text-white"
+                  : "bg-[#1C1410] text-white";
+              const total = spot.orders.reduce((sum, order) => sum + order.total, 0);
+              const bits = [
+                summary.fresh ? `${summary.fresh} new` : "",
+                summary.cooking ? `${summary.cooking} cooking` : "",
+                summary.ready ? `${summary.ready} ready` : "",
+              ].filter(Boolean);
+              return (
+                <button
+                  key={spot.key}
+                  type="button"
+                  onClick={() => setOpenKey(spot.key)}
+                  className={`flex min-h-28 cursor-pointer flex-col items-start justify-between rounded-2xl border-none p-3 text-left shadow-sm ${tone}`}
+                >
+                  <span className="w-full">
+                    <span className="block truncate text-base font-semibold">{spot.title}</span>
+                    {spot.subtitle ? (
+                      <span className="mt-0.5 block truncate text-[11px] opacity-80">{spot.subtitle}</span>
+                    ) : null}
+                  </span>
+                  <span className="mt-3 w-full">
+                    <span className="block text-sm font-semibold">
+                      {clear ? "Clear" : money(spot.orders[0]?.currency || "INR", total)}
+                    </span>
+                    <span className="mt-0.5 block text-[11px] leading-snug opacity-90">
+                      {clear ? "No plates" : bits.join(" · ")}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )
       ) : (
         <PaymentsBoard tables={tables} menus={menus} />
       )}
@@ -692,26 +790,38 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="rounded-2xl bg-[#1C1410] px-4 py-4 text-white">
-          <p className="text-xs uppercase tracking-wide text-white/60">Unpaid</p>
-          <p className="mt-1 text-2xl font-semibold">{counts.unpaid}</p>
-          <p className="text-sm text-white/70">{money(rows[0]?.currency || "INR", unpaidTotal)} to collect</p>
-        </div>
-        <div className="rounded-2xl border border-[#E7DDD2] bg-white px-4 py-4">
-          <p className="text-xs uppercase tracking-wide text-[#6B5A50]">Paid</p>
-          <p className="mt-1 text-2xl font-semibold text-[#1C1410]">{counts.paid}</p>
-          <p className="text-sm text-[#6B5A50]">Marked paid</p>
-        </div>
-        <div className="rounded-2xl border border-[#E7DDD2] bg-white px-4 py-4">
-          <p className="text-xs uppercase tracking-wide text-[#6B5A50]">Rejected</p>
-          <p className="mt-1 text-2xl font-semibold text-[#1C1410]">{counts.rejected}</p>
-          <p className="text-sm text-[#6B5A50]">Not served</p>
-        </div>
-        <div className="rounded-2xl border border-[#E7DDD2] bg-white px-4 py-4">
-          <p className="text-xs uppercase tracking-wide text-[#6B5A50]">All finished</p>
-          <p className="mt-1 text-2xl font-semibold text-[#1C1410]">{counts.all}</p>
-          <p className="text-sm text-[#6B5A50]">Every status</p>
-        </div>
+        {loading ? (
+          Array.from({ length: 4 }).map((_, index) => (
+            <div key={`pay-skel-${index}`} className="min-h-[5.5rem] animate-pulse rounded-2xl bg-[#E7DDD2]/70 px-4 py-4">
+              <div className="h-3 w-16 rounded bg-white/50" />
+              <div className="mt-3 h-7 w-10 rounded bg-white/60" />
+              <div className="mt-2 h-3 w-24 rounded bg-white/40" />
+            </div>
+          ))
+        ) : (
+          <>
+            <div className="rounded-2xl bg-[#1C1410] px-4 py-4 text-white">
+              <p className="text-xs uppercase tracking-wide text-white/60">Unpaid</p>
+              <p className="mt-1 text-2xl font-semibold">{counts.unpaid}</p>
+              <p className="text-sm text-white/70">{money(rows[0]?.currency || "INR", unpaidTotal)} to collect</p>
+            </div>
+            <div className="rounded-2xl border border-[#E7DDD2] bg-white px-4 py-4">
+              <p className="text-xs uppercase tracking-wide text-[#6B5A50]">Paid</p>
+              <p className="mt-1 text-2xl font-semibold text-[#1C1410]">{counts.paid}</p>
+              <p className="text-sm text-[#6B5A50]">Marked paid</p>
+            </div>
+            <div className="rounded-2xl border border-[#E7DDD2] bg-white px-4 py-4">
+              <p className="text-xs uppercase tracking-wide text-[#6B5A50]">Rejected</p>
+              <p className="mt-1 text-2xl font-semibold text-[#1C1410]">{counts.rejected}</p>
+              <p className="text-sm text-[#6B5A50]">Not served</p>
+            </div>
+            <div className="rounded-2xl border border-[#E7DDD2] bg-white px-4 py-4">
+              <p className="text-xs uppercase tracking-wide text-[#6B5A50]">All finished</p>
+              <p className="mt-1 text-2xl font-semibold text-[#1C1410]">{counts.all}</p>
+              <p className="text-sm text-[#6B5A50]">Every status</p>
+            </div>
+          </>
+        )}
       </div>
 
       <form

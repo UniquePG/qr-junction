@@ -197,55 +197,37 @@ export default function MenuManagementPage() {
   const [showLayoutPicker, setShowLayoutPicker] = useState(false);
   const [layoutPickerMode, setLayoutPickerMode] = useState<'live' | 'draft'>('live');
 
-  const fetchMenusList = async (selectId?: number) => {
-    setMenusLoading(true);
-    try {
-      const res = await restaurantService.listMenus();
-      if (res.ok) {
-        const json = await res.json();
-        setMenus(json.menus || []);
-        
-        if (json.menus?.length > 0) {
-          if (selectId && json.menus.some((m: Menu) => m.id === selectId)) {
-            setSelectedMenuId(selectId);
-          } else {
-            const defaultMenu = json.menus.find((m: Menu) => m.isDefault) || json.menus[0];
-            setSelectedMenuId(defaultMenu.id);
-          }
-        } else {
-          setSelectedMenuId(null);
+  const applyMenuHierarchy = (json: {
+    restaurant?: Restaurant | null;
+    menu?: (Menu & { categories?: MenuCategory[] }) | null;
+  }) => {
+    if (json.restaurant) setRestaurant(json.restaurant);
+    if (json.menu) {
+      const nextCategories = json.menu.categories || [];
+      setCategories(nextCategories);
+      if (nextCategories.length > 0) {
+        const exists = nextCategories.some((c) => c.id === activeTabCategoryId);
+        if (!exists) {
+          setActiveTabCategoryId(nextCategories[0].id);
         }
+      } else {
+        setActiveTabCategoryId(null);
       }
-    } catch (err) {
-      console.error('Failed to load menus list:', err);
-    } finally {
-      setMenusLoading(false);
     }
   };
 
-  const fetchMenuHierarchy = async () => {
-    if (selectedMenuId === null) {
+  const fetchMenuHierarchy = async (menuId?: number | null) => {
+    const id = menuId ?? selectedMenuId;
+    if (id === null || id === undefined) {
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      const res = await restaurantService.getMenu(selectedMenuId);
+      const res = await restaurantService.getMenu(id);
       if (res.ok) {
-        const json = await res.json();
-        if (json.restaurant) setRestaurant(json.restaurant);
-        if (json.menu) {
-          setCategories(json.menu.categories || []);
-          if (json.menu.categories?.length > 0) {
-            // Check if active category is in list, if not set first
-            const exists = json.menu.categories.some((c: MenuCategory) => c.id === activeTabCategoryId);
-            if (!exists) {
-              setActiveTabCategoryId(json.menu.categories[0].id);
-            }
-          } else {
-            setActiveTabCategoryId(null);
-          }
-        }
+        const json = res.data?.menu ? res.data : await res.json();
+        applyMenuHierarchy(json);
       }
     } catch (err) {
       console.error('Failed to load menu details:', err);
@@ -254,18 +236,56 @@ export default function MenuManagementPage() {
     }
   };
 
+  const fetchMenusList = async (selectId?: number) => {
+    setMenusLoading(true);
+    setLoading(true);
+    try {
+      const res = await restaurantService.listMenus();
+      if (res.ok) {
+        const json = res.data?.menus ? res.data : await res.json();
+        const list: Menu[] = json.menus || [];
+        setMenus(list);
+
+        if (list.length > 0) {
+          const nextId =
+            selectId && list.some((m) => m.id === selectId)
+              ? selectId
+              : (list.find((m) => m.isDefault) || list[0]).id;
+          setSelectedMenuId(nextId);
+          // Prefetch hierarchy in the same turn (avoids list → detail waterfall).
+          await fetchMenuHierarchy(nextId);
+        } else {
+          setSelectedMenuId(null);
+          setCategories([]);
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Failed to load menus list:', err);
+      setLoading(false);
+    } finally {
+      setMenusLoading(false);
+    }
+  };
+
   // Fetch menus on load
   useEffect(() => {
     if (user) {
-      fetchMenusList();
+      void fetchMenusList();
     }
   }, [user]);
 
-  // Fetch hierarchy on selected menu change
+  // Fetch hierarchy when user switches menu (initial load already prefetched).
+  const initialMenuLoad = React.useRef(true);
   useEffect(() => {
-    if (selectedMenuId !== null) {
-      fetchMenuHierarchy();
+    if (selectedMenuId === null) return;
+    if (initialMenuLoad.current) {
+      initialMenuLoad.current = false;
+      return;
     }
+    void fetchMenuHierarchy(selectedMenuId);
   }, [selectedMenuId]);
 
   // Menu CRUD Actions

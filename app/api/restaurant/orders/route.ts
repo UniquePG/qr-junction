@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { getDbUserIdFromRequest } from "@/lib/authHelper";
 import { listFinishedOrders, listRestaurantOrders, OrderError, setPrepMinutes } from "@/lib/orders/service";
+import { createTimer } from "@/lib/perf/timing";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
+  const timer = createTimer();
   const userId = await getDbUserIdFromRequest(request);
+  timer.mark("auth");
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const url = new URL(request.url);
@@ -19,10 +22,18 @@ export async function GET(request: Request) {
         page: Number(url.searchParams.get("page") || 1),
         pageSize: Number(url.searchParams.get("pageSize") || 12),
       });
-      return NextResponse.json(data);
+      timer.mark("db");
+      const response = NextResponse.json(data);
+      timer.apply(response);
+      timer.log("GET /api/restaurant/orders?view=finished");
+      return response;
     }
     const data = await listRestaurantOrders(userId);
-    return NextResponse.json(data);
+    timer.mark("db");
+    const response = NextResponse.json(data);
+    timer.apply(response);
+    timer.log("GET /api/restaurant/orders");
+    return response;
   } catch (error) {
     if (error instanceof OrderError) {
       return NextResponse.json({ error: error.message, code: error.code }, { status: error.status });

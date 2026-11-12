@@ -166,7 +166,7 @@ export const restaurantService = {
   },
 
   updateOrder(id: string, body: { status?: string; reason?: string; readyInMinutes?: number; stageMinutes?: number; paid?: boolean }) {
-    return apiRequest<{ order: any; changed: boolean }>({
+    return apiRequest<{ order: any; changed: boolean; placedCount?: number }>({
       method: "PATCH",
       url: endpoints.restaurant.order(id),
       data: body,

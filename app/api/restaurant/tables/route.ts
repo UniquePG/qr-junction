@@ -15,22 +15,53 @@ export async function GET(request: Request) {
 
     const restaurant = await prisma.restaurant.findUnique({
       where: { userId },
+      select: { id: true },
     });
 
     if (!restaurant) {
       return NextResponse.json({ success: true, tables: [] });
     }
 
+    const { cacheGetJson, cacheSetJson } = await import("@/lib/cache/redis");
+    const { restaurantCacheKey, TTL } = await import("@/lib/cache/keys");
+    const cacheKey = restaurantCacheKey(restaurant.id, "tables");
+    const cached = await cacheGetJson<{ success: true; tables: unknown[] }>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+
     const tables = await prisma.restaurantTable.findMany({
       where: { restaurantId: restaurant.id },
-      include: {
-        qrCode: true,
-        menu: true,
+      select: {
+        id: true,
+        restaurantId: true,
+        menuId: true,
+        tableNumber: true,
+        capacity: true,
+        qrCodeId: true,
+        createdAt: true,
+        updatedAt: true,
+        menu: { select: { id: true, name: true } },
+        qrCode: {
+          select: {
+            id: true,
+            shortCode: true,
+            name: true,
+            fgColor: true,
+            bgColor: true,
+            logoUrl: true,
+            customDesign: true,
+            totalScans: true,
+            uniqueScans: true,
+          },
+        },
       },
-      orderBy: { tableNumber: 'asc' },
+      orderBy: { tableNumber: "asc" },
     });
 
-    return NextResponse.json({ success: true, tables });
+    const payload = { success: true as const, tables };
+    await cacheSetJson(cacheKey, payload, TTL.tables);
+    return NextResponse.json(payload);
   } catch (error: any) {
     console.error('Error fetching tables:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -118,6 +149,8 @@ export async function POST(request: Request) {
       },
     });
 
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(restaurant.id, { tables: true });
     return NextResponse.json({ success: true, table });
   } catch (error: any) {
     const denied = planErrorResponse(error);
@@ -212,6 +245,8 @@ export async function PUT(request: Request) {
       return updated;
     });
 
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(restaurant.id, { tables: true });
     return NextResponse.json({ success: true, table });
   } catch (error: any) {
     const denied = planErrorResponse(error);
@@ -258,6 +293,8 @@ export async function DELETE(request: Request) {
       });
     }
 
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(table.restaurantId, { tables: true });
     return NextResponse.json({ success: true, message: 'Table and its QR code deleted' });
   } catch (error: any) {
     const denied = planErrorResponse(error);

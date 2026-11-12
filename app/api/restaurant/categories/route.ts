@@ -63,6 +63,8 @@ export async function POST(request: Request) {
       console.error('Category translation sync failed:', error);
     });
 
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(restaurant.id, { menu: Number(menuId), menusIndex: true });
     return NextResponse.json({ success: true, category });
   } catch (error: any) {
     const denied = planErrorResponse(error);
@@ -101,6 +103,8 @@ export async function PUT(request: Request) {
         })
       );
       await prisma.$transaction(updates);
+      const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+      await invalidateRestaurant(restaurant.id, { menu: "all", menusIndex: true });
       return NextResponse.json({ success: true, message: 'Categories reordered successfully' });
     }
 
@@ -131,6 +135,8 @@ export async function PUT(request: Request) {
       });
     }
 
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(restaurant.id, { menu: existing.menuId, menusIndex: true });
     return NextResponse.json({ success: true, category });
   } catch (error: any) {
     const denied = planErrorResponse(error);
@@ -173,6 +179,8 @@ export async function DELETE(request: Request) {
       where: { id: Number(id) },
     });
 
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(restaurant.id, { menu: existing.menuId, menusIndex: true });
     return NextResponse.json({ success: true, message: 'Category deleted' });
   } catch (error: any) {
     const denied = planErrorResponse(error);

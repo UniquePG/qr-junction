@@ -21,52 +21,109 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const restaurant = await getRestaurantByUserId(userId);
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { userId },
+      select: { id: true, name: true },
+    });
     if (!restaurant) {
       return NextResponse.json({ success: true, menus: [] });
     }
 
+    const { cacheGetJson, cacheSetJson } = await import("@/lib/cache/redis");
+    const { restaurantCacheKey, TTL } = await import("@/lib/cache/keys");
+    const cacheKey = restaurantCacheKey(restaurant.id, "menus:index");
+    const cached = await cacheGetJson<{ success: true; menus: unknown[] }>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+
     const menus = await prisma.menu.findMany({
       where: { restaurantId: restaurant.id },
-      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        restaurantId: true,
+        name: true,
+        description: true,
+        theme: true,
+        isDefault: true,
+        i18n: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: { createdAt: "asc" },
     });
 
     const qrCodes = await prisma.qRCode.findMany({
       where: {
         userId,
         type: QRType.RESTAURANT_MENU,
-      }
+        restaurantId: restaurant.id,
+      },
+      select: {
+        id: true,
+        shortCode: true,
+        name: true,
+        fgColor: true,
+        bgColor: true,
+        logoUrl: true,
+        customDesign: true,
+        totalScans: true,
+        uniqueScans: true,
+        destination: true,
+      },
     });
 
-    const menusWithQr = [];
-    for (const menu of menus) {
-      let qr = qrCodes.find(q => {
-        const dest = q.destination as any;
-        return dest && dest.menuId === menu.id && !dest.tableNumber;
-      });
+    const qrByMenuId = new Map<number, (typeof qrCodes)[number]>();
+    for (const qr of qrCodes) {
+      const dest = qr.destination as { menuId?: number; tableNumber?: string } | null;
+      if (!dest || dest.tableNumber || !dest.menuId) continue;
+      if (!qrByMenuId.has(dest.menuId)) qrByMenuId.set(dest.menuId, qr);
+    }
 
-      if (!qr) {
-        // Lazy create QR Code for the menu
-        const shortCode = await generateUniqueShortCode();
-        qr = await prisma.qRCode.create({
-          data: {
-            name: `${restaurant.name} - ${menu.name} Direct QR`,
-            type: QRType.RESTAURANT_MENU,
-            shortCode,
-            destination: {
+    const missing = menus.filter((menu) => !qrByMenuId.has(menu.id));
+    if (missing.length) {
+      const created = await Promise.all(
+        missing.map(async (menu) => {
+          const shortCode = await generateUniqueShortCode();
+          return prisma.qRCode.create({
+            data: {
+              name: `${restaurant.name} - ${menu.name} Direct QR`,
+              type: QRType.RESTAURANT_MENU,
+              shortCode,
+              destination: {
+                restaurantId: restaurant.id,
+                menuId: menu.id,
+              },
+              userId,
               restaurantId: restaurant.id,
-              menuId: menu.id,
+              fgColor: "#000000",
+              bgColor: "#FFFFFF",
+              status: QRStatus.ACTIVE,
             },
-            userId,
-            restaurantId: restaurant.id,
-            fgColor: '#000000',
-            bgColor: '#FFFFFF',
-            status: QRStatus.ACTIVE,
-          }
-        });
+            select: {
+              id: true,
+              shortCode: true,
+              name: true,
+              fgColor: true,
+              bgColor: true,
+              logoUrl: true,
+              customDesign: true,
+              totalScans: true,
+              uniqueScans: true,
+              destination: true,
+            },
+          });
+        }),
+      );
+      for (const qr of created) {
+        const dest = qr.destination as { menuId?: number };
+        if (dest?.menuId) qrByMenuId.set(dest.menuId, qr);
       }
+    }
 
-      menusWithQr.push({
+    const menusWithQr = menus.map((menu) => {
+      const qr = qrByMenuId.get(menu.id)!;
+      return {
         ...menu,
         qrCode: {
           id: qr.id,
@@ -78,11 +135,13 @@ export async function GET(request: Request) {
           customDesign: qr.customDesign,
           totalScans: qr.totalScans,
           uniqueScans: qr.uniqueScans,
-        }
-      });
-    }
+        },
+      };
+    });
 
-    return NextResponse.json({ success: true, menus: menusWithQr });
+    const payload = { success: true as const, menus: menusWithQr };
+    await cacheSetJson(cacheKey, payload, TTL.menusIndex);
+    return NextResponse.json(payload);
   } catch (error: any) {
     console.error('Error fetching menus:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -175,6 +234,8 @@ export async function POST(request: Request) {
       }
     };
 
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(restaurant.id, { menusIndex: true, menu: newMenu.id, overview: true });
     return NextResponse.json({ success: true, menu: menuWithQr });
   } catch (error: any) {
     const denied = planErrorResponse(error);
@@ -296,6 +357,8 @@ export async function PUT(request: Request) {
       } : null
     };
 
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(restaurant.id, { menusIndex: true, menu: updatedMenu.id, overview: true });
     return NextResponse.json({ success: true, menu: menuWithQr });
   } catch (error: any) {
     const denied = planErrorResponse(error);
@@ -386,6 +449,8 @@ export async function DELETE(request: Request) {
       });
     }
 
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(restaurant.id, { menusIndex: true, menu: "all", tables: true, overview: true });
     return NextResponse.json({ success: true, message: 'Menu deleted successfully' });
   } catch (error: any) {
     const denied = planErrorResponse(error);
