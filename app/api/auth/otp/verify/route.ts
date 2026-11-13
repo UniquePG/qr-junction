@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionDbUser } from "@/lib/authHelper";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/auth/rateLimit";
+import { queueMail, sendWelcomeEmail } from "@/lib/mail";
 import {
   OTP_MAX_ATTEMPTS,
   hashOtp,
@@ -83,6 +84,11 @@ export async function POST(request: Request) {
 
     await setEmailVerified(user.id, true);
     await deleteOtp(user.id);
+
+    queueMail(
+      () => sendWelcomeEmail({ to: user.email, name: user.name }),
+      "welcome-otp-verified",
+    );
 
     return NextResponse.json({
       success: true,

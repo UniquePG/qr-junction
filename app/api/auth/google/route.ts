@@ -3,6 +3,7 @@ import { ensureAccountSubscription } from "@/lib/billing/seed";
 import { INVALID_CREDENTIALS, userIsAdmin } from "@/lib/auth/credentials";
 import { clientIp, rateLimit, rateLimitResponse } from "@/lib/auth/rateLimit";
 import { adminAuth } from "@/lib/firebaseAdmin";
+import { queueMail, sendWelcomeEmail } from "@/lib/mail";
 import { publicUser } from "@/lib/otp";
 import { setEmailVerified } from "@/lib/otpDb";
 import { prisma } from "@/lib/prisma";
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
     let user =
       (await prisma.user.findUnique({ where: { firebaseUid } })) ||
       (await prisma.user.findUnique({ where: { email } }));
+    let isNewUser = false;
 
     if (!user) {
       user = await prisma.user.create({
@@ -54,6 +56,7 @@ export async function POST(request: Request) {
           emailVerified: true,
         },
       });
+      isNewUser = true;
     } else {
       user = await prisma.user.update({
         where: { id: user.id },
@@ -70,6 +73,13 @@ export async function POST(request: Request) {
 
     await ensureAccountSubscription(user.id);
     await setEmailVerified(user.id, true);
+
+    if (isNewUser) {
+      queueMail(
+        () => sendWelcomeEmail({ to: user.email, name: user.name }),
+        "welcome-google",
+      );
+    }
 
     if (userIsAdmin(user)) {
       return NextResponse.json({ error: INVALID_CREDENTIALS }, { status: 401 });

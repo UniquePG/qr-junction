@@ -71,6 +71,7 @@ export default function AdminUserPlanPage() {
   const [graceDays, setGraceDays] = useState("7");
   const [lockedPrice, setLockedPrice] = useState("");
   const [message, setMessage] = useState("");
+  const [notifyCustomer, setNotifyCustomer] = useState(false);
   const [saving, setSaving] = useState(false);
   const [overrideKey, setOverrideKey] = useState("");
   const [overrideLimit, setOverrideLimit] = useState<LimitDraft>({ enabled: true, quota: 0, allowlist: [], config: null });
@@ -112,7 +113,9 @@ export default function AdminUserPlanPage() {
     setSaving(true);
     setMessage("");
     try {
-      await adminService.saveUserSubscription(params.id, {
+      const result = await adminService.saveUserSubscription<{
+        mail?: { delivered?: boolean; fallback?: boolean; error?: string } | null;
+      }>(params.id, {
         planCode,
         status,
         interval: interval || null,
@@ -121,8 +124,20 @@ export default function AdminUserPlanPage() {
         graceDays: Number(graceDays),
         lockedPriceRupees: lockedPrice === "" ? undefined : Number(lockedPrice),
         clearLockedPrice: lockedPrice === "",
+        notifyCustomer,
       });
-      setMessage("Subscription saved.");
+      if (!notifyCustomer) {
+        setMessage("Subscription saved.");
+      } else if (result.mail?.error) {
+        setMessage(`Subscription saved, but email failed: ${result.mail.error}`);
+      } else if (result.mail?.delivered) {
+        setMessage("Subscription saved and customer emailed.");
+      } else if (result.mail?.fallback) {
+        setMessage("Subscription saved. SMTP is not configured — email was logged on the server.");
+      } else {
+        setMessage("Subscription saved.");
+      }
+      setNotifyCustomer(false);
       load();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not save.");
@@ -231,7 +246,23 @@ export default function AdminUserPlanPage() {
           ))}
         </div>
         <p className="mt-3 text-xs text-slate-400">After the period ends, this account keeps full access for the grace days so they can pay. Leave the locked price blank to follow the plan price. Switching the plan fills grace from that plan before you save.</p>
-        <button type="button" disabled={saving} onClick={save} className="mt-4 rounded-xl bg-[#001B50] px-4 py-2 text-sm font-semibold text-white">Save subscription</button>
+        <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={notifyCustomer}
+            onChange={(event) => setNotifyCustomer(event.target.checked)}
+          />
+          <span>
+            <span className="block text-sm font-semibold text-[#001B50]">Email customer about this change</span>
+            <span className="mt-0.5 block text-xs text-slate-500">
+              Sends a professional subscription update to their account email. Off by default so quiet admin edits stay quiet.
+            </span>
+          </span>
+        </label>
+        <button type="button" disabled={saving} onClick={save} className="mt-4 rounded-xl bg-[#001B50] px-4 py-2 text-sm font-semibold text-white">
+          {saving ? "Saving…" : notifyCustomer ? "Save & email customer" : "Save subscription"}
+        </button>
       </section>
 
       <section className="rounded-3xl border border-slate-200 bg-white p-5">

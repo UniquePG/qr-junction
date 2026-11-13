@@ -5,11 +5,15 @@ import { prisma } from "@/lib/prisma";
 import { ensureCatalog } from "@/lib/billing/seed";
 import { parseRupees } from "@/lib/billing/money";
 import { resolveBilling } from "@/lib/billing/resolve";
+import { sendSubscriptionEmail } from "@/lib/mail";
 
 async function loadUser(id: string) {
   const userId = Number(id);
   if (!userId) return null;
-  return prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, name: true },
+  });
 }
 
 export async function GET(
@@ -100,5 +104,53 @@ export async function PATCH(
     },
   });
 
-  return NextResponse.json({ subscription });
+  const notifyCustomer = Boolean(body.notifyCustomer);
+  let mail: { delivered: boolean; fallback: boolean } | null = null;
+
+  if (notifyCustomer) {
+    const planRecord =
+      plan ||
+      (subscription.planId
+        ? await prisma.plan.findUnique({ where: { id: subscription.planId } })
+        : null);
+    try {
+      mail = await sendSubscriptionEmail({
+        to: user.email,
+        name: user.name,
+        planName: planRecord?.name || "Free",
+        status: subscription.status,
+        interval: subscription.interval,
+        currentPeriodEnd: subscription.currentPeriodEnd,
+        graceDays: subscription.graceDays,
+      });
+      await prisma.subscriptionEvent.create({
+        data: {
+          subscriptionId: subscription.id,
+          type: "subscription_email_sent",
+          createdById: admin.id,
+          payload: {
+            delivered: mail.delivered,
+            fallback: mail.fallback,
+            to: user.email,
+            planName: planRecord?.name || "Free",
+            status: subscription.status,
+          } as Prisma.InputJsonValue,
+        },
+      });
+    } catch (error) {
+      console.error("Subscription email failed:", error);
+      return NextResponse.json(
+        {
+          subscription,
+          mail: {
+            delivered: false,
+            error: error instanceof Error ? error.message : "Could not send email.",
+          },
+        },
+        { status: 200 },
+      );
+    }
+  }
+
+  return NextResponse.json({ subscription, mail });
 }
