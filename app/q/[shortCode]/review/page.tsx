@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Star, Send, Loader2, CheckCircle, ArrowRight, ArrowLeft, Check, Sparkles, MessageSquare } from 'lucide-react';
 import { qrService, reviewService } from '@/lib/api';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 
 // Tag selections depending on business review category
 const categoryTagsData: Record<string, { positive: string[]; negative: string[] }> = {

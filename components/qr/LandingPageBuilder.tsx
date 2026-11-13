@@ -25,7 +25,7 @@ import {
   ExternalLink,
   Laptop
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 import Link from 'next/link';
 
 interface LandingPageBuilderProps {

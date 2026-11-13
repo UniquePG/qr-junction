@@ -3,7 +3,7 @@
 import { openLiveSocket, type LiveEvent } from "@/lib/live/client";
 import { restaurantService } from "@/lib/api";
 import { formatTableLabel, orderCallCode } from "@/lib/orders/displayId";
-import { toast } from "react-toastify";
+import { toast } from '@/lib/toast';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 const SOUND_KEY = "qj-kitchen-sound";

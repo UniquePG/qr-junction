@@ -4,7 +4,7 @@ import PasswordInput from "@/components/PasswordInput";
 import { authService } from "@/lib/api";
 import { KeyRound, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from '@/lib/toast';
 
 type Tone = "platform" | "suite" | "admin";
 

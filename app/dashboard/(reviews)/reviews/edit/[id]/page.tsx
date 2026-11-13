@@ -13,7 +13,7 @@ import {
   Eye, 
   Star 
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 import Link from 'next/link';
 import { getQrUrl } from '@/utils/qrUrl';
 

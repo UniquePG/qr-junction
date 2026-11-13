@@ -1,70 +1,38 @@
-'use client';
+"use client";
 
-import { toast, ToastOptions } from 'react-toastify';
+import { toast as sonnerToast, type ExternalToast } from "sonner";
 
-// Custom toast utility functions
+type ToastOptions = ExternalToast;
+
+function withDefaults(options?: ToastOptions, duration = 3000): ToastOptions {
+  return {
+    duration,
+    ...options,
+  };
+}
+
+export const toast = Object.assign(
+  (message: string, options?: ToastOptions) => sonnerToast(message, withDefaults(options)),
+  {
+    success: (message: string, options?: ToastOptions) =>
+      sonnerToast.success(message, withDefaults(options, 3000)),
+    error: (message: string, options?: ToastOptions) =>
+      sonnerToast.error(message, withDefaults(options, 4000)),
+    warning: (message: string, options?: ToastOptions) =>
+      sonnerToast.warning(message, withDefaults(options, 3000)),
+    info: (message: string, options?: ToastOptions) =>
+      sonnerToast.info(message, withDefaults(options, 3000)),
+    message: (message: string, options?: ToastOptions) =>
+      sonnerToast.message(message, withDefaults(options, 3000)),
+    dismiss: sonnerToast.dismiss,
+    promise: sonnerToast.promise,
+  },
+);
+
 export const showToast = {
-  success: (message: string, options?: ToastOptions) => {
-    toast.success(message, {
-      position: 'top-right',
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      ...options,
-    });
-  },
-
-  error: (message: string, options?: ToastOptions) => {
-    toast.error(message, {
-      position: 'top-right',
-      autoClose: 4000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      ...options,
-    });
-  },
-
-  warning: (message: string, options?: ToastOptions) => {
-    toast.warning(message, {
-      position: 'top-right',
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      ...options,
-    });
-  },
-
-  info: (message: string, options?: ToastOptions) => {
-    toast.info(message, {
-      position: 'top-right',
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      ...options,
-    });
-  },
-
-  default: (message: string, options?: ToastOptions) => {
-    toast(message, {
-      position: 'top-right',
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      ...options,
-    });
-  },
+  success: (message: string, options?: ToastOptions) => toast.success(message, options),
+  error: (message: string, options?: ToastOptions) => toast.error(message, options),
+  warning: (message: string, options?: ToastOptions) => toast.warning(message, options),
+  info: (message: string, options?: ToastOptions) => toast.info(message, options),
+  default: (message: string, options?: ToastOptions) => toast(message, options),
 };
-
-// Export toast for advanced usage
-export { toast };
-

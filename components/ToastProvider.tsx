@@ -1,25 +1,26 @@
-'use client';
+"use client";
 
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from "sonner";
 
+/** Global Sonner toaster — replaces the old react-toastify container. */
 export function ToastProvider() {
   return (
-    <ToastContainer
+    <Toaster
       position="top-right"
-      autoClose={3000}
-      hideProgressBar={false}
-      newestOnTop={false}
-      closeOnClick
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
+      richColors
+      closeButton
+      expand={false}
+      duration={3000}
       theme="light"
-      className="toast-container"
-      toastClassName="toast"
-      progressClassName="toast-progress"
+      className="toaster-sonner"
+      toastOptions={{
+        classNames: {
+          toast: "toast-sonner",
+          title: "toast-sonner-title",
+          description: "toast-sonner-description",
+          closeButton: "toast-sonner-close",
+        },
+      }}
     />
   );
 }
-

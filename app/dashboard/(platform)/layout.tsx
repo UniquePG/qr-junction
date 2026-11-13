@@ -20,7 +20,7 @@ import {
   Star,
   Utensils,
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 import Image from 'next/image';
 
 const navLinks = [

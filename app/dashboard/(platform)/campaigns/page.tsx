@@ -22,7 +22,7 @@ import {
   CheckCircle2,
   AlertTriangle
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 
 interface CampaignData {
   id: number;

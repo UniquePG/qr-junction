@@ -7,7 +7,7 @@ import { restaurantService } from "@/lib/api";
 import { Bell, FileText, KeyRound, Languages, Loader2, Volume2 } from "lucide-react";
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from '@/lib/toast';
 
 type SettingsState = {
   digitalBill: boolean;

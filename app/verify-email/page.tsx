@@ -7,7 +7,7 @@ import { ArrowRight, Loader2, Mail, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from '@/lib/toast';
 
 const OTP_LOCK_KEY = "qrj_otp_lock";
 const OTP_LENGTH = 6;

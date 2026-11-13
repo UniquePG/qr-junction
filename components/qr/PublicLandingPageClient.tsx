@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { leadService, publicService } from "@/lib/api";
 import React, { useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from '@/lib/toast';
 
 interface PublicLandingPageProps {
   landingPage: {

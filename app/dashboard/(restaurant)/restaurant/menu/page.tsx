@@ -24,7 +24,7 @@ import {
   Copy,
   Download
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 import CustomizableQRCode from '@/components/CustomizableQRCode';
 import QRDesignModal from '@/components/QRDesignModal';
 import MenuLayoutPicker from '@/components/menu/MenuLayoutPicker';

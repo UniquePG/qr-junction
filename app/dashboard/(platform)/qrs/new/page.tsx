@@ -12,7 +12,7 @@ import {
   HelpCircle,
   Eye
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 import Link from 'next/link';
 import { TABS, TabType, FormData, validateForm, getDbDestination, getQrTypeFromTabType } from '@/lib/qrEngine';
 import { TabFormRenderer } from '@/components/qr/TabsForms';

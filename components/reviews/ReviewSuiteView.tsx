@@ -47,7 +47,7 @@ import {
   Bar,
   Legend
 } from 'recharts';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 import ConfirmModal from '@/components/ConfirmModal';
 import { getQrUrl } from '@/utils/qrUrl';
 import CustomizableQRCode from '@/components/CustomizableQRCode';

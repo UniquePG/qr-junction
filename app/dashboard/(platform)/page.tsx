@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { dashboardService } from '@/lib/api';
 import { useAuth } from '@/components/AuthContext';
 import { Globe, Loader2 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 
 import DashboardTimeFilter from '@/components/DashboardTimeFilter';
 import DashboardStatsCards from '@/components/DashboardStatsCards';

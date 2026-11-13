@@ -21,7 +21,7 @@ import {
   Sparkles,
   Leaf
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 
 interface Menu {
   id: number;

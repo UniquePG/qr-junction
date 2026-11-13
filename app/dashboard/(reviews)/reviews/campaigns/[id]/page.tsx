@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { qrService } from '@/lib/api';
 import { useAuth } from '@/components/AuthContext';
 import { Loader2, Star, MessageSquareWarning, BarChart, FileText } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 
 export default function ReviewAnalyticsPage() {
   const { id } = useParams() as { id: string };

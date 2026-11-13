@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, Download, Save, Upload, X, Check, Trash2, Sparkles, Palette, Layout, QrCode, ChevronDown } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 import { qrService, uploadService } from '@/lib/api';
 import { useAuth } from '@/components/AuthContext';
 import { getQrUrl } from '@/utils/qrUrl';

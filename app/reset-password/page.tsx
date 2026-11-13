@@ -6,7 +6,7 @@ import { ArrowRight, Loader2, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from '@/lib/toast';
 
 function ResetPasswordForm() {
   const router = useRouter();

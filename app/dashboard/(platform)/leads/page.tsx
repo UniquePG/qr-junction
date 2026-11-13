@@ -15,7 +15,7 @@ import {
   PhoneCall, 
   Mail 
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 
 interface LeadData {
   id: string;

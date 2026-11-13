@@ -7,7 +7,7 @@ import { ArrowRight, Loader2, Mail } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from '@/lib/toast';
 
 export default function AdminLoginPage() {
   const router = useRouter();

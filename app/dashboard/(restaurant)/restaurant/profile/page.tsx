@@ -16,7 +16,7 @@ import {
   type WeekdayKey,
 } from '@/lib/restaurant/profile';
 import { Image as ImageIcon, Loader2, Store } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 
 type ProfileForm = {
   name: string;

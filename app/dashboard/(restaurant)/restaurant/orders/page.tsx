@@ -10,7 +10,7 @@ import { formatTableLabel, orderCallCode } from "@/lib/orders/displayId";
 import { waitLabel } from "@/lib/orders/eta";
 import { customerStatusCopy, ownerStage } from "@/lib/orders/status";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from '@/lib/toast';
 
 
 type OrderItem = {

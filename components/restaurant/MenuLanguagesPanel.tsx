@@ -2,7 +2,7 @@
 
 import { Loader2, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from '@/lib/toast';
 
 type LocaleRow = {
   code: string;

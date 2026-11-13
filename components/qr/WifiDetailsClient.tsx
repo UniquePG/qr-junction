@@ -3,7 +3,7 @@
 import { leadService, publicService } from "@/lib/api";
 import { Award, Check, Copy, Key, Send, ShieldCheck, Wifi } from "lucide-react";
 import React, { useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from '@/lib/toast';
 
 interface WifiDetailsProps {
   shortCode: string;

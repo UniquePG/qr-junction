@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight, Loader2, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from '@/lib/toast';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();

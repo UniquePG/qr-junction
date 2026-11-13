@@ -4,7 +4,7 @@ import { ArrowRight, Download, Link2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import React, { useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from '@/lib/toast';
 import { trackGuestQrEvent } from "@/lib/guestAnalytics";
 
 export default function QuickQRCard() {

@@ -21,7 +21,7 @@ import {
   BarChart,
   Palette
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 import CustomizableQRCode from '@/components/CustomizableQRCode';
 import QRDesignModal from '@/components/QRDesignModal';
 

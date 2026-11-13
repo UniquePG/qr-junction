@@ -17,7 +17,7 @@ import {
   Sparkles,
   QrCode
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 
 interface LandingPageData {
   id: number;

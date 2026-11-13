@@ -5,7 +5,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { qrService } from '@/lib/api';
 import { useAuth } from '@/components/AuthContext';
 import { Loader2, Download, ExternalLink, Check, Save, QrCode } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from '@/lib/toast';
 import { getQrUrl } from '@/utils/qrUrl';
 
 interface LandingPageQRModalProps {
