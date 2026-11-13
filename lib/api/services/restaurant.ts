@@ -126,6 +126,10 @@ export const restaurantService = {
       unpaidCount: number;
       finishedCount: number;
       orderingEnabled: boolean;
+      acceptingOrders: boolean;
+      orderingEffective: boolean;
+      canManageAcceptingOrders: boolean;
+      orderingReason: string | null;
       prepMinutes: number;
       digitalBillEnabled: boolean;
     }>({
@@ -175,18 +179,30 @@ export const restaurantService = {
 
   getSettings() {
     return apiRequest<{
-      settings: { digitalBill: boolean; orderSound: boolean };
-      entitlements: { digitalBill: boolean };
+      settings: { digitalBill: boolean; orderSound: boolean; acceptingOrders: boolean };
+      entitlements: { digitalBill: boolean; ordering: boolean };
+      capabilities: {
+        orderingUnlocked: boolean;
+        canManageAcceptingOrders: boolean;
+        orderingEffective: boolean;
+        orderingReason: string | null;
+      };
     }>({
       method: "GET",
       url: endpoints.restaurant.settings,
     });
   },
 
-  patchSettings(body: { digitalBill?: boolean; orderSound?: boolean }) {
+  patchSettings(body: { digitalBill?: boolean; orderSound?: boolean; acceptingOrders?: boolean }) {
     return apiRequest<{
-      settings: { digitalBill: boolean; orderSound: boolean };
-      entitlements: { digitalBill: boolean };
+      settings: { digitalBill: boolean; orderSound: boolean; acceptingOrders: boolean };
+      entitlements: { digitalBill: boolean; ordering: boolean };
+      capabilities: {
+        orderingUnlocked: boolean;
+        canManageAcceptingOrders: boolean;
+        orderingEffective: boolean;
+        orderingReason: string | null;
+      };
     }>({
       method: "PATCH",
       url: endpoints.restaurant.settings,

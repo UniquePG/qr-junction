@@ -16,7 +16,13 @@ import {
 } from "recharts";
 
 export type RestaurantAnalytics = {
-  restaurant: { currency: string; orderingEnabled: boolean };
+  restaurant: {
+    currency: string;
+    orderingEnabled: boolean;
+    acceptingOrders?: boolean;
+    orderingEffective?: boolean;
+    orderingReason?: string | null;
+  };
   range: { bucket: "hour" | "day" | "week" };
   summary: {
     sales: number;

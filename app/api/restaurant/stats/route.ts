@@ -67,7 +67,7 @@ export async function GET(request: Request) {
 
     const restaurant = await prisma.restaurant.findUnique({
       where: { userId },
-      select: { id: true, currency: true, orderingEnabled: true },
+      select: { id: true, currency: true, orderingEnabled: true, settings: true, userId: true },
     });
     if (!restaurant) return NextResponse.json({ success: true, restaurant: null });
 
@@ -327,9 +327,22 @@ export async function GET(request: Request) {
       { label: "30m+", count: num(speed.over_30) },
     ] : [];
 
+    const { resolveOrderingGate } = await import("@/lib/restaurant/gates");
+    const orderingGate = await resolveOrderingGate({
+      userId: restaurant.userId,
+      orderingEnabled: restaurant.orderingEnabled,
+      settings: restaurant.settings,
+    });
+
     return NextResponse.json({
       success: true,
-      restaurant: { currency: restaurant.currency, orderingEnabled: restaurant.orderingEnabled },
+      restaurant: {
+        currency: restaurant.currency,
+        orderingEnabled: restaurant.orderingEnabled,
+        acceptingOrders: orderingGate.acceptingOrders,
+        orderingEffective: orderingGate.effective,
+        orderingReason: orderingGate.reason,
+      },
       range: { bucket },
       summary: {
         sales,

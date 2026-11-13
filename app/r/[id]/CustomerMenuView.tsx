@@ -69,6 +69,8 @@ interface Restaurant {
   taxRate: any; // Decimal type
   taxName: string;
   orderingEnabled?: boolean;
+  orderingPaused?: boolean;
+  orderingUnlocked?: boolean;
   phone?: string | null;
   whatsapp?: string | null;
   email?: string | null;

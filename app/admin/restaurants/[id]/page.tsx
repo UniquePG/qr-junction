@@ -30,13 +30,18 @@ export default function AdminRestaurantDetailPage() {
         {restaurant.description ? <p className="text-sm text-slate-600 mt-2">{restaurant.description}</p> : null}
       </div>
 
-      <AdminCard title="Table ordering">
+      <AdminCard title="Table ordering unlock">
         <div className="flex items-center justify-between gap-4">
-          <p className="text-sm text-slate-600">
-            {restaurant.orderingEnabled
-              ? "Customers can add dishes and send a plate from this menu."
-              : "This restaurant is a digital menu only. Add buttons stay hidden."}
-          </p>
+          <div className="min-w-0">
+            <p className="text-sm text-slate-600">
+              {restaurant.orderingEnabled
+                ? "Live ordering is unlocked. The restaurant owner can still pause acceptance from Settings (off days / kitchen closed)."
+                : "Ordering is locked. Guests browse only. The owner cannot manage acceptance until you unlock this."}
+            </p>
+            <p className="mt-2 text-xs text-slate-400">
+              Unlock requires the restaurant.ordering plan feature (or an override). Owner pause does not change this admin unlock.
+            </p>
+          </div>
           <button
             type="button"
             disabled={saving}
@@ -52,7 +57,7 @@ export default function AdminRestaurantDetailPage() {
             }}
             className={`h-10 shrink-0 cursor-pointer rounded-xl border-none px-4 text-sm font-semibold text-white ${restaurant.orderingEnabled ? "bg-slate-700" : "bg-[#001B50]"}`}
           >
-            {saving ? "Saving…" : restaurant.orderingEnabled ? "Turn ordering off" : "Turn ordering on"}
+            {saving ? "Saving…" : restaurant.orderingEnabled ? "Lock ordering" : "Unlock ordering"}
           </button>
         </div>
       </AdminCard>

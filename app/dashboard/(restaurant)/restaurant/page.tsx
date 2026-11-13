@@ -169,7 +169,13 @@ export default function RestaurantHomePage() {
             <Link href="/dashboard/restaurant/menu" className="font-medium text-[#1C1410] no-underline">{data.restaurant.menuCount} {data.restaurant.menuCount === 1 ? "menu" : "menus"}</Link>
             <span> · </span>
             <Link href="/dashboard/restaurant/tables" className="font-medium text-[#1C1410] no-underline">{data.restaurant.tableCount} {data.restaurant.tableCount === 1 ? "table" : "tables"}</Link>
-            {data.restaurant.orderingEnabled ? null : <span> · Ordering is off</span>}
+            {data.restaurant.orderingEffective === false
+              ? data.restaurant.orderingReason === "OWNER_PAUSED"
+                ? <span> · Not accepting orders</span>
+                : <span> · Ordering is off</span>
+              : data.restaurant.orderingEnabled
+                ? null
+                : <span> · Ordering is off</span>}
           </p>
         </div>
         <div className="min-w-0">

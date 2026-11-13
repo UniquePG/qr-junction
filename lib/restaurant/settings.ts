@@ -1,9 +1,11 @@
 export type RestaurantSettings = {
   digitalBill?: boolean;
   orderSound?: boolean;
+  /** Owner ops switch. Missing/undefined means accepting (production-safe default). */
+  acceptingOrders?: boolean;
 };
 
-const KNOWN_KEYS = new Set(["digitalBill", "orderSound"]);
+const KNOWN_KEYS = new Set(["digitalBill", "orderSound", "acceptingOrders"]);
 
 export function getRestaurantSettings(raw: unknown): Required<RestaurantSettings> {
   const source =
@@ -13,6 +15,8 @@ export function getRestaurantSettings(raw: unknown): Required<RestaurantSettings
   return {
     digitalBill: source.digitalBill === true,
     orderSound: source.orderSound === true,
+    // Default ON when unset so existing restaurants keep accepting orders.
+    acceptingOrders: source.acceptingOrders !== false,
   };
 }
 

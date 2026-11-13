@@ -110,6 +110,13 @@ export async function PATCH(
       data: { orderingEnabled: body.orderingEnabled },
       select: { id: true, name: true, orderingEnabled: true },
     });
+    const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+    await invalidateRestaurant(restaurant.id, {
+      settings: true,
+      ordersActive: true,
+      overview: true,
+      menu: "all",
+    });
     return NextResponse.json({ success: true, restaurant });
   } catch {
     return NextResponse.json({ error: "Restaurant not found." }, { status: 404 });

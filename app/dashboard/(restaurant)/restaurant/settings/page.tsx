@@ -4,7 +4,7 @@ import ChangePasswordForm from "@/components/auth/ChangePasswordForm";
 import MenuLanguagesPanel from "@/components/restaurant/MenuLanguagesPanel";
 import { useOrderAlerts } from "@/components/orders/OrderAlerts";
 import { restaurantService } from "@/lib/api";
-import { Bell, FileText, KeyRound, Languages, Loader2, Volume2 } from "lucide-react";
+import { Bell, FileText, KeyRound, Languages, Loader2, ShoppingBag, Volume2 } from "lucide-react";
 import Link from "next/link";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from '@/lib/toast';
@@ -12,6 +12,7 @@ import { toast } from '@/lib/toast';
 type SettingsState = {
   digitalBill: boolean;
   orderSound: boolean;
+  acceptingOrders: boolean;
 };
 
 function ToggleRow({
@@ -63,9 +64,35 @@ function ToggleRow({
 export default function RestaurantSettingsPage() {
   const { soundReady, enableSound, setOrderSoundPreferred } = useOrderAlerts();
   const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState<SettingsState>({ digitalBill: false, orderSound: false });
+  const [settings, setSettings] = useState<SettingsState>({
+    digitalBill: false,
+    orderSound: false,
+    acceptingOrders: true,
+  });
   const [digitalBillAllowed, setDigitalBillAllowed] = useState(false);
+  const [canManageAcceptingOrders, setCanManageAcceptingOrders] = useState(false);
+  const [orderingUnlocked, setOrderingUnlocked] = useState(false);
+  const [orderingAllowed, setOrderingAllowed] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
+
+  const applySettingsResponse = (data: {
+    settings?: Partial<SettingsState>;
+    entitlements?: { digitalBill?: boolean; ordering?: boolean };
+    capabilities?: {
+      orderingUnlocked?: boolean;
+      canManageAcceptingOrders?: boolean;
+    };
+  }) => {
+    setSettings({
+      digitalBill: Boolean(data.settings?.digitalBill),
+      orderSound: Boolean(data.settings?.orderSound),
+      acceptingOrders: data.settings?.acceptingOrders !== false,
+    });
+    setDigitalBillAllowed(Boolean(data.entitlements?.digitalBill));
+    setOrderingAllowed(Boolean(data.entitlements?.ordering));
+    setOrderingUnlocked(Boolean(data.capabilities?.orderingUnlocked));
+    setCanManageAcceptingOrders(Boolean(data.capabilities?.canManageAcceptingOrders));
+  };
 
   const load = useCallback(async () => {
     try {
@@ -74,11 +101,7 @@ export default function RestaurantSettingsPage() {
         const body = res.data as { error?: string };
         throw new Error(body?.error || "Failed to load settings");
       }
-      setSettings({
-        digitalBill: Boolean(res.data.settings?.digitalBill),
-        orderSound: Boolean(res.data.settings?.orderSound),
-      });
-      setDigitalBillAllowed(Boolean(res.data.entitlements?.digitalBill));
+      applySettingsResponse(res.data);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to load settings");
     } finally {
@@ -102,11 +125,7 @@ export default function RestaurantSettingsPage() {
         const body = res.data as { error?: string };
         throw new Error(body?.error || "Could not save setting");
       }
-      setSettings({
-        digitalBill: Boolean(res.data.settings?.digitalBill),
-        orderSound: Boolean(res.data.settings?.orderSound),
-      });
-      setDigitalBillAllowed(Boolean(res.data.entitlements?.digitalBill));
+      applySettingsResponse(res.data);
       if (typeof partial.orderSound === "boolean") {
         setOrderSoundPreferred(partial.orderSound);
         if (partial.orderSound) {
@@ -136,11 +155,40 @@ export default function RestaurantSettingsPage() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C4622D]">Restaurant</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#1C1410] sm:text-3xl">Settings</h1>
         <p className="mt-1 max-w-xl text-sm text-[#6B5A50]">
-          Manage guest languages, kitchen alerts, and digital bills. More switches will land here later.
+          Manage guest languages, kitchen alerts, order acceptance, and digital bills.
         </p>
       </div>
 
       <section className="space-y-3">
+        <div className="mb-1 flex items-center gap-2 px-1">
+          <ShoppingBag className="h-4 w-4 text-[#C4622D]" />
+          <h2 className="text-sm font-semibold text-[#1C1410]">Live ordering</h2>
+        </div>
+        <ToggleRow
+          title="Accept orders from menu"
+          description="When off, guests can browse the menu but cannot add dishes or send plates. Use this on off days or when the kitchen is closed."
+          checked={canManageAcceptingOrders ? settings.acceptingOrders : false}
+          disabled={!canManageAcceptingOrders}
+          busy={busyKey === "acceptingOrders"}
+          onChange={(next) => void patch({ acceptingOrders: next })}
+          hint={
+            !canManageAcceptingOrders ? (
+              !orderingAllowed ? (
+                <span>
+                  Live ordering is not on your plan.{" "}
+                  <Link href="/dashboard/restaurant/billing" className="font-semibold text-[#C4622D]">
+                    View plan
+                  </Link>
+                </span>
+              ) : !orderingUnlocked ? (
+                <span>Ordering is not unlocked for this restaurant yet. Ask support or an admin to turn it on.</span>
+              ) : null
+            ) : null
+          }
+        />
+      </section>
+
+      <section className="mt-8 space-y-3">
         <div className="mb-1 flex items-center gap-2 px-1">
           <Bell className="h-4 w-4 text-[#C4622D]" />
           <h2 className="text-sm font-semibold text-[#1C1410]">Kitchen alerts</h2>

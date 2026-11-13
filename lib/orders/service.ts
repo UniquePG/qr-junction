@@ -1,5 +1,4 @@
 import { Prisma } from "@prisma/client";
-import { allows } from "@/lib/billing/guard";
 import { prisma } from "@/lib/prisma";
 import { orderChannel, publishOrder, restaurantChannel } from "@/lib/orders/bus";
 import { newCustomerPublicId, newOrderPublicId, newPublicToken } from "@/lib/orders/ids";
@@ -7,6 +6,7 @@ import { estimatePrepMinutes, stageWindowMinutes } from "@/lib/orders/eta";
 import { quoteLines, type PriceQuote } from "@/lib/orders/pricing";
 import { canMoveStatus, type OrderStatus } from "@/lib/orders/status";
 import { isDigitalBillEffective } from "@/lib/restaurant/digitalBill";
+import { resolveOrderingGate } from "@/lib/restaurant/gates";
 
 const ACTIVE = ["PLACED", "ACCEPTED", "PREPARING", "READY"] as const;
 
@@ -223,8 +223,17 @@ export async function quoteOrder(input: {
     },
   });
   if (!restaurant) throw new OrderError(404, "NOT_FOUND", "Restaurant not found.");
-  if (!restaurant.orderingEnabled || !(await allows(restaurant.userId, "restaurant.ordering"))) {
-    throw new OrderError(403, "ORDERING_OFF", "Ordering is off for this restaurant.");
+  const orderingGate = await resolveOrderingGate({
+    userId: restaurant.userId,
+    orderingEnabled: restaurant.orderingEnabled,
+    settings: restaurant.settings,
+  });
+  if (!orderingGate.effective) {
+    const message =
+      orderingGate.reason === "OWNER_PAUSED"
+        ? "This restaurant is not accepting orders right now."
+        : "Ordering is off for this restaurant.";
+    throw new OrderError(403, "ORDERING_OFF", message);
   }
 
   const menu = await prisma.menu.findFirst({
@@ -405,9 +414,19 @@ export async function listRestaurantOrders(userId: number) {
   });
   if (!restaurant) throw new OrderError(404, "NOT_FOUND", "Restaurant not found.");
 
+  const orderingGate = await resolveOrderingGate({
+    userId,
+    orderingEnabled: restaurant.orderingEnabled,
+    settings: restaurant.settings,
+  });
+
   const { getCachedActiveOrders, setCachedActiveOrders } = await import("@/lib/cache/restaurantOrders");
   type BoardPayload = {
     orderingEnabled: boolean;
+    acceptingOrders: boolean;
+    orderingEffective: boolean;
+    canManageAcceptingOrders: boolean;
+    orderingReason: string | null;
     prepMinutes: number;
     digitalBillEnabled: boolean;
     placedCount: number;
@@ -449,6 +468,10 @@ export async function listRestaurantOrders(userId: number) {
   ]);
   const payload: BoardPayload = {
     orderingEnabled: restaurant.orderingEnabled,
+    acceptingOrders: orderingGate.acceptingOrders,
+    orderingEffective: orderingGate.effective,
+    canManageAcceptingOrders: orderingGate.canManageAcceptingOrders,
+    orderingReason: orderingGate.reason,
     prepMinutes: restaurant.prepMinutes,
     digitalBillEnabled,
     placedCount: nextPlacedCount,

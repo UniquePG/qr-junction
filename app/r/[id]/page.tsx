@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import CustomerMenuView from './CustomerMenuView';
 import { Metadata } from 'next';
 import { isMenuTheme } from '@/components/menu/themeCatalog';
-import { guestRestaurantSelect } from '@/lib/restaurant/guest';
+import { guestRestaurantSelect, toGuestRestaurant } from '@/lib/restaurant/guest';
 import { loadGuestLocales } from '@/lib/menu/i18n/guestLocales';
 
 interface PageProps {
@@ -92,9 +92,10 @@ export default async function RestaurantMenuPage({ params, searchParams }: PageP
   }
 
   const locales = await loadGuestLocales(restaurantId);
+  const guestRestaurant = await toGuestRestaurant(restaurant);
 
   // Serialize to plain JSON objects to prevent Next.js from throwing errors about passing Prisma Decimal/Date objects to Client Components
-  const serializedRestaurant = JSON.parse(JSON.stringify(restaurant));
+  const serializedRestaurant = JSON.parse(JSON.stringify(guestRestaurant));
   const serializedMenu = JSON.parse(JSON.stringify(menu));
 
   return (

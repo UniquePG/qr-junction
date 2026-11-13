@@ -9,8 +9,9 @@ import type { BillOrder, BillRestaurant } from "@/lib/orders/bill";
 import { formatTableLabel, orderCallCode } from "@/lib/orders/displayId";
 import { waitLabel } from "@/lib/orders/eta";
 import { customerStatusCopy, ownerStage } from "@/lib/orders/status";
+import Link from "next/link";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from '@/lib/toast';
+import { toast } from "@/lib/toast";
 
 
 type OrderItem = {
@@ -154,6 +155,10 @@ export default function RestaurantOrdersPage() {
   const [menus, setMenus] = useState<MenuRow[]>([]);
   const [unpaidCount, setUnpaidCount] = useState(0);
   const [orderingEnabled, setOrderingEnabled] = useState(true);
+  const [acceptingOrders, setAcceptingOrders] = useState(true);
+  const [orderingEffective, setOrderingEffective] = useState(true);
+  const [canManageAcceptingOrders, setCanManageAcceptingOrders] = useState(false);
+  const [orderingReason, setOrderingReason] = useState<string | null>(null);
   const [view, setView] = useState<"floor" | "payments">("floor");
   const showSoundUnlock = alerts.orderSoundPreferred && !alerts.soundReady;
   const [openKey, setOpenKey] = useState<string | null>(null);
@@ -176,6 +181,10 @@ export default function RestaurantOrdersPage() {
     setOrders(orderResult.data.orders || []);
     setUnpaidCount(Number(orderResult.data.unpaidCount || 0));
     setOrderingEnabled(Boolean(orderResult.data.orderingEnabled));
+    setAcceptingOrders(orderResult.data.acceptingOrders !== false);
+    setOrderingEffective(orderResult.data.orderingEffective !== false);
+    setCanManageAcceptingOrders(Boolean(orderResult.data.canManageAcceptingOrders));
+    setOrderingReason(orderResult.data.orderingReason ?? null);
     if (!prepReady && typeof orderResult.data.prepMinutes === "number") {
       setPrepDraft(String(orderResult.data.prepMinutes));
       setPrepReady(true);
@@ -207,6 +216,10 @@ export default function RestaurantOrdersPage() {
     setOrders(orderResult.ok ? orderResult.data.orders || [] : []);
     setUnpaidCount(orderResult.ok ? Number(orderResult.data.unpaidCount || 0) : 0);
     setOrderingEnabled(orderResult.ok ? Boolean(orderResult.data.orderingEnabled) : true);
+    setAcceptingOrders(orderResult.ok ? orderResult.data.acceptingOrders !== false : true);
+    setOrderingEffective(orderResult.ok ? orderResult.data.orderingEffective !== false : true);
+    setCanManageAcceptingOrders(orderResult.ok ? Boolean(orderResult.data.canManageAcceptingOrders) : false);
+    setOrderingReason(orderResult.ok ? orderResult.data.orderingReason ?? null : null);
     setTables(tablesData);
     setMenus(menusData);
     if (!prepReady && orderResult.ok && typeof orderResult.data.prepMinutes === "number") {
@@ -317,7 +330,22 @@ export default function RestaurantOrdersPage() {
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.16em] text-[#C4622D]">Kitchen</p>
           <h2 className="mt-1 text-2xl font-semibold text-[#2A211C]">{view === "floor" ? (tables.length ? "Tables" : "Menus") : "Payments"}</h2>
-          {!orderingEnabled ? <p className="mt-2 text-sm text-[#6B5A50]">Ordering is off for this restaurant. An admin can turn it on.</p> : null}
+          {!orderingEffective ? (
+            <p className="mt-2 text-sm text-[#6B5A50]">
+              {orderingReason === "OWNER_PAUSED" || (orderingEnabled && !acceptingOrders) ? (
+                <>
+                  You paused order acceptance. Guests can browse the menu but cannot send plates.{" "}
+                  {canManageAcceptingOrders ? (
+                    <Link href="/dashboard/restaurant/settings" className="font-semibold text-[#C4622D]">
+                      Turn accepting back on in Settings
+                    </Link>
+                  ) : null}
+                </>
+              ) : (
+                <>Ordering is off for this restaurant. An admin can unlock it.</>
+              )}
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex rounded-xl bg-[#F3EBE3] p-1">

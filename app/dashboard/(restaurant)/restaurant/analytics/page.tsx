@@ -136,7 +136,13 @@ export default function RestaurantAnalyticsPage() {
           <p className="mt-1 text-sm text-[#6B5A50]">
             {perOrder ? `${perOrder.toFixed(perOrder % 1 === 0 ? 0 : 1)} dishes an order` : "Sales, pace, and what each table is doing"}
             {summary.rejectedOrders ? ` · ${summary.rejectedOrders} turned away (${money(data.restaurant.currency, summary.rejectedSales)})` : ""}
-            {data.restaurant.orderingEnabled ? "" : " · Ordering is off"}
+            {data.restaurant.orderingEffective === false
+              ? data.restaurant.orderingReason === "OWNER_PAUSED"
+                ? " · Not accepting orders"
+                : " · Ordering is off"
+              : data.restaurant.orderingEnabled
+                ? ""
+                : " · Ordering is off"}
           </p>
         </div>
         <div className="min-w-0">
