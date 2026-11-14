@@ -19,6 +19,8 @@ export type FloorOverview = {
     name: string;
     currency: string;
     orderingEnabled: boolean;
+    orderingEffective?: boolean;
+    orderingReason?: string | null;
     menuCount: number;
     tableCount: number;
   };
