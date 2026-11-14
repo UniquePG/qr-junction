@@ -68,6 +68,8 @@ function toBillOrder(order: {
   tableNumber: string | null;
   customer: { name: string };
   subtotal: unknown;
+  discount?: unknown;
+  offersApplied?: unknown;
   tax: unknown;
   total: unknown;
   currency: string;
@@ -81,11 +83,17 @@ function toBillOrder(order: {
     quantity: number;
   }>;
 }): BillOrder {
+  const discount = order.discount != null ? money(order.discount) : 0;
+  const offersApplied = Array.isArray(order.offersApplied)
+    ? (order.offersApplied as BillOrder["offersApplied"])
+    : null;
   return {
     publicId: order.publicId,
     tableNumber: order.tableNumber,
     customerName: order.customer.name,
     subtotal: money(order.subtotal),
+    discount,
+    offersApplied,
     tax: money(order.tax),
     total: money(order.total),
     currency: order.currency,

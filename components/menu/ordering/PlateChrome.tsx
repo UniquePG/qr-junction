@@ -14,13 +14,17 @@ type QuoteLine = {
   name: string;
   variantLabel: string | null;
   unitPrice: number;
+  listUnitPrice?: number;
   quantity: number;
   lineTotal: number;
+  offerIds?: number[];
 };
 
 type Quote = {
   lines: QuoteLine[];
   subtotal: number;
+  discount?: number;
+  offersApplied?: Array<{ offerId: number; title: string; amount: number }>;
   tax: number;
   total: number;
   currency: string;
@@ -203,6 +207,7 @@ export function PlateChrome({
     };
   });
   const subtotal = quote?.subtotal ?? lines.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0);
+  const discount = quote?.discount ?? 0;
   const total = quote?.total ?? subtotal;
 
   return (
@@ -287,12 +292,41 @@ export function PlateChrome({
           <div className="space-y-3">
             {displayLines.map((line) => {
               const source = matchPlateLine(line);
+              const listUnit = line.listUnitPrice ?? line.unitPrice;
+              const listLine = Math.round(listUnit * line.quantity * 100) / 100;
+              const saved = Math.max(0, Math.round((listLine - line.lineTotal) * 100) / 100);
+              const fullyFree = line.lineTotal === 0 && listLine > 0;
+              const freeUnits =
+                listUnit > 0 && saved > 0
+                  ? Math.max(0, Math.round(saved / listUnit))
+                  : 0;
+              const offerBadge = fullyFree
+                ? "Free"
+                : freeUnits > 0
+                  ? freeUnits === 1
+                    ? "1 free"
+                    : `${freeUnits} free`
+                  : saved > 0
+                    ? "Offer"
+                    : null;
               return (
                 <div key={`${line.menuItemId}:${line.variantLabel || ""}`} className="flex items-center gap-3 rounded-2xl bg-white p-3">
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-[#1C1410]">{line.name}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold text-[#1C1410]">{line.name}</p>
+                      {offerBadge ? (
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                          {offerBadge}
+                        </span>
+                      ) : null}
+                    </div>
                     {line.variantLabel ? <p className="text-xs text-[#6B5A50]">{line.variantLabel}</p> : null}
-                    <p className="mt-1 text-sm font-semibold text-[#1C1410]">{money(currencySymbol, line.lineTotal)}</p>
+                    <p className="mt-1 flex flex-wrap items-center gap-2 text-sm font-semibold text-[#1C1410]">
+                      {saved > 0 ? (
+                        <span className="text-xs font-medium text-[#8A7366] line-through">{money(currencySymbol, listLine)}</span>
+                      ) : null}
+                      <span>{fullyFree ? "FREE" : money(currencySymbol, line.lineTotal)}</span>
+                    </p>
                   </div>
                   {source ? (
                     <div className="flex items-center rounded-full bg-[#F6F1EA] p-1">
@@ -308,7 +342,23 @@ export function PlateChrome({
           </div>
 
           <div className="mt-4 space-y-1 rounded-2xl bg-white px-4 py-3 text-sm text-[#6B5A50]">
-            <div className="flex justify-between"><span>Subtotal</span><span>{money(currencySymbol, subtotal)}</span></div>
+            <div className="flex justify-between"><span>Subtotal</span><span>{money(currencySymbol, subtotal + discount)}</span></div>
+            {discount > 0 ? (
+              <div className="flex justify-between text-emerald-700">
+                <span>Offers saved</span>
+                <span>−{money(currencySymbol, discount)}</span>
+              </div>
+            ) : null}
+            {quote?.offersApplied?.length ? (
+              <div className="space-y-0.5 pt-1 text-[11px] text-[#8A7366]">
+                {quote.offersApplied.map((o) => (
+                  <div key={o.offerId} className="flex justify-between gap-2">
+                    <span className="truncate">{o.title}</span>
+                    <span>−{money(currencySymbol, o.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
             <div className="flex justify-between"><span>{quote?.taxName || "Tax"}{quote ? ` ${quote.taxRate}%` : ""}</span><span>{money(currencySymbol, quote?.tax ?? 0)}</span></div>
             <div className="flex justify-between text-base font-bold text-[#1C1410]"><span>Total</span><span>{money(currencySymbol, total)}</span></div>
           </div>

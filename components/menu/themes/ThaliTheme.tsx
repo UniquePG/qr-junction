@@ -1,4 +1,4 @@
-import { DietMark, VariantPills, formatMoney } from "../shared";
+import { DietMark, VariantPills, formatMoney, ItemPrice } from "../shared";
 import { ItemTags } from "../ItemTags";
 import type { ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
@@ -74,7 +74,7 @@ export default function ThaliTheme({ categories, currencySymbol, onSelectItem }:
                         <span className="min-w-0">{item.name}</span>
                       </h4>
                       {!item.variants?.length && (
-                        <p className="text-sm font-black text-[#c45c26]">{formatMoney(currencySymbol, item.price)}</p>
+                        <p className="text-sm font-black text-[#c45c26]"><ItemPrice item={item} symbol={currencySymbol} /></p>
                       )}
                       <VariantPills
                         item={item}

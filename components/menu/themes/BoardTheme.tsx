@@ -1,4 +1,4 @@
-import { DietMark, formatMoney } from "../shared";
+import { DietMark, formatMoney, ItemPrice } from "../shared";
 import { ItemTags } from "../ItemTags";
 import type { ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
@@ -28,7 +28,7 @@ export default function BoardTheme({ categories, currencySymbol, onSelectItem }:
                   </span>
                   <span className="flex-1 border-b border-dotted border-amber-700/50 min-w-3" />
                   <span className="font-mono text-[13px] text-amber-400 shrink-0">
-                    {formatMoney(currencySymbol, item.variants?.[0]?.price ?? item.price)}
+                    <ItemPrice item={item} symbol={currencySymbol} price={item.variants?.[0]?.price ?? item.price} />
                   </span>
                 </div>
                 {item.variants && item.variants.length > 1 && (

@@ -416,6 +416,7 @@ model Restaurant {
   qrCodes      QRCode[]
   orders       MenuOrder[]
   locales      RestaurantLocale[]
+  offers       MenuOffer[]
 
   @@index([createdAt])
   @@map("restaurants")
@@ -455,6 +456,7 @@ model Menu {
   categories   MenuCategory[]
   tables       RestaurantTable[]
   orders       MenuOrder[]
+  offers       MenuOffer[]
 
   @@index([restaurantId])
   @@index([restaurantId, isDefault])
@@ -580,6 +582,8 @@ model MenuOrder {
   tableNumber    String?         @map("table_number")
   status         MenuOrderStatus @default(PLACED)
   subtotal       Decimal         @db.Decimal(10, 2)
+  discount       Decimal         @default(0) @db.Decimal(10, 2)
+  offersApplied  Json?           @map("offers_applied") // [{ offerId, type, title, amount }]
   tax            Decimal         @db.Decimal(10, 2)
   total          Decimal         @db.Decimal(10, 2)
   currency       String          @default("INR")
@@ -605,18 +609,82 @@ model MenuOrder {
 }
 
 model MenuOrderItem {
-  id           Int      @id @default(autoincrement())
-  orderId      Int      @map("order_id")
-  menuItemId   Int?     @map("menu_item_id")
-  name         String
-  variantLabel String?  @map("variant_label")
-  unitPrice    Decimal  @db.Decimal(10, 2) @map("unit_price")
-  quantity     Int
+  id            Int      @id @default(autoincrement())
+  orderId       Int      @map("order_id")
+  menuItemId    Int?     @map("menu_item_id")
+  name          String
+  variantLabel  String?  @map("variant_label")
+  listUnitPrice Decimal? @db.Decimal(10, 2) @map("list_unit_price")
+  unitPrice     Decimal  @db.Decimal(10, 2) @map("unit_price")
+  quantity      Int
+  offerIds      Json?    @map("offer_ids") // number[] applied to this line
 
   order        MenuOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@map("menu_order_items")
+}
+
+enum MenuOfferType {
+  ITEM_DISCOUNT
+  BOGO
+  COMBO
+  COLLECTION
+  SPECIAL
+}
+
+enum MenuOfferStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+}
+
+enum MenuOfferTargetKind {
+  ITEM
+  CATEGORY
+}
+
+model MenuOffer {
+  id           Int             @id @default(autoincrement())
+  restaurantId Int             @map("restaurant_id")
+  menuId       Int?            @map("menu_id")
+  type         MenuOfferType
+  status       MenuOfferStatus @default(DRAFT)
+  title        String
+  subtitle     String?
+  badgeLabel   String?         @map("badge_label")
+  imageUrl     String?         @map("image_url")
+  priority     Int             @default(0)
+  startsAt     DateTime?       @map("starts_at")
+  endsAt       DateTime?       @map("ends_at")
+  schedule     Json?           // { daysOfWeek?, windows?: { start, end }[], timezone? }
+  rules        Json            // type-specific payload — see lib/offers/rules.ts
+  presentation Json?           // { emphasis?: "rail"|"hero"|"badge", accent? }
+  i18n         Json?
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+
+  restaurant   Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menu         Menu?           @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  targets      MenuOfferTarget[]
+
+  @@index([restaurantId, status])
+  @@index([menuId, status])
+  @@index([restaurantId, startsAt, endsAt])
+  @@map("menu_offers")
+}
+
+model MenuOfferTarget {
+  id      Int                 @id @default(autoincrement())
+  offerId Int                 @map("offer_id")
+  kind    MenuOfferTargetKind
+  refId   Int                 @map("ref_id")
+
+  offer   MenuOffer           @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@unique([offerId, kind, refId])
+  @@index([kind, refId])
+  @@map("menu_offer_targets")
 }
 
 model MenuOrderEvent {

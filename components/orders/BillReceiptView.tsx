@@ -101,8 +101,14 @@ export default function BillReceiptView({
         <div className="mt-4 space-y-1.5 border-t border-[#E7DDD2] pt-3 text-sm">
           <div className="flex justify-between text-[#6B5A50]">
             <span>Subtotal</span>
-            <span>{formatBillMoney(bill.moneySymbol, order.subtotal)}</span>
+            <span>{formatBillMoney(bill.moneySymbol, order.subtotal + (order.discount || 0))}</span>
           </div>
+          {(order.discount || 0) > 0 ? (
+            <div className="flex justify-between text-emerald-700">
+              <span>Offers saved</span>
+              <span>−{formatBillMoney(bill.moneySymbol, order.discount || 0)}</span>
+            </div>
+          ) : null}
           <div className="flex justify-between text-[#6B5A50]">
             <span>{order.taxName || "Tax"}</span>
             <span>{formatBillMoney(bill.moneySymbol, order.tax)}</span>

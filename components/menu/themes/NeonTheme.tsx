@@ -1,5 +1,5 @@
 import { Flame } from "lucide-react";
-import { DietMark, VariantPills, formatMoney } from "../shared";
+import { DietMark, VariantPills, formatMoney, ItemPrice } from "../shared";
 import { ItemTags } from "../ItemTags";
 import type { ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
@@ -39,7 +39,7 @@ export default function NeonTheme({ categories, currencySymbol, onSelectItem }: 
                       {item.name}
                     </h4>
                     {!item.variants?.length && (
-                      <span className="text-[#2de2e6] font-black shrink-0">{formatMoney(currencySymbol, item.price)}</span>
+                      <span className="text-[#2de2e6] font-black shrink-0"><ItemPrice item={item} symbol={currencySymbol} /></span>
                     )}
                   </div>
                   {item.description && <p className="text-[11px] text-[#c9b6e0] line-clamp-2">{item.description}</p>}

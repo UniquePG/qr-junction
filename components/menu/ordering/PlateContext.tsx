@@ -36,8 +36,19 @@ export type LiveOrder = {
 };
 
 type Quote = {
-  lines: Array<{ menuItemId: number; name: string; variantLabel: string | null; unitPrice: number; quantity: number; lineTotal: number }>;
+  lines: Array<{
+    menuItemId: number;
+    name: string;
+    variantLabel: string | null;
+    unitPrice: number;
+    listUnitPrice?: number;
+    quantity: number;
+    lineTotal: number;
+    offerIds?: number[];
+  }>;
   subtotal: number;
+  discount?: number;
+  offersApplied?: Array<{ offerId: number; title: string; amount: number }>;
   tax: number;
   total: number;
   currency: string;

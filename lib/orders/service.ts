@@ -5,6 +5,7 @@ import { newCustomerPublicId, newOrderPublicId, newPublicToken } from "@/lib/ord
 import { estimatePrepMinutes, stageWindowMinutes } from "@/lib/orders/eta";
 import { quoteLines, type PriceQuote } from "@/lib/orders/pricing";
 import { canMoveStatus, type OrderStatus } from "@/lib/orders/status";
+import { loadPricingOffers } from "@/lib/offers/resolve";
 import { isDigitalBillEffective } from "@/lib/restaurant/digitalBill";
 import { resolveOrderingGate } from "@/lib/restaurant/gates";
 
@@ -37,9 +38,11 @@ const orderInclude = {
       id: true,
       name: true,
       variantLabel: true,
+      listUnitPrice: true,
       unitPrice: true,
       quantity: true,
       menuItemId: true,
+      offerIds: true,
     },
   },
   events: {
@@ -99,6 +102,10 @@ export function toOrderDto(
   order: OrderDtoSource,
   extras?: { publicToken?: boolean; history?: unknown[]; digitalBillEnabled?: boolean },
 ) {
+  const discount =
+    "discount" in order && order.discount != null ? money(order.discount as Prisma.Decimal | number) : 0;
+  const offersApplied =
+    "offersApplied" in order && order.offersApplied != null ? order.offersApplied : null;
   return {
     publicId: order.publicId,
     status: order.status,
@@ -109,6 +116,8 @@ export function toOrderDto(
     customerPhone: order.customer.phone,
     customerPublicId: order.customer.publicId,
     subtotal: money(order.subtotal),
+    discount,
+    offersApplied,
     tax: money(order.tax),
     total: money(order.total),
     currency: order.currency,
@@ -125,13 +134,21 @@ export function toOrderDto(
       note: event.note,
       createdAt: event.createdAt.toISOString(),
     })),
-    items: order.items.map((item) => ({
-      name: item.name,
-      variantLabel: item.variantLabel,
-      unitPrice: money(item.unitPrice),
-      quantity: item.quantity,
-      lineTotal: money(Number(item.unitPrice) * item.quantity),
-    })),
+    items: order.items.map((item) => {
+      const list =
+        "listUnitPrice" in item && item.listUnitPrice != null
+          ? money(item.listUnitPrice as Prisma.Decimal | number)
+          : money(item.unitPrice);
+      return {
+        name: item.name,
+        variantLabel: item.variantLabel,
+        listUnitPrice: list,
+        unitPrice: money(item.unitPrice),
+        quantity: item.quantity,
+        lineTotal: money(Number(item.unitPrice) * item.quantity),
+        offerIds: "offerIds" in item ? item.offerIds : null,
+      };
+    }),
     ...(extras?.publicToken ? { publicToken: order.publicToken } : {}),
     ...(extras?.history ? { history: extras.history } : {}),
     ...(typeof extras?.digitalBillEnabled === "boolean"
@@ -266,10 +283,18 @@ export async function quoteOrder(input: {
     };
   });
 
+  const offers = await loadPricingOffers(restaurant.id, menu.id);
+
   return {
     restaurant,
     menu,
-    quote: quoteLines(resolved, Number(restaurant.taxRate), restaurant.taxName, restaurant.currency),
+    quote: quoteLines(
+      resolved,
+      Number(restaurant.taxRate),
+      restaurant.taxName,
+      restaurant.currency,
+      offers,
+    ),
   };
 }
 
@@ -359,6 +384,8 @@ export async function createOrder(input: {
         expectedReadyAt: readyAt,
         stageDueAt: new Date(Date.now() + stageWindowMinutes("PLACED") * 60_000),
         subtotal: new Prisma.Decimal(priced.quote.subtotal),
+        discount: new Prisma.Decimal(priced.quote.discount || 0),
+        offersApplied: (priced.quote.offersApplied || []) as Prisma.InputJsonValue,
         tax: new Prisma.Decimal(priced.quote.tax),
         total: new Prisma.Decimal(priced.quote.total),
         currency: priced.quote.currency,
@@ -368,8 +395,10 @@ export async function createOrder(input: {
             menuItemId: line.menuItemId,
             name: line.name,
             variantLabel: line.variantLabel,
+            listUnitPrice: new Prisma.Decimal(line.listUnitPrice ?? line.unitPrice),
             unitPrice: new Prisma.Decimal(line.unitPrice),
             quantity: line.quantity,
+            offerIds: (line.offerIds || []) as Prisma.InputJsonValue,
           })),
         },
         events: { create: { status: "PLACED" } },

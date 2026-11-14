@@ -221,4 +221,38 @@ export const restaurantService = {
     }
     return res.blob();
   },
+
+  listOffers(menuId?: string | number | null) {
+    return apiRequest<{
+      offers: any[];
+      entitlements: { offers: boolean; custom: boolean };
+    }>({
+      method: "GET",
+      url: endpoints.restaurant.offers,
+      params: menuId != null && menuId !== "" ? { menuId } : undefined,
+    });
+  },
+
+  createOffer(body: unknown) {
+    return apiRequest<{ offer: any }>({
+      method: "POST",
+      url: endpoints.restaurant.offers,
+      data: body,
+    });
+  },
+
+  updateOffer(id: string | number, body: unknown) {
+    return apiRequest<{ offer: any }>({
+      method: "PATCH",
+      url: endpoints.restaurant.offer(id),
+      data: body,
+    });
+  },
+
+  deleteOffer(id: string | number) {
+    return apiRequest({
+      method: "DELETE",
+      url: endpoints.restaurant.offer(id),
+    });
+  },
 };

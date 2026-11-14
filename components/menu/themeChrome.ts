@@ -358,3 +358,193 @@ export function getThemeChrome(theme: string): ThemeChrome {
     modalMuted: "text-slate-500",
   };
 }
+
+export type ThemeOfferChrome = {
+  rail: string;
+  card: string;
+  /** Soft inset panel inside a card (callouts, item grids). */
+  panel: string;
+  /** Compact tappable item chip / tile. */
+  chip: string;
+  badge: string;
+  strike: string;
+  price: string;
+  comboCta: string;
+  title: string;
+  muted: string;
+  /** Thin accent edge / ribbon. */
+  accent: string;
+};
+
+/** Theme-matched offer presentation — keeps rails/badges on-brand per layout. */
+export function getThemeOfferChrome(theme: string): ThemeOfferChrome {
+  if (theme === "gourmet") {
+    return {
+      rail: "gap-3",
+      card: "bg-[#13151b] border border-amber-900/30 text-white shadow-[0_0_0_1px_rgba(245,158,11,0.08)]",
+      panel: "bg-black/35 border border-amber-900/25",
+      chip: "bg-[#1c1f28] border border-amber-900/35 text-amber-50 hover:border-amber-500/50",
+      badge: "bg-amber-500 text-slate-950 border-transparent",
+      strike: "text-slate-500 line-through",
+      price: "text-amber-400 font-bold",
+      comboCta: "bg-amber-500 text-slate-950 hover:bg-amber-400",
+      title: "text-amber-400 font-serif font-black",
+      muted: "text-slate-400",
+      accent: "bg-amber-500",
+    };
+  }
+  if (theme === "street") {
+    return {
+      rail: "gap-3",
+      card: "bg-white border-2 border-orange-500 text-slate-900 shadow-[3px_3px_0_#f97316]",
+      panel: "bg-orange-50 border border-orange-200",
+      chip: "bg-white border-2 border-orange-300 text-slate-900 hover:border-orange-500",
+      badge: "bg-orange-500 text-white border-transparent",
+      strike: "text-slate-400 line-through",
+      price: "text-orange-600 font-black",
+      comboCta: "bg-orange-500 text-white hover:bg-orange-600",
+      title: "text-orange-600 font-black",
+      muted: "text-slate-500",
+      accent: "bg-orange-500",
+    };
+  }
+  if (theme === "premium") {
+    return {
+      rail: "gap-3",
+      card: "bg-[#FCFAF4] border border-amber-300 text-amber-950",
+      panel: "bg-amber-50/80 border border-amber-200/80",
+      chip: "bg-white border border-amber-200 text-amber-950 hover:border-amber-400",
+      badge: "bg-amber-900 text-white border-transparent",
+      strike: "text-amber-800/50 line-through",
+      price: "text-amber-950 font-serif font-bold",
+      comboCta: "bg-amber-900 text-white hover:bg-amber-800",
+      title: "text-amber-950 font-serif font-black",
+      muted: "text-amber-900/70",
+      accent: "bg-amber-700",
+    };
+  }
+  if (theme === "cafe") {
+    return {
+      rail: "gap-3",
+      card: "bg-white border-2 border-slate-900 text-slate-950 shadow-[4px_4px_0_#1e293b]",
+      panel: "bg-amber-50 border-2 border-slate-900/20",
+      chip: "bg-white border-2 border-slate-900/30 text-slate-950 hover:border-slate-900",
+      badge: "bg-amber-400 text-slate-950 border-2 border-slate-900",
+      strike: "text-slate-400 line-through",
+      price: "text-slate-950 font-black",
+      comboCta: "bg-slate-950 text-white border-2 border-slate-900 hover:bg-slate-800",
+      title: "text-slate-950 font-black",
+      muted: "text-slate-600",
+      accent: "bg-amber-400",
+    };
+  }
+  if (theme === "neon") {
+    return {
+      rail: "gap-3",
+      card: "bg-[#140c22] border border-[#ff4d9a]/50 text-[#f5f0ff] shadow-[0_0_24px_rgba(255,77,154,0.15)]",
+      panel: "bg-[#1a1030] border border-[#ff4d9a]/25",
+      chip: "bg-[#1a1030] border border-[#2de2e6]/35 text-[#f5f0ff] hover:border-[#2de2e6]",
+      badge: "bg-[#ff4d9a] text-[#0a0612] border-transparent",
+      strike: "text-slate-500 line-through",
+      price: "text-[#2de2e6] font-black",
+      comboCta: "bg-[#2de2e6] text-[#0a0612] hover:brightness-110",
+      title: "text-[#ff4d9a] font-black",
+      muted: "text-[#c9b6e0]",
+      accent: "bg-[#ff4d9a]",
+    };
+  }
+  if (theme === "thali") {
+    return {
+      rail: "gap-3",
+      card: "bg-[#fff6ea] border-2 border-[#c45c26] text-[#3d2414]",
+      panel: "bg-[#ffe8d2] border border-[#c45c26]/30",
+      chip: "bg-white border border-[#c45c26]/35 text-[#3d2414] hover:border-[#c45c26]",
+      badge: "bg-[#c45c26] text-white border-transparent",
+      strike: "text-[#7a5a3a]/60 line-through",
+      price: "text-[#c45c26] font-black",
+      comboCta: "bg-[#c45c26] text-white hover:bg-[#a84b1c]",
+      title: "text-[#8b3d12] font-black",
+      muted: "text-[#7a5a3a]",
+      accent: "bg-[#c45c26]",
+    };
+  }
+  if (theme === "ticket" || theme === "board") {
+    return {
+      rail: "gap-3",
+      card: theme === "board"
+        ? "bg-[#12141a] border border-amber-400/40 text-amber-100 font-mono"
+        : "bg-[#f7f1df] border border-dashed border-[#b42318] text-[#1c1914]",
+      panel: theme === "board"
+        ? "bg-black/40 border border-amber-400/20"
+        : "bg-[#efe6cf] border border-dashed border-[#b42318]/40",
+      chip: theme === "board"
+        ? "bg-[#1a1d26] border border-amber-400/30 text-amber-100 hover:border-amber-400"
+        : "bg-white border border-[#b42318]/30 text-[#1c1914] hover:border-[#b42318]",
+      badge: theme === "board" ? "bg-amber-400 text-[#0b0c0f]" : "bg-[#b42318] text-white",
+      strike: "opacity-50 line-through",
+      price: theme === "board" ? "text-amber-400 font-mono font-black" : "text-[#b42318] font-black",
+      comboCta: theme === "board" ? "bg-amber-400 text-[#0b0c0f] hover:bg-amber-300" : "bg-[#1c1914] text-[#f7f1df] hover:bg-black",
+      title: theme === "board" ? "text-amber-400 font-mono font-black uppercase" : "text-[#1c1914] font-black uppercase",
+      muted: theme === "board" ? "text-amber-700" : "text-[#6b6250]",
+      accent: theme === "board" ? "bg-amber-400" : "bg-[#b42318]",
+    };
+  }
+  if (theme === "lantern" || theme === "playbill") {
+    return {
+      rail: "gap-3",
+      card: "bg-[#3a1418] border border-[#f3c97a]/40 text-[#fff4d6]",
+      panel: "bg-[#2a0e12] border border-[#f3c97a]/25",
+      chip: "bg-[#2a0e12] border border-[#f3c97a]/35 text-[#fff4d6] hover:border-[#f3c97a]",
+      badge: "bg-[#f3c97a] text-[#3a1012] border-transparent",
+      strike: "text-[#e8c39e]/50 line-through",
+      price: "text-[#f3c97a] font-black",
+      comboCta: "bg-[#f3c97a] text-[#3a1012] hover:brightness-110",
+      title: "text-[#f3c97a] font-black",
+      muted: "text-[#e8c39e]",
+      accent: "bg-[#f3c97a]",
+    };
+  }
+  if (theme === "garden") {
+    return {
+      rail: "gap-3",
+      card: "bg-[#f7fbf4] border border-[#2f5d3a]/30 text-[#243026]",
+      panel: "bg-[#e8f2e4] border border-[#2f5d3a]/20",
+      chip: "bg-white border border-[#2f5d3a]/25 text-[#243026] hover:border-[#2f5d3a]",
+      badge: "bg-[#2f5d3a] text-[#f7fbf4] border-transparent",
+      strike: "text-[#5b6b5d]/70 line-through",
+      price: "text-[#2f5d3a] font-black",
+      comboCta: "bg-[#2f5d3a] text-[#f7fbf4] hover:bg-[#244a2e]",
+      title: "text-[#2f5d3a] font-serif font-black",
+      muted: "text-[#5b6b5d]",
+      accent: "bg-[#2f5d3a]",
+    };
+  }
+  if (theme === "editorial" || theme === "stamp" || theme === "polaroid" || theme === "bento") {
+    return {
+      rail: "gap-3",
+      card: "bg-[#fffaf1] border border-[#2b2118]/20 text-[#2b2118]",
+      panel: "bg-[#f3ebe0] border border-[#2b2118]/15",
+      chip: "bg-white border border-[#2b2118]/20 text-[#2b2118] hover:border-[#2b2118]",
+      badge: "bg-[#b42318] text-white border-transparent",
+      strike: "text-[#6b6250]/70 line-through",
+      price: "text-[#b42318] font-black",
+      comboCta: "bg-[#2b2118] text-white hover:bg-black",
+      title: "text-[#2b2118] font-black",
+      muted: "text-[#6b6250]",
+      accent: "bg-[#b42318]",
+    };
+  }
+  return {
+    rail: "gap-3",
+    card: "bg-white border border-rose-200 text-slate-900 shadow-sm",
+    panel: "bg-rose-50/80 border border-rose-100",
+    chip: "bg-white border border-rose-200 text-slate-800 hover:border-rose-400",
+    badge: "bg-rose-600 text-white border-transparent",
+    strike: "text-slate-400 line-through",
+    price: "text-rose-700 font-bold",
+    comboCta: "bg-[#001B50] text-white hover:bg-[#002a7a]",
+    title: "text-slate-900 font-black",
+    muted: "text-slate-500",
+    accent: "bg-rose-600",
+  };
+}

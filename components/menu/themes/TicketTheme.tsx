@@ -1,4 +1,4 @@
-import { DietMark, formatMoney } from "../shared";
+import { DietMark, formatMoney, ItemPrice } from "../shared";
 import { ItemTags } from "../ItemTags";
 import type { ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
@@ -29,7 +29,7 @@ export default function TicketTheme({ categories, currencySymbol, onSelectItem }
                     </span>
                     <span className="flex-1 border-b border-dotted border-[#1c1914]/50 min-w-4" />
                     <span className="font-mono text-[13px] font-bold shrink-0">
-                      {formatMoney(currencySymbol, item.variants?.[0]?.price ?? item.price)}
+                      <ItemPrice item={item} symbol={currencySymbol} price={item.variants?.[0]?.price ?? item.price} />
                     </span>
                   </div>
                   {item.variants && item.variants.length > 1 && (

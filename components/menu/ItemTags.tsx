@@ -21,6 +21,8 @@ import {
 } from "@/lib/menu/item-config";
 import type { MenuItem } from "@/components/menu/types";
 import { useMenuLocaleOptional } from "@/components/menu/i18n/MenuLocaleProvider";
+import { OfferBadge } from "@/components/menu/offers/OfferBadge";
+import { useOfferTheme } from "@/components/menu/offers/OfferContext";
 
 const TONE_CLASS: Record<TagTone, string> = {
   amber: "border-amber-200 bg-amber-50 text-amber-800",
@@ -72,17 +74,19 @@ export function ItemTags({
   size = "sm",
   className = "",
 }: {
-  item: Pick<MenuItem, "isPopular" | "config">;
+  item: Pick<MenuItem, "isPopular" | "config"> & { id?: number };
   hidePopular?: boolean;
   size?: "sm" | "md";
   className?: string;
 }) {
   const i18n = useMenuLocaleOptional();
+  const theme = useOfferTheme();
   const tags = displayTags(item, { hidePopular });
-  if (!tags.length) return null;
   const pad = size === "md" ? "px-2.5 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]";
+  if (!tags.length && item.id == null) return null;
   return (
     <div className={`flex flex-wrap gap-1 ${className}`}>
+      {item.id != null ? <OfferBadge itemId={item.id} theme={theme} /> : null}
       {tags.map((tag) => {
         const preset = presetForTag(tag);
         const tone = preset?.tone || "slate";

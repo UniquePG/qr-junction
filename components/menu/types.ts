@@ -1,3 +1,5 @@
+import type { GuestOfferView } from "@/lib/offers/types";
+
 export type MenuItem = {
   id: number;
   name: string;
@@ -23,6 +25,8 @@ export type ThemeViewProps = {
   categories: MenuCategory[];
   currencySymbol: string;
   onSelectItem: (item: MenuItem) => void;
+  /** Optional — themes may ignore; CustomerMenuView still renders OfferRail. */
+  offers?: GuestOfferView | null;
 };
 
 export type ThemeGroup = "classic" | "new" | "paper" | "night" | "playful";

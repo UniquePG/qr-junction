@@ -1,4 +1,4 @@
-import { DietMark, formatMoney } from "../shared";
+import { DietMark, formatMoney, ItemPrice } from "../shared";
 import { ItemTags } from "../ItemTags";
 import type { ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
@@ -28,9 +28,11 @@ export default function PlaybillTheme({ categories, currencySymbol, onSelectItem
                   <p className="mt-1 text-[11px] italic text-[#c9b49a] line-clamp-2">{item.description}</p>
                 )}
                 <p className="mt-1 text-xs tracking-[0.2em] text-[#e8c39e]">
-                  {item.variants?.length
-                    ? item.variants.map((variant) => `${variant.label} ${formatMoney(currencySymbol, variant.price)}`).join("  ·  ")
-                    : formatMoney(currencySymbol, item.price)}
+                  {item.variants?.length ? (
+                    item.variants.map((variant) => `${variant.label} ${formatMoney(currencySymbol, variant.price)}`).join("  ·  ")
+                  ) : (
+                    <ItemPrice item={item} symbol={currencySymbol} />
+                  )}
                 </p>
                 {item.isPopular && (
                   <p className="mt-1 text-[9px] uppercase tracking-[0.28em] text-[#e8c39e]">Encore</p>

@@ -1,4 +1,4 @@
-import { DietMark, VariantPills, formatMoney } from "../shared";
+import { DietMark, VariantPills, formatMoney, ItemPrice } from "../shared";
 import { ItemTags } from "../ItemTags";
 import type { MenuItem, ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
@@ -38,7 +38,7 @@ function Cell({
           <span className="min-w-0">{item.name}</span>
         </h4>
         {!item.variants?.length && (
-          <p className="text-sm font-black text-[#b42318]">{formatMoney(currencySymbol, item.price)}</p>
+          <p className="text-sm font-black text-[#b42318]"><ItemPrice item={item} symbol={currencySymbol} /></p>
         )}
         <VariantPills
           item={item}

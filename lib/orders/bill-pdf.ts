@@ -257,8 +257,12 @@ export async function buildBillPdfBytes(restaurant: BillRestaurant, order: BillO
   y -= 14;
 
   // --- Totals ---
+  const discount = bill.order.discount || 0;
   const totals: Array<[string, string, boolean]> = [
-    ["Subtotal", formatBillMoney(symbol, bill.order.subtotal), false],
+    ["Subtotal", formatBillMoney(symbol, bill.order.subtotal + discount), false],
+    ...(discount > 0
+      ? ([["Offers saved", `-${formatBillMoney(symbol, discount)}`, false]] as Array<[string, string, boolean]>)
+      : []),
     [bill.order.taxName || "Tax", formatBillMoney(symbol, bill.order.tax), false],
     ["Total", formatBillMoney(symbol, bill.order.total), true],
   ];

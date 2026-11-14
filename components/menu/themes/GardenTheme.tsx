@@ -1,5 +1,5 @@
 import { Leaf } from "lucide-react";
-import { DietMark, VariantPills, formatMoney } from "../shared";
+import { DietMark, VariantPills, formatMoney, ItemPrice } from "../shared";
 import { ItemTags } from "../ItemTags";
 import type { ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
@@ -35,7 +35,7 @@ export default function GardenTheme({ categories, currencySymbol, onSelectItem }
                       {item.name}
                     </h4>
                     {!item.variants?.length && (
-                      <span className="text-sm font-black text-[#2f5d3a] shrink-0">{formatMoney(currencySymbol, item.price)}</span>
+                      <span className="text-sm font-black text-[#2f5d3a] shrink-0"><ItemPrice item={item} symbol={currencySymbol} /></span>
                     )}
                   </div>
                   {item.description && <p className="mt-1 text-[11px] text-[#5b6b5d] line-clamp-2">{item.description}</p>}

@@ -2,6 +2,7 @@ import type { MenuLocaleCode } from "./locales";
 
 export type GuestUiKey =
   | "searchPlaceholder"
+  | "clearSearch"
   | "filterAll"
   | "filterVeg"
   | "filterNonVeg"
@@ -51,7 +52,8 @@ export type GuestUiKey =
 type Pack = Record<GuestUiKey, string>;
 
 const en: Pack = {
-  searchPlaceholder: "Search dishes, drinks, appetizers...",
+  searchPlaceholder: "Search dishes, drinks, or price...",
+  clearSearch: "Clear search",
   filterAll: "All",
   filterVeg: "Veg",
   filterNonVeg: "Non-Veg",
@@ -101,7 +103,8 @@ const en: Pack = {
 
 const hi: Pack = {
   ...en,
-  searchPlaceholder: "व्यंजन, पेय, स्टार्टर खोजें...",
+  searchPlaceholder: "व्यंजन, पेय या कीमत खोजें...",
+  clearSearch: "खोज साफ़ करें",
   filterAll: "सभी",
   filterVeg: "शाकाहारी",
   filterNonVeg: "मांसाहारी",
@@ -150,7 +153,8 @@ const hi: Pack = {
 
 const mr: Pack = {
   ...en,
-  searchPlaceholder: "पदार्थ, पेये, स्टार्टर शोधा...",
+  searchPlaceholder: "पदार्थ, पेये किंवा किंमत शोधा...",
+  clearSearch: "शोध साफ करा",
   filterAll: "सर्व",
   filterVeg: "शाकाहारी",
   filterNonVeg: "मांसाहारी",
@@ -199,7 +203,8 @@ const mr: Pack = {
 
 const gu: Pack = {
   ...en,
-  searchPlaceholder: "વાનગીઓ, પીણાં શોધો...",
+  searchPlaceholder: "વાનગીઓ, પીણાં અથવા કિંમત શોધો...",
+  clearSearch: "શોધ સાફ કરો",
   filterAll: "બધા",
   filterVeg: "શાકાહારી",
   filterNonVeg: "માંસાહારી",
@@ -248,7 +253,8 @@ const gu: Pack = {
 
 const bn: Pack = {
   ...en,
-  searchPlaceholder: "খাবার, পানীয় খুঁজুন...",
+  searchPlaceholder: "খাবার, পানীয় বা দাম খুঁজুন...",
+  clearSearch: "খোঁজ মুছুন",
   filterAll: "সব",
   filterVeg: "নিরামিষ",
   filterNonVeg: "আমিষ",
@@ -297,7 +303,8 @@ const bn: Pack = {
 
 const ta: Pack = {
   ...en,
-  searchPlaceholder: "உணவுகள், பானங்கள் தேடுங்கள்...",
+  searchPlaceholder: "உணவுகள், பானங்கள் அல்லது விலை தேடுங்கள்...",
+  clearSearch: "தேடலை அழி",
   filterAll: "அனைத்தும்",
   filterVeg: "சைவம்",
   filterNonVeg: "அசைவம்",
@@ -346,7 +353,8 @@ const ta: Pack = {
 
 const te: Pack = {
   ...en,
-  searchPlaceholder: "వంటకాలు, పానీయాలు వెతకండి...",
+  searchPlaceholder: "వంటకాలు, పానీయాలు లేదా ధర వెతకండి...",
+  clearSearch: "శోధన క్లియర్ చేయి",
   filterAll: "అన్నీ",
   filterVeg: "శాకాహారం",
   filterNonVeg: "మాంసాహారం",

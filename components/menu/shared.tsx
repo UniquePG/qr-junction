@@ -1,9 +1,36 @@
 import type { MenuItem } from "./types";
+import { StrikePrice } from "@/components/menu/offers/StrikePrice";
+import { useOfferTheme } from "@/components/menu/offers/OfferContext";
 
 export function formatMoney(symbol: string, value: any, digits = 0) {
   const n = Number(value);
   if (Number.isNaN(n)) return `${symbol}0`;
   return `${symbol}${n.toFixed(digits)}`;
+}
+
+/** Base price with optional offer strike — use in themes for item list price. */
+export function ItemPrice({
+  item,
+  symbol,
+  className = "",
+  price,
+}: {
+  item: Pick<MenuItem, "id" | "price">;
+  symbol: string;
+  className?: string;
+  /** Override (e.g. first variant). */
+  price?: any;
+}) {
+  const theme = useOfferTheme();
+  return (
+    <StrikePrice
+      itemId={item.id}
+      listPrice={price ?? item.price}
+      symbol={symbol}
+      theme={theme}
+      className={className}
+    />
+  );
 }
 
 export function DietMark({ item, size = "sm" }: { item: MenuItem; size?: "sm" | "md" }) {

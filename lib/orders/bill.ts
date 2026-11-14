@@ -31,6 +31,8 @@ export type BillOrder = {
   tableNumber: string | null;
   customerName: string;
   subtotal: number;
+  discount?: number;
+  offersApplied?: Array<{ offerId: number; title: string; amount: number }> | null;
   tax: number;
   total: number;
   currency: string;

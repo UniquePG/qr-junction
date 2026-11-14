@@ -11,6 +11,7 @@ import {
   CreditCard,
   ClipboardList,
   LayoutDashboard,
+  Percent,
   QrCode,
   ScanLine,
   Settings,
@@ -53,6 +54,7 @@ function placeFromRestaurant(restaurant: {
 const items: SuiteNavItem[] = [
   { name: "Home", href: "/dashboard/restaurant", icon: LayoutDashboard, mobile: true },
   { name: "Menus", href: "/dashboard/restaurant/menu", icon: UtensilsCrossed, mobile: true },
+  { name: "Offers", href: "/dashboard/restaurant/offers", icon: Percent, mobile: true },
   { name: "Tables", href: "/dashboard/restaurant/tables", icon: QrCode, mobile: true },
   { name: "Orders", href: "/dashboard/restaurant/orders", icon: ClipboardList, mobile: true, center: true },
   { name: "Profile", href: "/dashboard/restaurant/profile", icon: Store },

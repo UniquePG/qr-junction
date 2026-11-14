@@ -1,4 +1,4 @@
-import { DietMark, VariantPills, formatMoney } from "../shared";
+import { DietMark, VariantPills, formatMoney, ItemPrice } from "../shared";
 import { ItemTags } from "../ItemTags";
 import type { ThemeViewProps } from "../types";
 import { PlateSlot } from "@/components/menu/ordering/PlateControl";
@@ -26,7 +26,7 @@ export default function EditorialTheme({ categories, currencySymbol, onSelectIte
             <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 text-[#faf6ee]">
               <p className="text-[10px] uppercase tracking-[0.28em] mb-1">Cover story</p>
               <h3 className="font-serif text-2xl sm:text-3xl leading-tight wrap-anywhere">{hero.name}</h3>
-              <p className="mt-2 text-sm font-semibold">{formatMoney(currencySymbol, hero.variants?.[0]?.price ?? hero.price)}</p>
+              <p className="mt-2 text-sm font-semibold"><ItemPrice item={hero} symbol={currencySymbol} price={hero.variants?.[0]?.price ?? hero.price} /></p>
             </div>
           </div>
           <div className="flex justify-end px-4 py-3">
@@ -57,7 +57,7 @@ export default function EditorialTheme({ categories, currencySymbol, onSelectIte
                       {item.name}
                     </h4>
                     {!item.variants?.length && (
-                      <span className="font-serif font-bold shrink-0">{formatMoney(currencySymbol, item.price)}</span>
+                      <span className="font-serif font-bold shrink-0"><ItemPrice item={item} symbol={currencySymbol} /></span>
                     )}
                   </div>
                   {item.description && (
