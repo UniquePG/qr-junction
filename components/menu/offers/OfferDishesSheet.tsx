@@ -10,6 +10,8 @@ import type {
 import type { MenuItem } from "@/components/menu/types";
 import { getThemeOfferChrome } from "@/components/menu/themeChrome";
 import { formatMoney } from "@/components/menu/shared";
+import { PlateSlot } from "@/components/menu/ordering/PlateControl";
+import { usePlate } from "@/components/menu/ordering/PlateContext";
 import { useOfferItemsById } from "./OfferContext";
 
 function discountedUnit(list: number, rules: ItemDiscountRules) {
@@ -34,6 +36,8 @@ export function OfferDishesSheet({
   onSelectItem?: (itemId: number) => void;
 }) {
   const itemsById = useOfferItemsById();
+  const plate = usePlate();
+  const canOrder = Boolean(plate?.enabled);
   const chrome = getThemeOfferChrome(theme);
   const discountRules =
     offer.type === "ITEM_DISCOUNT" ? (offer.rules as ItemDiscountRules) : null;
@@ -63,8 +67,8 @@ export function OfferDishesSheet({
   }, [comboRules, itemsById, offer.itemIds]);
 
   function pick(itemId: number) {
-    onSelectItem?.(itemId);
     onClose();
+    window.setTimeout(() => onSelectItem?.(itemId), 0);
   }
 
   return (
@@ -113,41 +117,46 @@ export function OfferDishesSheet({
                   offerPrice != null && Number.isFinite(offerPrice) && offerPrice < list;
                 return (
                   <li key={item.id}>
-                    <button
-                      type="button"
-                      onClick={() => pick(item.id)}
-                      className={`flex w-full items-center gap-2.5 rounded-xl border px-2.5 py-2 text-left transition active:scale-[0.99] ${chrome.chip}`}
-                    >
-                      <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-black/5">
-                        {item.image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={item.image} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <span className={`flex h-full w-full items-center justify-center text-[11px] font-black ${chrome.muted}`}>
-                            {item.name.slice(0, 1).toUpperCase()}
-                          </span>
-                        )}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        {slotLabel ? (
-                          <span className={`block text-[9px] font-bold uppercase tracking-wide ${chrome.muted}`}>
-                            {slotLabel}
-                          </span>
-                        ) : null}
-                        <span className="block truncate text-[13px] font-bold leading-snug">{item.name}</span>
-                        <span className={`mt-0.5 flex items-center gap-1.5 text-[11px] font-semibold ${chrome.price}`}>
-                          {showStrike ? (
-                            <>
-                              <span className={chrome.strike}>{formatMoney(currencySymbol, list)}</span>
-                              <span>{formatMoney(currencySymbol, offerPrice)}</span>
-                            </>
+                    <div className={`flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 ${chrome.chip}`}>
+                      <button
+                        type="button"
+                        onClick={() => pick(item.id)}
+                        className="flex min-w-0 flex-1 items-center gap-2.5 text-left transition active:scale-[0.99]"
+                      >
+                        <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-black/5">
+                          {item.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.image} alt="" className="h-full w-full object-cover" />
                           ) : (
-                            <span>{formatMoney(currencySymbol, list)}</span>
+                            <span className={`flex h-full w-full items-center justify-center text-[11px] font-black ${chrome.muted}`}>
+                              {item.name.slice(0, 1).toUpperCase()}
+                            </span>
                           )}
                         </span>
-                      </span>
-                      <ArrowRight className={`h-3.5 w-3.5 shrink-0 opacity-40 ${chrome.muted}`} />
-                    </button>
+                        <span className="min-w-0 flex-1">
+                          {slotLabel ? (
+                            <span className={`block text-[9px] font-bold uppercase tracking-wide ${chrome.muted}`}>
+                              {slotLabel}
+                            </span>
+                          ) : null}
+                          <span className="block truncate text-[13px] font-bold leading-snug">{item.name}</span>
+                          <span className={`mt-0.5 flex items-center gap-1.5 text-[11px] font-semibold ${chrome.price}`}>
+                            {showStrike ? (
+                              <>
+                                <span className={chrome.strike}>{formatMoney(currencySymbol, list)}</span>
+                                <span>{formatMoney(currencySymbol, offerPrice)}</span>
+                              </>
+                            ) : (
+                              <span>{formatMoney(currencySymbol, list)}</span>
+                            )}
+                          </span>
+                        </span>
+                        {!canOrder ? (
+                          <ArrowRight className={`h-3.5 w-3.5 shrink-0 opacity-40 ${chrome.muted}`} />
+                        ) : null}
+                      </button>
+                      {canOrder ? <PlateSlot item={item} inline align="end" /> : null}
+                    </div>
                   </li>
                 );
               })}

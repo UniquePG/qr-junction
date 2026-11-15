@@ -67,6 +67,10 @@ type PlateApi = {
   quantityForItem: (itemId: number) => number;
   openItem: (item: MenuItem) => void;
   openConfirm: () => void;
+  openTracker: () => void;
+  cartOpen: boolean;
+  trackerOpen: boolean;
+  now: number;
   liveOrders: LiveOrder[];
 };
 
@@ -233,7 +237,13 @@ export function PlateProvider({
   }, []);
 
   useEffect(() => {
-    if (cartOpen && lines.length) void refreshQuote();
+    if (!cartOpen) return;
+    if (!lines.length) {
+      setQuote(null);
+      setQuoteError("");
+      return;
+    }
+    void refreshQuote();
   }, [cartOpen, lines, refreshQuote]);
 
   useEffect(() => {
@@ -319,6 +329,11 @@ export function PlateProvider({
     return () => connection.close();
   }, [watchKey]);
 
+  const openTracker = useCallback(() => {
+    setCartOpen(false);
+    setTrackerOpen(true);
+  }, []);
+
   const api = useMemo<PlateApi>(() => ({
     enabled,
     addLabel: addLabelForTheme(theme),
@@ -330,8 +345,28 @@ export function PlateProvider({
     quantityForItem,
     openItem: onOpenItem,
     openConfirm: openCart,
+    openTracker,
+    cartOpen,
+    trackerOpen,
+    now,
     liveOrders,
-  }), [add, count, enabled, lines, liveOrders, onOpenItem, openCart, quantity, quantityForItem, setQuantity, theme]);
+  }), [
+    add,
+    cartOpen,
+    count,
+    enabled,
+    lines,
+    liveOrders,
+    now,
+    onOpenItem,
+    openCart,
+    openTracker,
+    quantity,
+    quantityForItem,
+    setQuantity,
+    theme,
+    trackerOpen,
+  ]);
 
   const identityLocked = liveOrders.some((order) => !["SERVED", "REJECTED"].includes(order.status));
 
@@ -373,10 +408,7 @@ export function PlateProvider({
             }
             setCartOpen(false);
           }}
-          onOpenTracker={() => {
-            setCartOpen(false);
-            setTrackerOpen(true);
-          }}
+          onOpenTracker={openTracker}
           onCloseTracker={() => setTrackerOpen(false)}
           onQuantity={(line, next) => setQuantity(line.item, line.variantLabel, next)}
           onCustomer={setCustomer}

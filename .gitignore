@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local DB dumps / private ops (scripts, credentials, README stay local)
+backups/
+*.dump
+

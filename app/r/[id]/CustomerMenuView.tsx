@@ -29,6 +29,7 @@ import StampTheme from '@/components/menu/themes/StampTheme';
 import BentoTheme from '@/components/menu/themes/BentoTheme';
 import PlaybillTheme from '@/components/menu/themes/PlaybillTheme';
 import { PlateProvider } from '@/components/menu/ordering/PlateContext';
+import { PlateOrderStrip } from '@/components/menu/ordering/PlateChrome';
 import { DishOrderActions, PlateSlot } from '@/components/menu/ordering/PlateControl';
 import { MenuPlaceDetails } from '@/components/menu/PlaceDetails';
 import { ItemTags } from '@/components/menu/ItemTags';
@@ -399,6 +400,19 @@ function CustomerMenuViewInner({
     () => menu.categories.flatMap((cat) => cat.items),
     [menu.categories],
   );
+
+  const dietOptions = useMemo(() => {
+    const available = allItems.filter((item) => item.isAvailable);
+    const hasVeg = available.some((item) => item.isVeg || item.isVegan);
+    const hasNonVeg = available.some((item) => item.isNonVeg);
+    return { hasVeg, hasNonVeg, showDietFilter: hasVeg && hasNonVeg };
+  }, [allItems]);
+
+  useEffect(() => {
+    if (!dietOptions.showDietFilter && dietFilter !== 'ALL') {
+      setDietFilter('ALL');
+    }
+  }, [dietOptions.showDietFilter, dietFilter]);
 
   const jumpToOfferItem = (itemId: number) => {
     const item = allItems.find((row) => row.id === itemId);
@@ -975,6 +989,7 @@ function CustomerMenuViewInner({
       {/* Sticky Filters & Search */}
       <div className={`sticky top-0 z-30 mt-6 overflow-visible border-b backdrop-blur-md transition-all duration-300 ${chrome.sticky}`}>
         <div className="relative mx-auto max-w-4xl space-y-2.5 overflow-visible px-4 py-3">
+          <PlateOrderStrip />
           {/* Search + language */}
           <div className="flex items-stretch gap-2">
             <div className="relative min-w-0 flex-1">
@@ -1080,52 +1095,54 @@ function CustomerMenuViewInner({
             ) : null}
           </div>
 
-          {/* Diet segmented control — full width so labels never clip */}
-          <div
-            className={`flex w-full items-center rounded-full border p-0.5 ${chrome.input}`}
-            role="group"
-            aria-label="Diet filter"
-          >
-            {(
-              [
-                { id: 'ALL' as const, label: t('filterAll'), mark: null },
-                { id: 'VEG' as const, label: t('filterVeg'), mark: 'veg' as const },
-                { id: 'NON_VEG' as const, label: t('filterNonVeg'), mark: 'nonveg' as const },
-              ]
-            ).map((opt) => {
-              const on = dietFilter === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setDietFilter(opt.id)}
-                  className={`inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-2 py-2 text-[12px] font-bold transition active:scale-[0.98] ${
-                    on
-                      ? chrome.dietPill(opt.id, true)
-                      : 'border-transparent bg-transparent opacity-70 hover:opacity-100'
-                  }`}
-                >
-                  {opt.mark === 'veg' ? (
-                    <span
-                      className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[3px] border border-emerald-600 bg-white"
-                      aria-hidden
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
-                    </span>
-                  ) : null}
-                  {opt.mark === 'nonveg' ? (
-                    <span
-                      className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[3px] border border-red-600 bg-white"
-                      aria-hidden
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
-                    </span>
-                  ) : null}
-                  <span>{opt.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/* Diet filter only when menu has both veg and non-veg dishes */}
+          {dietOptions.showDietFilter ? (
+            <div
+              className={`flex w-full items-center rounded-full border p-0.5 ${chrome.input}`}
+              role="group"
+              aria-label="Diet filter"
+            >
+              {(
+                [
+                  { id: 'ALL' as const, label: t('filterAll'), mark: null },
+                  { id: 'VEG' as const, label: t('filterVeg'), mark: 'veg' as const },
+                  { id: 'NON_VEG' as const, label: t('filterNonVeg'), mark: 'nonveg' as const },
+                ]
+              ).map((opt) => {
+                const on = dietFilter === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setDietFilter(opt.id)}
+                    className={`inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-2 py-2 text-[12px] font-bold transition active:scale-[0.98] ${
+                      on
+                        ? chrome.dietPill(opt.id, true)
+                        : 'border-transparent bg-transparent opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    {opt.mark === 'veg' ? (
+                      <span
+                        className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[3px] border border-emerald-600 bg-white"
+                        aria-hidden
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                      </span>
+                    ) : null}
+                    {opt.mark === 'nonveg' ? (
+                      <span
+                        className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[3px] border border-red-600 bg-white"
+                        aria-hidden
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
+                      </span>
+                    ) : null}
+                    <span>{opt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
 
           {/* Bestsellers + categories */}
           <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -1249,7 +1266,7 @@ function CustomerMenuViewInner({
 
       {/* Dish Expanded Dialog Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setSelectedItem(null)}>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setSelectedItem(null)}>
           <div 
             className={`rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-scale-up relative max-h-[90vh] flex flex-col transition-all duration-300 ${chrome.modal}`}
             onClick={(e) => e.stopPropagation()}

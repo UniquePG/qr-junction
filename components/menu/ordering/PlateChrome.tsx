@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { Check, Download, Pencil, ShoppingBag, X } from "lucide-react";
+import { Check, Download, Minus, Pencil, Plus, ShoppingBag, X } from "lucide-react";
 import { waitingLine } from "@/lib/orders/banter";
 import { formatTableLabel, orderCallCode } from "@/lib/orders/displayId";
 import { customerStatusCopy } from "@/lib/orders/status";
 import { waitLabel } from "@/lib/orders/eta";
 import type { LiveOrder, PlateLine } from "@/components/menu/ordering/PlateContext";
+import { usePlate } from "@/components/menu/ordering/PlateContext";
 import { useMenuLocaleOptional } from "@/components/menu/i18n/MenuLocaleProvider";
 
 type QuoteLine = {
@@ -61,6 +62,72 @@ function whenLabel(iso: string | null | undefined) {
 
 function eventTime(order: LiveOrder, status: string) {
   return order.events?.find((event) => event.status === status)?.createdAt || null;
+}
+
+/** Sticky top strip — render above search so it never covers menu controls. */
+export function PlateOrderStrip() {
+  const plate = usePlate();
+  const i18n = useMenuLocaleOptional();
+  const t = i18n?.t;
+  const statusCopy = (status: string, rejectReason?: string | null) =>
+    i18n?.statusCopy(status, rejectReason) ?? customerStatusCopy(status, rejectReason);
+
+  if (!plate?.enabled || plate.cartOpen || plate.trackerOpen) return null;
+
+  const active = plate.liveOrders.filter((order) => !["SERVED", "REJECTED"].includes(order.status));
+  const featured = active[0];
+  const showPast = plate.liveOrders.length > 0 && !featured;
+  if (!featured && !showPast) return null;
+
+  const featuredWait = featured ? waitLabel(featured.expectedReadyAt, plate.now) : null;
+  const featuredLine = featured
+    ? waitingLine(featured.status, featured.publicId, dishName(featured), featured.rejectReason)
+    : "";
+
+  return (
+    <div className="-mx-4 border-b border-[#EDE6DE]/80 px-4 pb-2.5">
+      {featured ? (
+        <button
+          type="button"
+          onClick={plate.openTracker}
+          className="flex w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-[#E7DDD2] bg-white/90 px-3 py-2 text-left shadow-sm"
+        >
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C4622D] opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#C4622D]" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-2">
+              <span className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-[#C4622D]">
+                {statusCopy(featured.status)}
+              </span>
+              {featuredWait ? (
+                <span className="shrink-0 text-[11px] font-semibold text-[#1C1410]">{featuredWait.short}</span>
+              ) : null}
+            </span>
+            <span className="mt-0.5 block truncate text-[12px] text-[#2A211C]">{featuredLine}</span>
+          </span>
+          <span className="shrink-0 text-[11px] font-semibold text-[#8A7366]">View</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={plate.openTracker}
+          className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border border-[#E7DDD2] bg-white/90 px-3.5 py-2 text-left shadow-sm"
+        >
+          <span className="min-w-0">
+            <span className="block text-[13px] font-semibold text-[#1C1410]">
+              {t?.("yourOrders") || "Your orders"}
+            </span>
+            <span className="block truncate text-[11px] text-[#8A7366]">Earlier plates & payment</span>
+          </span>
+          <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-[#1C1410] px-1.5 text-[11px] font-bold text-white">
+            {plate.liveOrders.length}
+          </span>
+        </button>
+      )}
+    </div>
+  );
 }
 
 export function PlateChrome({
@@ -167,11 +234,7 @@ export function PlateChrome({
   }));
 
   const active = liveOrders.filter((order) => !["SERVED", "REJECTED"].includes(order.status));
-  const featured = active[0];
-  const featuredWait = featured ? waitLabel(featured.expectedReadyAt, now) : null;
-  const featuredLine = featured ? waitingLine(featured.status, featured.publicId, dishName(featured), featured.rejectReason) : "";
-  const showOrders = liveOrders.length > 0 && !featured && !trackerOpen && !cartOpen;
-  const showDock = (count > 0 && !cartOpen) || (Boolean(featured) && !trackerOpen && !cartOpen) || showOrders;
+  const showCartDock = count > 0 && !cartOpen;
   const identityReady = customer.name.trim().length > 0 && phoneDigits(customer.phone).length >= 10;
   const showIdentityFields = !identityLocked && (!hasSavedIdentity || editingIdentity);
   function matchPlateLine(line: { menuItemId: number; variantLabel: string | null; unitPrice: number; quantity: number }) {
@@ -191,81 +254,64 @@ export function PlateChrome({
     );
   }
 
-  const displayLines: QuoteLine[] = (quote?.lines || lines.map((line) => ({
-    menuItemId: line.item.id,
-    name: line.item.name,
-    variantLabel: line.variantLabel,
-    unitPrice: line.unitPrice,
-    quantity: line.quantity,
-    lineTotal: line.unitPrice * line.quantity,
-  }))).map((line) => {
-    const source = matchPlateLine(line);
-    return {
-      ...line,
-      name: source?.item.name || line.name,
-      variantLabel: source?.variantLabel || line.variantLabel,
-    };
-  });
-  const subtotal = quote?.subtotal ?? lines.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0);
-  const discount = quote?.discount ?? 0;
-  const total = quote?.total ?? subtotal;
+  // Local plate lines are source of truth so a stale quote never keeps removed dishes visible.
+  const plateEmpty = lines.length === 0;
+  const quoteMatchesPlate =
+    !!quote &&
+    quote.lines.length === lines.length &&
+    lines.every((line) =>
+      quote.lines.some(
+        (row) =>
+          row.menuItemId === line.item.id &&
+          (row.variantLabel || "") === (line.variantLabel || "") &&
+          row.quantity === line.quantity,
+      ),
+    );
+  const displayLines: QuoteLine[] = plateEmpty
+    ? []
+    : lines.map((line) => {
+        const quoted = quoteMatchesPlate
+          ? quote?.lines.find(
+              (row) =>
+                row.menuItemId === line.item.id &&
+                (row.variantLabel || "") === (line.variantLabel || ""),
+            )
+          : undefined;
+        return {
+          menuItemId: line.item.id,
+          name: line.item.name,
+          variantLabel: line.variantLabel,
+          unitPrice: quoted?.unitPrice ?? line.unitPrice,
+          listUnitPrice: quoted?.listUnitPrice ?? line.unitPrice,
+          quantity: line.quantity,
+          lineTotal: quoted?.lineTotal ?? line.unitPrice * line.quantity,
+          offerIds: quoted?.offerIds,
+        };
+      });
+  const localSubtotal = lines.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0);
+  const subtotal = plateEmpty ? 0 : quoteMatchesPlate ? quote?.subtotal ?? localSubtotal : localSubtotal;
+  const discount = plateEmpty || !quoteMatchesPlate ? 0 : quote?.discount ?? 0;
+  const total = plateEmpty ? 0 : quoteMatchesPlate ? quote?.total ?? subtotal : localSubtotal;
+  const offersApplied = plateEmpty || !quoteMatchesPlate ? [] : quote?.offersApplied || [];
 
   return (
     <>
-      {showDock ? (
+      {showCartDock ? (
         <div
-          className="pointer-events-none fixed inset-x-0 z-[60] flex items-end justify-between gap-3 px-4"
+          className="pointer-events-none fixed inset-x-0 z-[60] flex justify-end px-4"
           style={{ bottom: "max(1rem, env(safe-area-inset-bottom))" }}
         >
-          <div className="pointer-events-none flex min-w-0 flex-1 items-end justify-start">
-            {showOrders ? (
-              <button
-                type="button"
-                onClick={onOpenTracker}
-                className="pointer-events-auto flex max-w-[min(100%,16rem)] cursor-pointer items-center justify-between gap-3 rounded-2xl border border-[#E7DDD2] bg-white/95 px-4 py-3 text-left shadow-[0_12px_40px_rgba(28,20,16,0.18)] backdrop-blur"
-              >
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-[#1C1410]">{t?.("yourOrders") || "Your orders"}</span>
-                  <span className="block truncate text-xs text-[#6B5A50]">Earlier plates, times, and payment</span>
-                </span>
-                <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-[#1C1410] px-1.5 text-[11px] font-bold text-white">{liveOrders.length}</span>
-              </button>
-            ) : null}
-            {featured && !trackerOpen && !cartOpen ? (
-              <button
-                type="button"
-                onClick={onOpenTracker}
-                className="pointer-events-auto flex min-w-0 max-w-[min(100%,18rem)] cursor-pointer items-center gap-3 rounded-2xl border border-[#E7DDD2] bg-white/95 px-3 py-2.5 text-left shadow-[0_12px_40px_rgba(28,20,16,0.18)] backdrop-blur"
-              >
-                <span className="relative flex h-2.5 w-2.5 shrink-0">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C4622D] opacity-60" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#C4622D]" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-semibold uppercase tracking-wide text-[#C4622D]">
-                      {statusCopy(featured.status)}
-                    </span>
-                    {featuredWait ? <span className="shrink-0 text-[11px] font-semibold text-[#1C1410]">{featuredWait.short}</span> : null}
-                  </span>
-                  <span className="mt-0.5 block truncate text-sm text-[#1C1410]">{featuredLine}</span>
-                </span>
-              </button>
-            ) : null}
-          </div>
-          {count > 0 && !cartOpen ? (
-            <button
-              type="button"
-              onClick={onOpenCart}
-              aria-label={`Your plate, ${count} ${count === 1 ? "item" : "items"}`}
-              className="pointer-events-auto relative flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-[#1C1410] text-white shadow-[0_12px_30px_rgba(28,20,16,0.35)]"
-            >
-              <ShoppingBag className="h-6 w-6" />
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#C4622D] px-1 text-[11px] font-bold text-white">
-                {count}
-              </span>
-            </button>
-          ) : null}
+          <button
+            type="button"
+            onClick={onOpenCart}
+            aria-label={`Your plate, ${count} ${count === 1 ? "item" : "items"}`}
+            className="pointer-events-auto relative flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-[#1C1410] text-white shadow-[0_12px_30px_rgba(28,20,16,0.35)]"
+          >
+            <ShoppingBag className="h-6 w-6" />
+            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#C4622D] px-1 text-[11px] font-bold text-white">
+              {count}
+            </span>
+          </button>
         </div>
       ) : null}
 
@@ -276,149 +322,292 @@ export function PlateChrome({
           onClose={onCloseCart}
           busy={sending}
           footer={
-            <div>
-              {quoteError ? <p className="mb-3 text-sm text-red-600">{quoteError}</p> : null}
-              <button
-                type="button"
-                disabled={sending || lines.length === 0 || !identityReady || (hasSavedIdentity && editingIdentity)}
-                onClick={onSend}
-                className="h-12 w-full cursor-pointer rounded-2xl border-none bg-[#C4622D] text-sm font-semibold text-white disabled:opacity-50"
-              >
-                {sending ? "Sending…" : t?.("sendKitchen") || "Send to the kitchen"}
-              </button>
+            <div className="space-y-3">
+              {quoteError ? <p className="text-sm text-red-600">{quoteError}</p> : null}
+              <div className="flex items-end justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#8A7366]">
+                    {count} {count === 1 ? "item" : "items"}
+                  </p>
+                  <p className="mt-0.5 text-2xl font-bold tracking-tight text-[#1C1410]">
+                    {money(currencySymbol, total)}
+                  </p>
+                  {discount > 0 ? (
+                    <p className="mt-0.5 text-xs font-semibold text-emerald-700">
+                      Saved {money(currencySymbol, discount)}
+                    </p>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  disabled={sending || lines.length === 0 || !identityReady || (hasSavedIdentity && editingIdentity)}
+                  onClick={onSend}
+                  className="h-12 min-w-[9.5rem] flex-1 cursor-pointer rounded-full border-none bg-[#1C1410] px-5 text-sm font-semibold text-white transition enabled:hover:bg-[#2A211C] disabled:opacity-45"
+                >
+                  {sending ? "Sending…" : t?.("sendKitchen") || "Send to kitchen"}
+                </button>
+              </div>
             </div>
           }
         >
-          <div className="space-y-3">
-            {displayLines.map((line) => {
-              const source = matchPlateLine(line);
-              const listUnit = line.listUnitPrice ?? line.unitPrice;
-              const listLine = Math.round(listUnit * line.quantity * 100) / 100;
-              const saved = Math.max(0, Math.round((listLine - line.lineTotal) * 100) / 100);
-              const fullyFree = line.lineTotal === 0 && listLine > 0;
-              const freeUnits =
-                listUnit > 0 && saved > 0
-                  ? Math.max(0, Math.round(saved / listUnit))
-                  : 0;
-              const offerBadge = fullyFree
-                ? "Free"
-                : freeUnits > 0
-                  ? freeUnits === 1
-                    ? "1 free"
-                    : `${freeUnits} free`
-                  : saved > 0
-                    ? "Offer"
-                    : null;
-              return (
-                <div key={`${line.menuItemId}:${line.variantLabel || ""}`} className="flex items-center gap-3 rounded-2xl bg-white p-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-[#1C1410]">{line.name}</p>
-                      {offerBadge ? (
-                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
-                          {offerBadge}
-                        </span>
-                      ) : null}
-                    </div>
-                    {line.variantLabel ? <p className="text-xs text-[#6B5A50]">{line.variantLabel}</p> : null}
-                    <p className="mt-1 flex flex-wrap items-center gap-2 text-sm font-semibold text-[#1C1410]">
-                      {saved > 0 ? (
-                        <span className="text-xs font-medium text-[#8A7366] line-through">{money(currencySymbol, listLine)}</span>
-                      ) : null}
-                      <span>{fullyFree ? "FREE" : money(currencySymbol, line.lineTotal)}</span>
+          {plateEmpty ? (
+            <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F3EEE7] text-[#8A7366]">
+                <ShoppingBag className="h-6 w-6" />
+              </span>
+              <p className="mt-4 text-base font-semibold text-[#1C1410]">
+                {t?.("emptyPlate") || "Your plate is empty"}
+              </p>
+              <p className="mt-1 text-sm text-[#8A7366]">Add something from the menu to get started.</p>
+            </div>
+          ) : (
+            <>
+              <ul className="divide-y divide-[#EDE6DE]">
+                {displayLines.map((line) => {
+                  const source = matchPlateLine(line);
+                  const listUnit = line.listUnitPrice ?? line.unitPrice;
+                  const listLine = Math.round(listUnit * line.quantity * 100) / 100;
+                  const saved = Math.max(0, Math.round((listLine - line.lineTotal) * 100) / 100);
+                  const fullyFree = line.lineTotal === 0 && listLine > 0;
+                  const freeUnits =
+                    listUnit > 0 && saved > 0 ? Math.max(0, Math.round(saved / listUnit)) : 0;
+                  const offerBadge = fullyFree
+                    ? "Free"
+                    : freeUnits > 0
+                      ? freeUnits === 1
+                        ? "1 free"
+                        : `${freeUnits} free`
+                      : saved > 0
+                        ? "Offer"
+                        : null;
+                  const unitOnOffer = listUnit > line.unitPrice + 0.001;
+                  return (
+                    <li
+                      key={`${line.menuItemId}:${line.variantLabel || ""}`}
+                      className="flex items-start gap-3 py-3.5 first:pt-0 last:pb-0"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-[15px] font-semibold leading-snug text-[#1C1410]">{line.name}</p>
+                          {offerBadge ? (
+                            <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                              {offerBadge}
+                            </span>
+                          ) : null}
+                        </div>
+                        {line.variantLabel ? (
+                          <p className="mt-0.5 text-xs text-[#8A7366]">{line.variantLabel}</p>
+                        ) : null}
+                        <p className="mt-1.5 text-[13px] leading-snug">
+                          {unitOnOffer ? (
+                            <>
+                              <span className="mr-1.5 tabular-nums text-[#A08B7C] line-through">
+                                {money(currencySymbol, listUnit)}
+                              </span>
+                              <span className="tabular-nums font-medium text-[#1C1410]">
+                                {money(currencySymbol, line.unitPrice)}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="tabular-nums font-medium text-[#1C1410]">
+                              {money(currencySymbol, line.unitPrice)}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex w-[6.75rem] shrink-0 flex-col items-stretch gap-1.5">
+                        {source ? (
+                          <div className="flex h-9 w-full items-center justify-between rounded-full border border-[#E7DDD2] bg-white px-0.5">
+                            <button
+                              type="button"
+                              onClick={() => onQuantity(source, source.quantity - 1)}
+                              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-[#1C1410]"
+                              aria-label="Remove one"
+                            >
+                              <Minus className="h-3.5 w-3.5" />
+                            </button>
+                            <span className="min-w-4 text-center text-sm font-bold tabular-nums text-[#1C1410]">
+                              {source.quantity}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => onQuantity(source, source.quantity + 1)}
+                              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-[#1C1410]"
+                              aria-label="Add one"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ) : null}
+                        <p className="text-right text-sm font-semibold tabular-nums leading-snug text-[#1C1410]">
+                          {saved > 0 ? (
+                            <span className="mr-1 block text-[11px] font-medium text-[#A08B7C] line-through">
+                              {money(currencySymbol, listLine)}
+                            </span>
+                          ) : null}
+                          <span>{fullyFree ? "FREE" : money(currencySymbol, line.lineTotal)}</span>
+                        </p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <section className="mt-5">
+                <div className="overflow-hidden rounded-2xl border border-[#EDE6DE] bg-[#FAF7F3]">
+                  <div className="flex items-center justify-between gap-3 border-b border-[#EDE6DE] px-4 py-2.5">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A7366]">
+                      Price breakdown
                     </p>
+                    {discount > 0 ? (
+                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                        Saved {money(currencySymbol, discount)}
+                      </span>
+                    ) : null}
                   </div>
-                  {source ? (
-                    <div className="flex items-center rounded-full bg-[#F6F1EA] p-1">
-                      <button type="button" onClick={() => onQuantity(source, source.quantity - 1)} className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-white text-lg text-[#1C1410]" aria-label="Remove one">−</button>
-                      <span className="w-7 text-center text-sm font-semibold">{source.quantity}</span>
-                      <button type="button" onClick={() => onQuantity(source, source.quantity + 1)} className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-white text-lg text-[#1C1410]" aria-label="Add one">+</button>
+
+                  <div className="space-y-2.5 px-4 py-3.5 text-sm">
+                    <div className="flex items-center justify-between gap-3 text-[#6B5A50]">
+                      <span>Item total</span>
+                      <span className="tabular-nums font-medium text-[#1C1410]">
+                        {money(currencySymbol, subtotal + discount)}
+                      </span>
                     </div>
+
+                    {offersApplied.length
+                      ? offersApplied.map((o) => (
+                          <div
+                            key={o.offerId}
+                            className="flex items-start justify-between gap-3 text-emerald-700"
+                          >
+                            <span className="min-w-0 leading-snug">
+                              <span className="block text-[11px] font-semibold uppercase tracking-wide text-emerald-600/80">
+                                Offer
+                              </span>
+                              <span className="block truncate text-[13px]">{o.title}</span>
+                            </span>
+                            <span className="shrink-0 tabular-nums font-medium">
+                              −{money(currencySymbol, o.amount)}
+                            </span>
+                          </div>
+                        ))
+                      : discount > 0 ? (
+                          <div className="flex items-center justify-between gap-3 text-emerald-700">
+                            <span>Discount</span>
+                            <span className="tabular-nums font-medium">
+                              −{money(currencySymbol, discount)}
+                            </span>
+                          </div>
+                        ) : null}
+
+                    <div className="flex items-center justify-between gap-3 text-[#6B5A50]">
+                      <span>
+                        {quote?.taxName || "Tax"}
+                        {quote ? ` · ${quote.taxRate}%` : ""}
+                      </span>
+                      <span className="tabular-nums font-medium text-[#1C1410]">
+                        {money(currencySymbol, quote?.tax ?? 0)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 border-t border-[#EDE6DE] bg-white px-4 py-3.5">
+                    <span className="text-[15px] font-bold text-[#1C1410]">To pay</span>
+                    <span className="text-lg font-bold tabular-nums tracking-tight text-[#1C1410]">
+                      {money(currencySymbol, total)}
+                    </span>
+                  </div>
+                </div>
+              </section>
+
+              <section className="mt-5 border-t border-[#EDE6DE] pt-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A7366]">
+                    Your details
+                  </p>
+                  {hasSavedIdentity && !showIdentityFields && !identityLocked ? (
+                    <button
+                      type="button"
+                      onClick={onEditIdentity}
+                      className="inline-flex cursor-pointer items-center gap-1 border-none bg-transparent text-xs font-semibold text-[#C4622D]"
+                      aria-label="Edit name and mobile"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </button>
                   ) : null}
                 </div>
-              );
-            })}
-            {lines.length === 0 ? <p className="rounded-2xl bg-white px-4 py-8 text-center text-sm text-[#6B5A50]">{t?.("emptyPlate") || "Your plate is empty"}.</p> : null}
-          </div>
 
-          <div className="mt-4 space-y-1 rounded-2xl bg-white px-4 py-3 text-sm text-[#6B5A50]">
-            <div className="flex justify-between"><span>Subtotal</span><span>{money(currencySymbol, subtotal + discount)}</span></div>
-            {discount > 0 ? (
-              <div className="flex justify-between text-emerald-700">
-                <span>Offers saved</span>
-                <span>−{money(currencySymbol, discount)}</span>
-              </div>
-            ) : null}
-            {quote?.offersApplied?.length ? (
-              <div className="space-y-0.5 pt-1 text-[11px] text-[#8A7366]">
-                {quote.offersApplied.map((o) => (
-                  <div key={o.offerId} className="flex justify-between gap-2">
-                    <span className="truncate">{o.title}</span>
-                    <span>−{money(currencySymbol, o.amount)}</span>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-            <div className="flex justify-between"><span>{quote?.taxName || "Tax"}{quote ? ` ${quote.taxRate}%` : ""}</span><span>{money(currencySymbol, quote?.tax ?? 0)}</span></div>
-            <div className="flex justify-between text-base font-bold text-[#1C1410]"><span>Total</span><span>{money(currencySymbol, total)}</span></div>
-          </div>
-
-          <div className="mt-4 rounded-2xl bg-white p-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#6B5A50]">For the kitchen</p>
-              {hasSavedIdentity && !showIdentityFields && !identityLocked ? (
-                <button type="button" onClick={onEditIdentity} className="inline-flex cursor-pointer items-center gap-1 border-none bg-transparent text-xs font-semibold text-[#C4622D]" aria-label="Edit name and mobile">
-                  <Pencil className="h-3.5 w-3.5" />
-                  Edit
-                </button>
-              ) : null}
-            </div>
-            {!showIdentityFields ? (
-              <div className="mt-2">
-                <p className="text-base font-semibold text-[#1C1410]">{customer.name}</p>
-                <p className="text-sm text-[#6B5A50]">{prettyPhone(customer.phone)}</p>
-                <p className="mt-2 text-xs text-[#6B5A50]">
-                  {identityLocked ? "This stays as it is while a plate is with the kitchen." : "Saved on this phone. We will not ask again."}
-                </p>
-              </div>
-            ) : (
-              <div className="mt-3 space-y-3">
-                <label className="block text-xs font-semibold text-[#6B5A50]">Name
-                  <input value={customer.name} onChange={(event) => onCustomer({ ...customer, name: event.target.value })} className="mt-1 w-full rounded-xl border border-[#E7DDD2] bg-[#F6F1EA] px-3 py-2 text-sm text-[#1C1410] outline-none" />
-                </label>
-                <label className="block text-xs font-semibold text-[#6B5A50]">Mobile number
-                  <input inputMode="tel" value={customer.phone} onChange={(event) => onCustomer({ ...customer, phone: event.target.value })} className="mt-1 w-full rounded-xl border border-[#E7DDD2] bg-[#F6F1EA] px-3 py-2 text-sm text-[#1C1410] outline-none" />
-                </label>
-                {hasSavedIdentity ? (
-                  <div className="flex gap-2">
-                    <button type="button" onClick={onCancelIdentity} className="h-9 flex-1 cursor-pointer rounded-xl border-none bg-[#F6F1EA] text-sm font-semibold text-[#1C1410]">Cancel</button>
-                    <button type="button" onClick={onSaveIdentity} className="inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-1 rounded-xl border-none bg-[#1C1410] text-sm font-semibold text-white">
-                      <Check className="h-4 w-4" />
-                      Save
-                    </button>
+                {!showIdentityFields ? (
+                  <div className="mt-3">
+                    <p className="text-[15px] font-semibold text-[#1C1410]">{customer.name}</p>
+                    <p className="mt-0.5 text-sm text-[#6B5A50]">{prettyPhone(customer.phone)}</p>
+                    <p className="mt-2 text-xs leading-relaxed text-[#8A7366]">
+                      {identityLocked
+                        ? "Locked while a plate is with the kitchen."
+                        : "Saved on this phone — we won’t ask again."}
+                    </p>
                   </div>
                 ) : (
-                  <p className="text-xs text-[#6B5A50]">Once. After this, the kitchen already knows who the plate is for.</p>
+                  <div className="mt-3 space-y-3">
+                    <label className="block text-xs font-medium text-[#6B5A50]">
+                      Name
+                      <input
+                        value={customer.name}
+                        onChange={(event) => onCustomer({ ...customer, name: event.target.value })}
+                        className="mt-1.5 w-full rounded-xl border border-[#E7DDD2] bg-[#FAF7F3] px-3.5 py-2.5 text-sm text-[#1C1410] outline-none transition focus:border-[#C4622D]/50 focus:ring-2 focus:ring-[#C4622D]/15"
+                      />
+                    </label>
+                    <label className="block text-xs font-medium text-[#6B5A50]">
+                      Mobile number
+                      <input
+                        inputMode="tel"
+                        value={customer.phone}
+                        onChange={(event) => onCustomer({ ...customer, phone: event.target.value })}
+                        className="mt-1.5 w-full rounded-xl border border-[#E7DDD2] bg-[#FAF7F3] px-3.5 py-2.5 text-sm text-[#1C1410] outline-none transition focus:border-[#C4622D]/50 focus:ring-2 focus:ring-[#C4622D]/15"
+                      />
+                    </label>
+                    {hasSavedIdentity ? (
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={onCancelIdentity}
+                          className="h-10 flex-1 cursor-pointer rounded-full border border-[#E7DDD2] bg-white text-sm font-semibold text-[#1C1410]"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={onSaveIdentity}
+                          className="inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-1 rounded-full border-none bg-[#1C1410] text-sm font-semibold text-white"
+                        >
+                          <Check className="h-4 w-4" />
+                          Save
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-xs leading-relaxed text-[#8A7366]">
+                        Once — then the kitchen knows who this plate is for.
+                      </p>
+                    )}
+                  </div>
                 )}
-              </div>
-            )}
-          </div>
 
-          <div className="mt-4 rounded-2xl bg-white p-4">
-            <label className="block text-xs font-semibold uppercase tracking-wide text-[#6B5A50]">
-              Note for the kitchen
-              <textarea
-                value={note}
-                onChange={(event) => onNote(event.target.value.slice(0, 160))}
-                rows={3}
-                maxLength={160}
-                placeholder={t?.("notePlaceholder") || "Less spice, no onion, pack separately…"}
-                className="mt-2 w-full resize-none rounded-xl border border-[#E7DDD2] bg-[#F6F1EA] px-3 py-2 text-sm font-normal normal-case tracking-normal text-[#1C1410] outline-none placeholder:text-[#6B5A50]/70"
-              />
-            </label>
-            <p className="mt-1 text-right text-[11px] text-[#6B5A50]">{note.trim().length}/160</p>
-          </div>
-
+                <label className="mt-5 block text-xs font-medium text-[#6B5A50]">
+                  Note for the kitchen
+                  <textarea
+                    value={note}
+                    onChange={(event) => onNote(event.target.value.slice(0, 160))}
+                    rows={2}
+                    maxLength={160}
+                    placeholder={t?.("notePlaceholder") || "Less spice, no onion, pack separately…"}
+                    className="mt-1.5 w-full resize-none rounded-xl border border-[#E7DDD2] bg-[#FAF7F3] px-3.5 py-2.5 text-sm font-normal normal-case tracking-normal text-[#1C1410] outline-none transition placeholder:text-[#A08B7C] focus:border-[#C4622D]/50 focus:ring-2 focus:ring-[#C4622D]/15"
+                  />
+                </label>
+                <p className="mt-1 text-right text-[11px] text-[#A08B7C]">{note.trim().length}/160</p>
+              </section>
+            </>
+          )}
         </Drawer>
       ) : null}
 
@@ -431,63 +620,133 @@ export function PlateChrome({
               const servedAt = eventTime(order, "SERVED");
               const payment = order.status === "SERVED" ? (order.paidAt ? "Paid" : "Unpaid") : null;
               const stepIndex = steps.findIndex((step) => step.id === order.status);
+              const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
               return (
-                <article key={order.publicId} className="rounded-3xl bg-white p-4 shadow-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-mono text-sm font-semibold tracking-wide text-[#C4622D]">
-                        {orderCallCode(order.publicId, order.tableNumber)}
-                      </p>
-                      <p className="mt-1 text-base font-semibold text-[#1C1410]">{statusCopy(order.status, order.rejectReason)}</p>
-                    </div>
-                    {payment ? (
-                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${order.paidAt ? "bg-emerald-50 text-emerald-700" : "bg-[#F6F1EA] text-[#C4622D]"}`}>{payment}</span>
-                    ) : !terminal && wait ? (
-                      <div className="shrink-0 text-right">
-                        <p className="text-sm font-bold text-[#1C1410]">{wait.short}</p>
-                        <p className="text-[11px] text-[#6B5A50]">around {wait.clock}</p>
+                <article
+                  key={order.publicId}
+                  className="overflow-hidden rounded-2xl border border-[#EDE6DE] bg-white"
+                >
+                  <div className="space-y-3 px-3.5 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <p className="font-mono text-[11px] font-semibold tracking-wide text-[#C4622D]">
+                            {orderCallCode(order.publicId, order.tableNumber)}
+                          </p>
+                          <span className="text-[11px] text-[#A08B7C]">·</span>
+                          <p className="text-[11px] text-[#8A7366]">
+                            {whenLabel(order.createdAt)}
+                            {servedAt ? ` · Served ${whenLabel(servedAt)}` : ""}
+                            {order.paidAt ? ` · Paid ${whenLabel(order.paidAt)}` : ""}
+                          </p>
+                        </div>
+                        <p className="mt-1 text-[14px] font-bold leading-snug text-[#1C1410]">
+                          {statusCopy(order.status, order.rejectReason)}
+                        </p>
                       </div>
-                    ) : null}
+                      {payment ? (
+                        <span
+                          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                            order.paidAt ? "bg-emerald-50 text-emerald-700" : "bg-[#F6F1EA] text-[#C4622D]"
+                          }`}
+                        >
+                          {payment}
+                        </span>
+                      ) : !terminal && wait ? (
+                        <div className="shrink-0 text-right">
+                          <p className="text-[13px] font-bold text-[#1C1410]">{wait.short}</p>
+                          <p className="text-[10px] text-[#8A7366]">{wait.clock}</p>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {order.status === "REJECTED" ? (
+                      <p className="text-[12px] leading-snug text-[#6B5A50]">
+                        {waitingLine(order.status, order.publicId, dishName(order), order.rejectReason)}
+                      </p>
+                    ) : (
+                      <ol className="flex items-center gap-1">
+                        {steps.map((step, index) => {
+                          const done = stepIndex >= index && stepIndex >= 0;
+                          const current = step.id === order.status;
+                          return (
+                            <li key={step.id} className="min-w-0 flex-1">
+                              <div className={`h-0.5 rounded-full ${done ? "bg-[#C4622D]" : "bg-[#E7DDD2]"}`} />
+                              <p
+                                className={`mt-1 truncate text-[9px] font-semibold ${
+                                  current ? "text-[#C4622D]" : "text-[#A08B7C]"
+                                }`}
+                              >
+                                {step.label}
+                              </p>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    )}
                   </div>
-                  <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#6B5A50]">
-                    <span className="whitespace-nowrap">Ordered {whenLabel(order.createdAt)}</span>
-                    {servedAt ? <span className="whitespace-nowrap">Served {whenLabel(servedAt)}</span> : null}
-                    {order.paidAt ? <span className="whitespace-nowrap">Paid {whenLabel(order.paidAt)}</span> : null}
-                  </p>
-                  <p className="mt-3 text-sm leading-relaxed text-[#2A211C]">{waitingLine(order.status, order.publicId, dishName(order), order.rejectReason)}</p>
-                  {order.status === "REJECTED" ? null : (
-                    <ol className="mt-4 flex items-center gap-1">
-                      {steps.map((step, index) => {
-                        const done = stepIndex >= index && stepIndex >= 0;
-                        const current = step.id === order.status;
-                        return (
-                          <li key={step.id} className="min-w-0 flex-1">
-                            <div className={`h-1 rounded-full ${done ? "bg-[#C4622D]" : "bg-[#E7DDD2]"}`} />
-                            <p className={`mt-1 truncate text-[10px] font-semibold ${current ? "text-[#C4622D]" : "text-[#6B5A50]"}`}>{step.label}</p>
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  )}
-                  <ul className="mt-4 space-y-1 text-sm text-[#2A211C]">
-                    {order.items.map((item, index) => (
-                      <li key={`${order.publicId}-${index}`} className="flex justify-between gap-3">
-                        <span className="min-w-0">{item.quantity} × {item.name}{item.variantLabel ? ` · ${item.variantLabel}` : ""}</span>
-                        <span className="shrink-0">{money(currencySymbol, item.lineTotal)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mt-3 text-right text-sm font-bold text-[#1C1410]">{money(currencySymbol, order.total)}</p>
+
+                  <div className="border-t border-[#EDE6DE] px-3.5 py-2.5">
+                    <div className="mb-1.5 flex items-center justify-between gap-2">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8A7366]">
+                        {itemCount} {itemCount === 1 ? "item" : "items"}
+                      </p>
+                    </div>
+                    <ul className="space-y-0">
+                      {order.items.map((item, index) => (
+                        <li
+                          key={`${order.publicId}-${index}`}
+                          className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2.5 gap-y-0.5 py-1.5"
+                        >
+                          <span className="pt-px text-[12px] font-bold tabular-nums text-[#8A7366]">
+                            {item.quantity}×
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-[13px] font-medium leading-snug text-[#1C1410]">
+                              {item.name}
+                            </p>
+                            <p className="mt-0.5 truncate text-[11px] tabular-nums text-[#8A7366]">
+                              {item.variantLabel ? `${item.variantLabel} · ` : null}
+                              {money(currencySymbol, item.unitPrice)} each
+                            </p>
+                          </div>
+                          <p className="shrink-0 pt-px text-right text-[13px] font-semibold tabular-nums text-[#1C1410]">
+                            {money(currencySymbol, item.lineTotal)}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className="mt-2 space-y-1 border-t border-dashed border-[#EDE6DE] pt-2 text-[12px] text-[#6B5A50]">
+                      <div className="flex justify-between gap-3">
+                        <span>Subtotal</span>
+                        <span className="tabular-nums">{money(currencySymbol, order.subtotal)}</span>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <span>{order.taxName || "Tax"}</span>
+                        <span className="tabular-nums">{money(currencySymbol, order.tax)}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 pt-0.5">
+                        <span className="text-[13px] font-bold text-[#1C1410]">Total</span>
+                        <span className="text-[14px] font-bold tabular-nums text-[#1C1410]">
+                          {money(currencySymbol, order.total)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
                   {order.paidAt && order.digitalBillEnabled ? (
-                    <button
-                      type="button"
-                      disabled={billBusyId === order.publicId}
-                      onClick={() => void downloadGuestBill(order)}
-                      className="mt-3 inline-flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border-none bg-[#1C1410] text-sm font-semibold text-white disabled:opacity-50"
-                    >
-                      <Download className="h-4 w-4" />
-                      {billBusyId === order.publicId ? "Preparing…" : "Download bill"}
-                    </button>
+                    <div className="border-t border-[#EDE6DE] px-3.5 py-2.5">
+                      <button
+                        type="button"
+                        disabled={billBusyId === order.publicId}
+                        onClick={() => void downloadGuestBill(order)}
+                        className="inline-flex h-9 w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border-none bg-[#1C1410] text-[13px] font-semibold text-white disabled:opacity-50"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        {billBusyId === order.publicId ? "Preparing…" : "Download bill"}
+                      </button>
+                    </div>
                   ) : null}
                 </article>
               );
@@ -515,25 +774,38 @@ function Drawer({
   children: ReactNode;
 }) {
   return (
-    <div className="fixed inset-0 z-[80] flex justify-end bg-black/45" onClick={() => !busy && onClose()}>
+    <div className="fixed inset-0 z-[80] flex justify-end bg-black/50 backdrop-blur-[2px]" onClick={() => !busy && onClose()}>
       <aside
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="flex h-full w-full max-w-md flex-col bg-[#F6F1EA] shadow-2xl"
+        className="flex h-full w-full max-w-md flex-col bg-[#FFFCFA] shadow-[0_0_60px_rgba(28,20,16,0.28)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-[#E7DDD2] px-5 py-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#C4622D]">{subtitle}</p>
-            <h2 className="mt-1 text-xl font-bold text-[#1C1410]">{title}</h2>
+        <div className="flex items-start justify-between gap-3 px-5 pb-3 pt-5">
+          <div className="min-w-0 pr-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A7366]">{subtitle}</p>
+            <h2 className="mt-1 text-[1.35rem] font-bold tracking-tight text-[#1C1410]">{title}</h2>
           </div>
-          <button type="button" onClick={onClose} disabled={busy} aria-label="Close" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-none bg-white text-[#1C1410] disabled:opacity-40">
-            <X className="h-5 w-5" />
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            aria-label="Close"
+            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#E7DDD2] bg-white text-[#1C1410] transition hover:bg-[#F6F1EA] disabled:opacity-40"
+          >
+            <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
-        {footer ? <div className="border-t border-[#E7DDD2] bg-[#F6F1EA] px-5 py-4">{footer}</div> : null}
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-1">{children}</div>
+        {footer ? (
+          <div
+            className="border-t border-[#EDE6DE] bg-white/95 px-5 pt-4 backdrop-blur"
+            style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+          >
+            {footer}
+          </div>
+        ) : null}
       </aside>
     </div>
   );
