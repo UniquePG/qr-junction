@@ -54,7 +54,7 @@ function placeFromRestaurant(restaurant: {
 const items: SuiteNavItem[] = [
   { name: "Home", href: "/dashboard/restaurant", icon: LayoutDashboard, mobile: true },
   { name: "Menus", href: "/dashboard/restaurant/menu", icon: UtensilsCrossed, mobile: true },
-  { name: "Offers", href: "/dashboard/restaurant/offers", icon: Percent, mobile: true },
+  { name: "Offers", href: "/dashboard/restaurant/offers", icon: Percent },
   { name: "Tables", href: "/dashboard/restaurant/tables", icon: QrCode, mobile: true },
   { name: "Orders", href: "/dashboard/restaurant/orders", icon: ClipboardList, mobile: true, center: true },
   { name: "Profile", href: "/dashboard/restaurant/profile", icon: Store },
@@ -67,10 +67,10 @@ const items: SuiteNavItem[] = [
 export default function RestaurantSuiteLayout({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const profileQuery = useQuery({
-    queryKey: restaurantKeys.profile(),
+    queryKey: [...restaurantKeys.profile(), "shell"] as const,
     staleTime: 120_000,
     queryFn: async () => {
-      const res = await restaurantService.getProfile();
+      const res = await restaurantService.getProfile({ fields: "shell" });
       const json = (res.data?.restaurant ? res.data : await res.json().catch(() => null)) as {
         restaurant?: Parameters<typeof placeFromRestaurant>[0];
       } | null;

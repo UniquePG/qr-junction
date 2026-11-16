@@ -11,6 +11,7 @@ export type InvalidateOpts = {
   entitlements?: boolean;
   ordersActive?: boolean;
   overview?: boolean;
+  stats?: boolean;
   userId?: number;
 };
 
@@ -21,14 +22,23 @@ export async function invalidateRestaurant(restaurantId: number, opts: Invalidat
   if (opts.tables) keys.push(restaurantCacheKey(restaurantId, "tables"));
   if (opts.menusIndex) keys.push(restaurantCacheKey(restaurantId, "menus:index"));
   if (opts.ordersActive) keys.push(restaurantCacheKey(restaurantId, "orders:active"));
-  if (opts.overview) keys.push(restaurantCacheKey(restaurantId, "overview"));
   if (typeof opts.menu === "number") keys.push(menuTreeCacheKey(restaurantId, opts.menu));
   if (opts.userId && opts.entitlements) keys.push(userEntitlementsKey(opts.userId));
 
   if (keys.length) await cacheDel(...keys);
-  if (opts.menu === "all") {
-    await cacheDelPattern(restaurantCacheKey(restaurantId, "menu:*"));
+
+  const patterns: string[] = [];
+  if (opts.overview) {
+    patterns.push(restaurantCacheKey(restaurantId, "overview"));
+    patterns.push(restaurantCacheKey(restaurantId, "overview:*"));
   }
+  if (opts.stats || opts.overview) {
+    patterns.push(restaurantCacheKey(restaurantId, "stats:*"));
+  }
+  if (opts.menu === "all") {
+    patterns.push(restaurantCacheKey(restaurantId, "menu:*"));
+  }
+  await Promise.all(patterns.map((pattern) => cacheDelPattern(pattern)));
 }
 
 export async function invalidateActiveOrdersCache(restaurantId: number) {

@@ -3,8 +3,8 @@ import { dateRangeParams } from "@/lib/api/services/dashboard";
 import { endpoints } from "@/lib/api/endpoints";
 
 export const restaurantService = {
-  getProfile() {
-    return apiRequest({ method: "GET", url: endpoints.restaurant.profile });
+  getProfile(params?: { fields?: "shell" }) {
+    return apiRequest({ method: "GET", url: endpoints.restaurant.profile, params });
   },
 
   saveProfile(body: unknown) {

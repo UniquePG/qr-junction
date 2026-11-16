@@ -1,11 +1,26 @@
 "use client";
 
 import { useAuth } from "@/components/AuthContext";
-import { AnalyticsBoard, type RestaurantAnalytics } from "@/components/restaurant/AnalyticsBoard";
+import type { RestaurantAnalytics } from "@/components/restaurant/AnalyticsBoard";
 import { money } from "@/components/restaurant/FloorCharts";
 import { restaurantService } from "@/lib/api";
+import { restaurantKeys } from "@/lib/restaurant/queryKeys";
+import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { useMemo, useState } from "react";
+
+const AnalyticsBoard = dynamic(
+  () => import("@/components/restaurant/AnalyticsBoard").then((mod) => mod.AnalyticsBoard),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-[12rem] items-center justify-center rounded-2xl border border-[#E7DDD2] bg-white">
+        <Loader2 className="h-6 w-6 animate-spin text-[#C4622D]" />
+      </div>
+    ),
+  },
+);
 
 type RangeKey = "today" | "7" | "30" | "all" | "custom";
 
@@ -31,62 +46,59 @@ function minutes(value: number) {
   return value >= 10 ? `${Math.round(value)} min` : `${value.toFixed(1)} min`;
 }
 
+function rangeStamp(start: Date | null, end: Date | null) {
+  return `${start?.toISOString() || "all"}:${end?.toISOString() || "all"}`;
+}
+
+async function loadStats(start: Date | null, end: Date | null) {
+  const res = await restaurantService.stats(start, end);
+  const json = (await res.json().catch(() => null)) as
+    | RestaurantAnalytics
+    | { message?: string; error?: string }
+    | null;
+  if (!res.ok || !(json as RestaurantAnalytics | null)?.restaurant) {
+    throw new Error(
+      (json as { message?: string; error?: string } | null)?.message ||
+        (json as { error?: string } | null)?.error ||
+        "Could not load analytics.",
+    );
+  }
+  return json as RestaurantAnalytics;
+}
+
 export default function RestaurantAnalyticsPage() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [data, setData] = useState<RestaurantAnalytics | null>(null);
-  const [error, setError] = useState("");
   const [range, setRange] = useState<RangeKey>("7");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const initial = useMemo(() => rangeDates("7"), []);
+  const [bounds, setBounds] = useState<{ start: Date | null; end: Date | null }>({
+    start: initial[0],
+    end: initial[1],
+  });
 
-  useEffect(() => {
-    if (!user) return;
-    const [start, end] = rangeDates("7");
-    let cancelled = false;
-    async function load() {
-      try {
-        const res = await restaurantService.stats(start, end);
-        const json = await res.json().catch(() => null);
-        if (cancelled) return;
-        if (!res.ok || !json?.restaurant) throw new Error(json?.message || json?.error || "Could not load analytics.");
-        setData(json as RestaurantAnalytics);
-      } catch (loadError) {
-        if (!cancelled) setError(loadError instanceof Error ? loadError.message : "Could not load analytics.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
+  const statsQuery = useQuery({
+    queryKey: restaurantKeys.stats(rangeStamp(bounds.start, bounds.end), range),
+    enabled: Boolean(user),
+    staleTime: 60_000,
+    queryFn: () => loadStats(bounds.start, bounds.end),
+  });
 
-  const apply = async (key: RangeKey, start: Date | null, end: Date | null) => {
+  const apply = (key: RangeKey, start: Date | null, end: Date | null) => {
     setRange(key);
-    setRefreshing(true);
-    setError("");
-    try {
-      const res = await restaurantService.stats(start, end);
-      const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.restaurant) throw new Error(json?.message || json?.error || "Could not load analytics.");
-      setData(json as RestaurantAnalytics);
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Could not load analytics.");
-    } finally {
-      setRefreshing(false);
-    }
+    setBounds({ start, end });
   };
 
-  if (loading) {
+  if (!user || statsQuery.isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#C4622D]" />
       </div>
     );
   }
+
+  const error = statsQuery.error instanceof Error ? statsQuery.error.message : "";
+  const data = statsQuery.data;
 
   if (error && !data) {
     return (
@@ -128,7 +140,7 @@ export default function RestaurantAnalyticsPage() {
   ];
 
   return (
-    <div className={`mx-auto w-full max-w-6xl space-y-4 ${refreshing ? "opacity-70" : ""}`}>
+    <div className={`mx-auto w-full max-w-6xl space-y-4 ${statsQuery.isFetching ? "opacity-70" : ""}`}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.16em] text-[#8A7568]">Analytics</p>
@@ -153,7 +165,7 @@ export default function RestaurantAnalyticsPage() {
                 type="button"
                 onClick={() => {
                   const [start, end] = rangeDates(item.key);
-                  void apply(item.key, start, end);
+                  apply(item.key, start, end);
                 }}
                 className={`h-9 rounded-full px-3 text-xs font-semibold ${range === item.key ? "bg-[#1C1410] text-white" : "border border-[#E7DDD2] bg-white text-[#2A211C]"}`}
               >
@@ -179,7 +191,7 @@ export default function RestaurantAnalyticsPage() {
                 const end = new Date(customEnd);
                 end.setHours(23, 59, 59, 999);
                 if (start > end) return;
-                void apply("custom", start, end);
+                apply("custom", start, end);
               }}
             >
               <input type="date" aria-label="Start date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="h-10 min-w-0 rounded-lg border border-[#E7DDD2] bg-white px-2 text-sm" required />

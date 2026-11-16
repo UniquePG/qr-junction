@@ -161,7 +161,9 @@ export function PlateProvider({
             return data.order as LiveOrder;
           }),
         ).then((rows) => {
-          setLiveOrders(rows.filter((row): row is LiveOrder => Boolean(row)));
+          const next = rows.filter((row): row is LiveOrder => Boolean(row));
+          next.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setLiveOrders(next);
         });
       }
     } catch {

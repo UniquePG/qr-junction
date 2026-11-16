@@ -248,6 +248,7 @@ model Scan {
 
   @@index([qrCodeId])
   @@index([scannedAt])
+  @@index([qrCodeId, scannedAt])
   @@index([visitorId])
   @@map("scans")
 }
@@ -604,6 +605,7 @@ model MenuOrder {
   @@unique([restaurantId, idempotencyKey])
   @@index([restaurantId, status, createdAt])
   @@index([restaurantId, status, paidAt])
+  @@index([restaurantId, createdAt])
   @@index([customerId, restaurantId])
   @@map("menu_orders")
 }
@@ -622,6 +624,7 @@ model MenuOrderItem {
   order        MenuOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
+  @@index([menuItemId])
   @@map("menu_order_items")
 }
 
@@ -697,6 +700,7 @@ model MenuOrderEvent {
   order     MenuOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
+  @@index([orderId, status])
   @@map("menu_order_events")
 }
 

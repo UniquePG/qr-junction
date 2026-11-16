@@ -3,7 +3,9 @@ import { Prisma } from "@prisma/client";
 import { dateFilter, parseAdminRange } from "@/lib/adminQuery";
 import { getDbUserIdFromRequest } from "@/lib/authHelper";
 import { allows } from "@/lib/billing/guard";
+import { overviewRangeCacheKey, TTL } from "@/lib/cache/keys";
 import { prisma } from "@/lib/prisma";
+import { resolveOrderingGate } from "@/lib/restaurant/gates";
 
 const ZONE = "Asia/Kolkata";
 
@@ -129,7 +131,17 @@ export async function GET(request: Request) {
     let start = range.startDate;
     let end = range.endDate;
     let allTime = range.isAllTime;
-    if (!(await allows(userId, "platform.analytics.advanced"))) {
+
+    const [advancedAnalytics, orderingGate] = await Promise.all([
+      allows(userId, "platform.analytics.advanced"),
+      resolveOrderingGate({
+        userId: restaurant.userId,
+        orderingEnabled: restaurant.orderingEnabled,
+        settings: restaurant.settings,
+      }),
+    ]);
+
+    if (!advancedAnalytics) {
       allTime = false;
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
@@ -137,22 +149,22 @@ export async function GET(request: Request) {
       if (!start || start < weekAgo) start = weekAgo;
       if (!end || end < weekAgo) end = new Date();
     }
+
+    const cacheKey = overviewRangeCacheKey(restaurant.id, start, end, allTime);
+    const { cacheGetJson, cacheSetJson } = await import("@/lib/cache/redis");
+    const cached = await cacheGetJson<Record<string, unknown>>(cacheKey);
+    if (cached) return NextResponse.json(cached);
+
     const bucket = bucketFor(allTime, start, end);
     const orderRange = dateFilter(Prisma.raw(`created_at`), start, end);
     const scanRange = dateFilter(Prisma.raw(`s.scanned_at`), start, end);
-    const previous = !allTime && start && end
-      ? {
-          end: new Date(start.getTime() - 1),
-          start: new Date(start.getTime() - (end.getTime() - start.getTime())),
-        }
-      : null;
-
-    const qrIds = (
-      await prisma.qRCode.findMany({
-        where: { restaurantId: restaurant.id },
-        select: { id: true },
-      })
-    ).map((row) => row.id);
+    const previous =
+      !allTime && start && end
+        ? {
+            end: new Date(start.getTime() - 1),
+            start: new Date(start.getTime() - (end.getTime() - start.getTime())),
+          }
+        : null;
 
     const orderSeries = trunc(Prisma.raw(`created_at`), bucket);
     const scanSeries = trunc(Prisma.raw(`s.scanned_at`), bucket);
@@ -175,7 +187,18 @@ export async function GET(request: Request) {
     ] = await Promise.all([
       prisma.menu.count({ where: { restaurantId: restaurant.id } }),
       prisma.restaurantTable.count({ where: { restaurantId: restaurant.id } }),
-      prisma.$queryRaw<{ orders: number; sales: number; customers: number; paid: number; unpaid: number; unpaid_orders: number; rejected_orders: number; rejected_sales: number }[]>`
+      prisma.$queryRaw<
+        {
+          orders: number;
+          sales: number;
+          customers: number;
+          paid: number;
+          unpaid: number;
+          unpaid_orders: number;
+          rejected_orders: number;
+          rejected_sales: number;
+        }[]
+      >`
         SELECT
           COUNT(*) FILTER (WHERE status::text <> 'REJECTED')::int AS orders,
           COALESCE(SUM(total) FILTER (WHERE status::text <> 'REJECTED'), 0)::float AS sales,
@@ -226,31 +249,30 @@ export async function GET(request: Request) {
         GROUP BY 1
         ORDER BY 1
       `,
-      qrIds.length
-        ? prisma.$queryRaw<{ bucket: string; scans: number }[]>`
-            SELECT
-              to_char(${scanSeries}, 'YYYY-MM-DD HH24:00') AS bucket,
-              COUNT(*)::int AS scans
-            FROM scans s
-            WHERE s.qr_code_id IN (${Prisma.join(qrIds)})
-            ${scanRange}
-            GROUP BY 1
-            ORDER BY 1
-          `
-        : Promise.resolve([]),
-      qrIds.length
-        ? prisma.$queryRaw<{ scans: number; guests: number }[]>`
-            SELECT COUNT(*)::int AS scans, COUNT(DISTINCT s.visitor_id)::int AS guests
-            FROM scans s
-            WHERE s.qr_code_id IN (${Prisma.join(qrIds)})
-            ${scanRange}
-          `
-        : Promise.resolve([{ scans: 0, guests: 0 }]),
-      previous && qrIds.length
+      prisma.$queryRaw<{ bucket: string; scans: number }[]>`
+        SELECT
+          to_char(${scanSeries}, 'YYYY-MM-DD HH24:00') AS bucket,
+          COUNT(*)::int AS scans
+        FROM scans s
+        JOIN qr_codes q ON q.id = s.qr_code_id
+        WHERE q.restaurant_id = ${restaurant.id}
+        ${scanRange}
+        GROUP BY 1
+        ORDER BY 1
+      `,
+      prisma.$queryRaw<{ scans: number; guests: number }[]>`
+        SELECT COUNT(*)::int AS scans, COUNT(DISTINCT s.visitor_id)::int AS guests
+        FROM scans s
+        JOIN qr_codes q ON q.id = s.qr_code_id
+        WHERE q.restaurant_id = ${restaurant.id}
+        ${scanRange}
+      `,
+      previous
         ? prisma.$queryRaw<{ scans: number }[]>`
             SELECT COUNT(*)::int AS scans
             FROM scans s
-            WHERE s.qr_code_id IN (${Prisma.join(qrIds)})
+            JOIN qr_codes q ON q.id = s.qr_code_id
+            WHERE q.restaurant_id = ${restaurant.id}
               AND s.scanned_at >= ${previous.start}
               AND s.scanned_at <= ${previous.end}
           `
@@ -271,12 +293,10 @@ export async function GET(request: Request) {
           SUM(i.quantity)::int AS quantity,
           COALESCE(SUM(i.quantity * i.unit_price), 0)::float AS sales
         FROM menu_order_items i
-        WHERE i.order_id IN (
-          SELECT id FROM menu_orders
-          WHERE restaurant_id = ${restaurant.id}
-            AND status::text <> 'REJECTED'
-            ${orderRange}
-        )
+        JOIN menu_orders o ON o.id = i.order_id
+        WHERE o.restaurant_id = ${restaurant.id}
+          AND o.status::text <> 'REJECTED'
+          ${dateFilter(Prisma.raw(`o.created_at`), start, end)}
         GROUP BY i.name
         ORDER BY quantity DESC, sales DESC
         LIMIT 6
@@ -300,12 +320,10 @@ export async function GET(request: Request) {
           COALESCE((
             SELECT SUM(i.quantity)::int
             FROM menu_order_items i
-            WHERE i.order_id IN (
-              SELECT id FROM menu_orders
-              WHERE restaurant_id = ${restaurant.id}
-                AND status::text <> 'REJECTED'
-                ${orderRange}
-            )
+            JOIN menu_orders o ON o.id = i.order_id
+            WHERE o.restaurant_id = ${restaurant.id}
+              AND o.status::text <> 'REJECTED'
+              ${dateFilter(Prisma.raw(`o.created_at`), start, end)}
           ), 0)::int AS items
         FROM (
           SELECT customer_id, COUNT(*)::int AS visits
@@ -343,16 +361,10 @@ export async function GET(request: Request) {
     }
     const sales = num(total?.sales);
     const orders = num(total?.orders);
+    const openNow = open.PLACED + open.ACCEPTED + open.PREPARING + open.READY;
 
-    const { resolveOrderingGate } = await import("@/lib/restaurant/gates");
-    const orderingGate = await resolveOrderingGate({
-      userId: restaurant.userId,
-      orderingEnabled: restaurant.orderingEnabled,
-      settings: restaurant.settings,
-    });
-
-    return NextResponse.json({
-      success: true,
+    const payload = {
+      success: true as const,
       restaurant: {
         name: restaurant.name,
         currency: restaurant.currency,
@@ -379,7 +391,7 @@ export async function GET(request: Request) {
         firstTime: num(guestRows[0]?.first_time),
         returning: num(guestRows[0]?.returning),
         items: num(guestRows[0]?.items),
-        openNow: open.PLACED + open.ACCEPTED + open.PREPARING + open.READY,
+        openNow,
         open,
         previous: previous
           ? {
@@ -401,12 +413,17 @@ export async function GET(request: Request) {
         count: num(statuses.find((row) => row.status === status)?.count),
       })),
       dishes: dishRows.map((row) => ({ name: row.name, quantity: num(row.quantity), sales: num(row.sales) })),
-      places: placeRows.filter((row) => num(row.orders) > 0).map((row) => ({
-        name: row.name,
-        orders: num(row.orders),
-        sales: num(row.sales),
-      })),
-    });
+      places: placeRows
+        .filter((row) => num(row.orders) > 0)
+        .map((row) => ({
+          name: row.name,
+          orders: num(row.orders),
+          sales: num(row.sales),
+        })),
+    };
+
+    await cacheSetJson(cacheKey, payload, TTL.overview);
+    return NextResponse.json(payload);
   } catch (error) {
     console.error("Restaurant overview error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

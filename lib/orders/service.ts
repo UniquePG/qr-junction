@@ -484,6 +484,7 @@ export async function listRestaurantOrders(userId: number) {
       },
       include: listInclude,
       orderBy: { createdAt: "desc" },
+      take: 200,
     }),
     prisma.menuOrder.findMany({
       where: finishedWhere,
@@ -570,13 +571,65 @@ export async function listFinishedOrders(
     });
   }
   const whereFor = (next: PaymentStatus) => ({ AND: [...shared, paymentStatusWhere(next)] });
-  const [unpaid, paid, rejected, all, unpaidSum] = await Promise.all([
-    prisma.menuOrder.count({ where: whereFor("unpaid") }),
-    prisma.menuOrder.count({ where: whereFor("paid") }),
-    prisma.menuOrder.count({ where: whereFor("rejected") }),
-    prisma.menuOrder.count({ where: whereFor("all") }),
-    prisma.menuOrder.aggregate({ where: whereFor("unpaid"), _sum: { total: true } }),
-  ]);
+
+  const dateSql =
+    from && to
+      ? Prisma.sql`AND o.created_at >= ${from} AND o.created_at <= ${to}`
+      : from
+        ? Prisma.sql`AND o.created_at >= ${from}`
+        : to
+          ? Prisma.sql`AND o.created_at <= ${to}`
+          : Prisma.empty;
+  const placeSql = (() => {
+    const value = String(input.place || "").slice(0, 48);
+    if (value === "counter") {
+      return Prisma.sql`AND (o.table_number IS NULL OR o.table_number = '')`;
+    }
+    if (value.startsWith("table:")) {
+      const tableNumber = value.slice("table:".length).trim().slice(0, 40);
+      return tableNumber ? Prisma.sql`AND o.table_number = ${tableNumber}` : Prisma.empty;
+    }
+    if (value.startsWith("menu:")) {
+      const menuId = Number(value.slice("menu:".length));
+      return Number.isInteger(menuId) && menuId > 0 ? Prisma.sql`AND o.menu_id = ${menuId}` : Prisma.empty;
+    }
+    return Prisma.empty;
+  })();
+  const qSql = q
+    ? Prisma.sql`AND (
+        o.public_id ILIKE ${`%${q}%`}
+        OR COALESCE(o.table_number, '') ILIKE ${`%${q}%`}
+        OR EXISTS (SELECT 1 FROM menus m WHERE m.id = o.menu_id AND m.name ILIKE ${`%${q}%`})
+        OR EXISTS (
+          SELECT 1 FROM customers c
+          WHERE c.id = o.customer_id
+            AND (c.name ILIKE ${`%${q}%`} OR c.public_id ILIKE ${`%${q}%`})
+        )
+      )`
+    : Prisma.empty;
+
+  const [countRow] = await prisma.$queryRaw<
+    { unpaid: number; paid: number; rejected: number; all_count: number; unpaid_total: number }[]
+  >`
+    SELECT
+      COUNT(*) FILTER (WHERE o.status::text = 'SERVED' AND o.paid_at IS NULL)::int AS unpaid,
+      COUNT(*) FILTER (WHERE o.status::text = 'SERVED' AND o.paid_at IS NOT NULL)::int AS paid,
+      COUNT(*) FILTER (WHERE o.status::text = 'REJECTED')::int AS rejected,
+      COUNT(*) FILTER (WHERE o.status::text IN ('SERVED', 'REJECTED'))::int AS all_count,
+      COALESCE(SUM(o.total) FILTER (WHERE o.status::text = 'SERVED' AND o.paid_at IS NULL), 0)::float AS unpaid_total
+    FROM menu_orders o
+    WHERE o.restaurant_id = ${restaurant.id}
+      AND o.status::text IN ('SERVED', 'REJECTED')
+      ${dateSql}
+      ${placeSql}
+      ${qSql}
+  `;
+  const unpaid = Number(countRow?.unpaid || 0);
+  const paid = Number(countRow?.paid || 0);
+  const rejected = Number(countRow?.rejected || 0);
+  const all = Number(countRow?.all_count || 0);
+  const unpaidTotal = Number(countRow?.unpaid_total || 0);
+
   const total = status === "unpaid" ? unpaid : status === "paid" ? paid : status === "rejected" ? rejected : all;
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const page = Math.min(requestedPage, pages);
@@ -593,7 +646,7 @@ export async function listFinishedOrders(
     page,
     pageSize,
     total,
-    unpaidTotal: money(unpaidSum._sum.total ?? 0),
+    unpaidTotal: money(unpaidTotal),
     counts: { unpaid, paid, rejected, all },
   };
 }

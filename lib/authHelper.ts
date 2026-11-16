@@ -1,11 +1,23 @@
-import { getEmailVerified } from "./otpDb";
 import { isOAuthProvider } from "./otp";
 import { prisma } from "./prisma";
 import { getSessionUserId, verifySessionToken } from "./session";
 
+type AuthUser = {
+  id: number;
+  provider: string | null;
+  emailVerified: boolean;
+};
+
 type DbUser = Awaited<ReturnType<typeof prisma.user.findUnique>> & {
   emailVerified?: boolean;
 };
+
+async function loadAuthUser(userId: number): Promise<AuthUser | null> {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, provider: true, emailVerified: true },
+  });
+}
 
 async function loadUser(userId: number) {
   return prisma.user.findUnique({ where: { id: userId } });
@@ -18,8 +30,7 @@ export async function getSessionDbUser(request: Request) {
     if (!userId) return null;
     const user = await loadUser(userId);
     if (!user) return null;
-    const emailVerified = await getEmailVerified(user.id);
-    return { ...user, emailVerified };
+    return { ...user, emailVerified: Boolean(user.emailVerified) };
   } catch (error) {
     console.error("Error getting session DB user:", error);
     return null;
@@ -37,8 +48,17 @@ export async function getDbUserFromRequest(request: Request) {
 }
 
 export async function getDbUserIdFromRequest(request: Request): Promise<number | null> {
-  const user = await getDbUserFromRequest(request);
-  return user?.id || null;
+  try {
+    const userId = await getSessionUserId(request);
+    if (!userId) return null;
+    const user = await loadAuthUser(userId);
+    if (!user) return null;
+    if (!user.emailVerified && !isOAuthProvider(user.provider)) return null;
+    return user.id;
+  } catch (error) {
+    console.error("Error getting session user id:", error);
+    return null;
+  }
 }
 
 /** Kitchen live sockets pass the app session JWT as the auth token. */
@@ -48,10 +68,9 @@ export async function getDbUserIdFromIdToken(token: string): Promise<number | nu
   try {
     const userId = await verifySessionToken(value);
     if (!userId) return null;
-    const user = await loadUser(userId);
+    const user = await loadAuthUser(userId);
     if (!user) return null;
-    const emailVerified = await getEmailVerified(user.id);
-    if (!emailVerified && !isOAuthProvider(user.provider)) return null;
+    if (!user.emailVerified && !isOAuthProvider(user.provider)) return null;
     return user.id;
   } catch {
     return null;

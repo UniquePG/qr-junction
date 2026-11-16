@@ -6,6 +6,19 @@ import { requireQuota, requireWritable } from '@/lib/billing/guard';
 import { generateUniqueShortCode } from '@/utils/shortCode';
 import { QRType, QRStatus } from '@prisma/client';
 
+/** Keep list payloads small — frame/logo preset only, no heavy design blobs. */
+function slimCustomDesign(design: unknown) {
+  if (!design || typeof design !== "object" || Array.isArray(design)) return null;
+  const row = design as Record<string, unknown>;
+  return {
+    logoPreset: typeof row.logoPreset === "string" ? row.logoPreset : "none",
+    frameId: typeof row.frameId === "string" ? row.frameId : "no_frame",
+    frameText: typeof row.frameText === "string" ? row.frameText : "",
+    frameColor: typeof row.frameColor === "string" ? row.frameColor : "#001b50",
+    frameTextColor: typeof row.frameTextColor === "string" ? row.frameTextColor : "#ffffff",
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const userId = await getDbUserIdFromRequest(request);
@@ -59,7 +72,19 @@ export async function GET(request: Request) {
       orderBy: { tableNumber: "asc" },
     });
 
-    const payload = { success: true as const, tables };
+    const slimTables = tables.map((table) =>
+      table.qrCode
+        ? {
+            ...table,
+            qrCode: {
+              ...table.qrCode,
+              customDesign: slimCustomDesign(table.qrCode.customDesign),
+            },
+          }
+        : table,
+    );
+
+    const payload = { success: true as const, tables: slimTables };
     await cacheSetJson(cacheKey, payload, TTL.tables);
     return NextResponse.json(payload);
   } catch (error: any) {

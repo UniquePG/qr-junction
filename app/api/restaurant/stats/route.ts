@@ -3,7 +3,9 @@ import { Prisma } from "@prisma/client";
 import { dateFilter, parseAdminRange } from "@/lib/adminQuery";
 import { getDbUserIdFromRequest } from "@/lib/authHelper";
 import { allows } from "@/lib/billing/guard";
+import { statsRangeCacheKey, TTL } from "@/lib/cache/keys";
 import { prisma } from "@/lib/prisma";
+import { resolveOrderingGate } from "@/lib/restaurant/gates";
 
 const ZONE = "Asia/Kolkata";
 type Bucket = "hour" | "day" | "week";
@@ -54,7 +56,9 @@ function axisLabel(key: string, bucket: Bucket) {
   }
   const [year, month, day] = key.slice(0, 10).split("-").map(Number);
   if (!year || !month || !day) return key;
-  return new Intl.DateTimeFormat("en-IN", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(year, month - 1, day)));
+  return new Intl.DateTimeFormat("en-IN", { month: "short", day: "numeric", timeZone: "UTC" }).format(
+    new Date(Date.UTC(year, month - 1, day)),
+  );
 }
 
 const WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -76,7 +80,17 @@ export async function GET(request: Request) {
     let start = range.startDate;
     let end = range.endDate;
     let allTime = range.isAllTime;
-    if (!(await allows(userId, "platform.analytics.advanced"))) {
+
+    const [advancedAnalytics, orderingGate] = await Promise.all([
+      allows(userId, "platform.analytics.advanced"),
+      resolveOrderingGate({
+        userId: restaurant.userId,
+        orderingEnabled: restaurant.orderingEnabled,
+        settings: restaurant.settings,
+      }),
+    ]);
+
+    if (!advancedAnalytics) {
       allTime = false;
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
@@ -84,24 +98,24 @@ export async function GET(request: Request) {
       if (!start || start < weekAgo) start = weekAgo;
       if (!end || end < weekAgo) end = new Date();
     }
+
+    const cacheKey = statsRangeCacheKey(restaurant.id, start, end, allTime);
+    const { cacheGetJson, cacheSetJson } = await import("@/lib/cache/redis");
+    const cached = await cacheGetJson<Record<string, unknown>>(cacheKey);
+    if (cached) return NextResponse.json(cached);
+
     const bucket = bucketFor(allTime, start, end);
     const orderRange = dateFilter(Prisma.raw(`created_at`), start, end);
     const orderRangeAliased = dateFilter(Prisma.raw(`o.created_at`), start, end);
     const scanRange = dateFilter(Prisma.raw(`s.scanned_at`), start, end);
-    const qrIds = (await prisma.qRCode.findMany({
-      where: { restaurantId: restaurant.id },
-      select: { id: true },
-    })).map((row) => row.id);
 
     const orderSeries = trunc(Prisma.raw(`created_at`), bucket);
     const scanSeries = trunc(Prisma.raw(`s.scanned_at`), bucket);
-    const keptItems = Prisma.sql`
-      i.order_id IN (
-        SELECT id FROM menu_orders
-        WHERE restaurant_id = ${restaurant.id}
-          AND status::text <> 'REJECTED'
-          ${orderRange}
-      )
+    const keptItemsJoin = Prisma.sql`
+      i.order_id = o.id
+      AND o.restaurant_id = ${restaurant.id}
+      AND o.status::text <> 'REJECTED'
+      ${orderRangeAliased}
     `;
 
     const [
@@ -119,7 +133,17 @@ export async function GET(request: Request) {
       orderPlaces,
       scanPlaces,
     ] = await Promise.all([
-      prisma.$queryRaw<{ orders: number; sales: number; customers: number; paid: number; unpaid: number; rejected_orders: number; rejected_sales: number }[]>`
+      prisma.$queryRaw<
+        {
+          orders: number;
+          sales: number;
+          customers: number;
+          paid: number;
+          unpaid: number;
+          rejected_orders: number;
+          rejected_sales: number;
+        }[]
+      >`
         SELECT
           COUNT(*) FILTER (WHERE status::text <> 'REJECTED')::int AS orders,
           COALESCE(SUM(total) FILTER (WHERE status::text <> 'REJECTED'), 0)::float AS sales,
@@ -132,7 +156,9 @@ export async function GET(request: Request) {
         WHERE restaurant_id = ${restaurant.id}
         ${orderRange}
       `,
-      prisma.$queryRaw<{ served: number; avg_minutes: number; under_10: number; to_20: number; to_30: number; over_30: number }[]>`
+      prisma.$queryRaw<
+        { served: number; avg_minutes: number; under_10: number; to_20: number; to_30: number; over_30: number }[]
+      >`
         SELECT
           COUNT(*)::int AS served,
           COALESCE(AVG(mins), 0)::float AS avg_minutes,
@@ -155,7 +181,12 @@ export async function GET(request: Request) {
           COUNT(*) FILTER (WHERE visits = 1)::int AS first_time,
           COUNT(*) FILTER (WHERE visits > 1)::int AS returning,
           COALESCE((
-            SELECT SUM(i.quantity)::int FROM menu_order_items i WHERE ${keptItems}
+            SELECT SUM(i.quantity)::int
+            FROM menu_order_items i
+            JOIN menu_orders o ON o.id = i.order_id
+            WHERE o.restaurant_id = ${restaurant.id}
+              AND o.status::text <> 'REJECTED'
+              ${orderRangeAliased}
           ), 0)::int AS items
         FROM (
           SELECT customer_id, COUNT(*)::int AS visits
@@ -166,14 +197,13 @@ export async function GET(request: Request) {
           GROUP BY customer_id
         ) guests
       `,
-      qrIds.length
-        ? prisma.$queryRaw<{ scans: number; guests: number }[]>`
-            SELECT COUNT(*)::int AS scans, COUNT(DISTINCT s.visitor_id)::int AS guests
-            FROM scans s
-            WHERE s.qr_code_id IN (${Prisma.join(qrIds)})
-            ${scanRange}
-          `
-        : Promise.resolve([{ scans: 0, guests: 0 }]),
+      prisma.$queryRaw<{ scans: number; guests: number }[]>`
+        SELECT COUNT(*)::int AS scans, COUNT(DISTINCT s.visitor_id)::int AS guests
+        FROM scans s
+        JOIN qr_codes q ON q.id = s.qr_code_id
+        WHERE q.restaurant_id = ${restaurant.id}
+        ${scanRange}
+      `,
       prisma.$queryRaw<{ bucket: string; orders: number; sales: number }[]>`
         SELECT
           to_char(${orderSeries}, 'YYYY-MM-DD HH24:00') AS bucket,
@@ -185,15 +215,15 @@ export async function GET(request: Request) {
         GROUP BY 1
         ORDER BY 1
       `,
-      qrIds.length
-        ? prisma.$queryRaw<{ bucket: string; scans: number }[]>`
-            SELECT to_char(${scanSeries}, 'YYYY-MM-DD HH24:00') AS bucket, COUNT(*)::int AS scans
-            FROM scans s
-            WHERE s.qr_code_id IN (${Prisma.join(qrIds)})
-            ${scanRange}
-            GROUP BY 1
-          `
-        : Promise.resolve([]),
+      prisma.$queryRaw<{ bucket: string; scans: number }[]>`
+        SELECT to_char(${scanSeries}, 'YYYY-MM-DD HH24:00') AS bucket, COUNT(*)::int AS scans
+        FROM scans s
+        JOIN qr_codes q ON q.id = s.qr_code_id
+        WHERE q.restaurant_id = ${restaurant.id}
+        ${scanRange}
+        GROUP BY 1
+        ORDER BY 1
+      `,
       prisma.$queryRaw<{ dow: number; orders: number; sales: number }[]>`
         SELECT
           EXTRACT(DOW FROM created_at AT TIME ZONE ${ZONE})::int AS dow,
@@ -219,9 +249,9 @@ export async function GET(request: Request) {
           SUM(i.quantity)::int AS quantity,
           COALESCE(SUM(i.quantity * i.unit_price), 0)::float AS sales
         FROM menu_order_items i
+        JOIN menu_orders o ON ${keptItemsJoin}
         LEFT JOIN menu_items mi ON mi.id = i.menu_item_id
         LEFT JOIN menu_categories c ON c.id = mi.category_id
-        WHERE ${keptItems}
         GROUP BY 1
         ORDER BY sales DESC
         LIMIT 8
@@ -231,7 +261,7 @@ export async function GET(request: Request) {
           SUM(i.quantity)::int AS quantity,
           COALESCE(SUM(i.quantity * i.unit_price), 0)::float AS sales
         FROM menu_order_items i
-        WHERE ${keptItems}
+        JOIN menu_orders o ON ${keptItemsJoin}
         GROUP BY i.name
         ORDER BY quantity DESC, sales DESC
         LIMIT 8
@@ -246,8 +276,8 @@ export async function GET(request: Request) {
           SUM(i.quantity)::int AS quantity,
           COALESCE(SUM(i.quantity * i.unit_price), 0)::float AS sales
         FROM menu_order_items i
+        JOIN menu_orders o ON ${keptItemsJoin}
         LEFT JOIN menu_items mi ON mi.id = i.menu_item_id
-        WHERE ${keptItems}
         GROUP BY 1
         ORDER BY sales DESC
       `,
@@ -260,18 +290,20 @@ export async function GET(request: Request) {
         WHERE restaurant_id = ${restaurant.id}
         ${orderRange}
         GROUP BY 1
+        ORDER BY sales DESC, orders DESC
+        LIMIT 8
       `,
-      qrIds.length
-        ? prisma.$queryRaw<{ name: string; scans: number }[]>`
-            SELECT COALESCE(t.table_number, 'Menu') AS name, COUNT(*)::int AS scans
-            FROM scans s
-            JOIN qr_codes q ON q.id = s.qr_code_id
-            LEFT JOIN restaurant_tables t ON t.qr_code_id = q.id
-            WHERE s.qr_code_id IN (${Prisma.join(qrIds)})
-            ${scanRange}
-            GROUP BY 1
-          `
-        : Promise.resolve([]),
+      prisma.$queryRaw<{ name: string; scans: number }[]>`
+        SELECT COALESCE(t.table_number, 'Menu') AS name, COUNT(*)::int AS scans
+        FROM scans s
+        JOIN qr_codes q ON q.id = s.qr_code_id
+        LEFT JOIN restaurant_tables t ON t.qr_code_id = q.id
+        WHERE q.restaurant_id = ${restaurant.id}
+        ${scanRange}
+        GROUP BY 1
+        ORDER BY scans DESC
+        LIMIT 8
+      `,
     ]);
 
     const series = new Map<string, { sales: number; orders: number; scans: number }>();
@@ -288,9 +320,8 @@ export async function GET(request: Request) {
     }
     for (const row of scanDays) take(row.bucket).scans = num(row.scans);
 
-    const points = bucket === "week" || !start || !end
-      ? [...series.keys()].sort()
-      : [];
+    const points =
+      bucket === "week" || !start || !end ? [...series.keys()].sort() : ([] as string[]);
     if (bucket !== "week" && start && end) {
       const step = bucket === "hour" ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
       const seen = new Set<string>();
@@ -320,22 +351,18 @@ export async function GET(request: Request) {
     const speed = service[0];
     const sales = num(total?.sales);
     const orders = num(total?.orders);
-    const pace = speed && num(speed.served) > 0 ? [
-      { label: "< 10m", count: num(speed.under_10) },
-      { label: "10–20", count: num(speed.to_20) },
-      { label: "20–30", count: num(speed.to_30) },
-      { label: "30m+", count: num(speed.over_30) },
-    ] : [];
+    const pace =
+      speed && num(speed.served) > 0
+        ? [
+            { label: "< 10m", count: num(speed.under_10) },
+            { label: "10–20", count: num(speed.to_20) },
+            { label: "20–30", count: num(speed.to_30) },
+            { label: "30m+", count: num(speed.over_30) },
+          ]
+        : [];
 
-    const { resolveOrderingGate } = await import("@/lib/restaurant/gates");
-    const orderingGate = await resolveOrderingGate({
-      userId: restaurant.userId,
-      orderingEnabled: restaurant.orderingEnabled,
-      settings: restaurant.settings,
-    });
-
-    return NextResponse.json({
-      success: true,
+    const payload = {
+      success: true as const,
       restaurant: {
         currency: restaurant.currency,
         orderingEnabled: restaurant.orderingEnabled,
@@ -376,11 +403,18 @@ export async function GET(request: Request) {
         sales: num(hourMap.get(hour)?.sales),
       })),
       service: pace,
-      categories: categoryRows.map((row) => ({ name: row.name, quantity: num(row.quantity), sales: num(row.sales) })),
+      categories: categoryRows.map((row) => ({
+        name: row.name,
+        quantity: num(row.quantity),
+        sales: num(row.sales),
+      })),
       dishes: dishRows.map((row) => ({ name: row.name, quantity: num(row.quantity), sales: num(row.sales) })),
       diet: dietRows.map((row) => ({ name: row.name, quantity: num(row.quantity), sales: num(row.sales) })),
       places: [...placeMap.values()].sort((a, b) => b.sales - a.sales || b.scans - a.scans).slice(0, 8),
-    });
+    };
+
+    await cacheSetJson(cacheKey, payload, TTL.stats);
+    return NextResponse.json(payload);
   } catch (error) {
     console.error("Restaurant analytics error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

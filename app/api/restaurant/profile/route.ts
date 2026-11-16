@@ -55,6 +55,14 @@ export async function GET(request: Request) {
       select: { id: true },
     });
     if (restaurant) {
+      const shellOnly = new URL(request.url).searchParams.get("fields") === "shell";
+      if (shellOnly) {
+        const shell = await prisma.restaurant.findUnique({
+          where: { id: restaurant.id },
+          select: { name: true, logoUrl: true, venueType: true, city: true },
+        });
+        return NextResponse.json({ success: true, restaurant: shell });
+      }
       const { cacheGetJson, cacheSetJson } = await import("@/lib/cache/redis");
       const { restaurantCacheKey, TTL } = await import("@/lib/cache/keys");
       const cacheKey = restaurantCacheKey(restaurant.id, "profile");

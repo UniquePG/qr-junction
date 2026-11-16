@@ -201,18 +201,22 @@ export default function RestaurantOffersPage() {
       const menuList = (menusJson?.menus || []).map((m) => ({ id: m.id, name: m.name }));
       setMenus(menuList);
 
+      const menuTrees = await Promise.all(
+        menuList.slice(0, 8).map(async (menu) => {
+          const menuRes = await restaurantService.getMenu(menu.id);
+          return (menuRes.data || (await menuRes.json().catch(() => null))) as {
+            menu?: {
+              categories?: {
+                id: number;
+                name: string;
+                items?: { id: number; name: string; price: any }[];
+              }[];
+            };
+          } | null;
+        }),
+      );
       const itemRows: ItemOption[] = [];
-      for (const menu of menuList.slice(0, 8)) {
-        const menuRes = await restaurantService.getMenu(menu.id);
-        const menuJson = (menuRes.data || (await menuRes.json().catch(() => null))) as {
-          menu?: {
-            categories?: {
-              id: number;
-              name: string;
-              items?: { id: number; name: string; price: any }[];
-            }[];
-          };
-        } | null;
+      for (const menuJson of menuTrees) {
         for (const cat of menuJson?.menu?.categories || []) {
           for (const item of cat.items || []) {
             itemRows.push({
