@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { authService } from "@/lib/api";
 
 export interface AuthUser {
@@ -28,6 +29,12 @@ const AuthContext = createContext<AuthContextType>({
   refreshUser: async () => {},
 });
 
+/** Guest surfaces never use auth — skip /api/auth/me to avoid 401 noise. */
+function shouldSkipAuthBootstrap(pathname: string | null) {
+  if (!pathname) return false;
+  return /^\/(r|q|p)(\/|$)/.test(pathname);
+}
+
 function mapPublicUser(raw: any): AuthUser {
   const id = Number(raw?.id) || 0;
   return {
@@ -43,6 +50,7 @@ function mapPublicUser(raw: any): AuthUser {
 }
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const pathname = usePathname();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -69,6 +77,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let cancelled = false;
     (async () => {
       try {
+        if (shouldSkipAuthBootstrap(pathname)) {
+          return;
+        }
         await refreshUser();
       } finally {
         if (!cancelled) setLoading(false);
@@ -77,7 +88,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       cancelled = true;
     };
-  }, [refreshUser]);
+  }, [pathname, refreshUser]);
 
   const logout = async () => {
     try {

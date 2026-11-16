@@ -87,6 +87,78 @@
   animation: fadeInUp 1s ease-in-out;
 }
 
+/* Guest menu welcome overlay */
+@keyframes welcomeRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes welcomeStamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.18) rotate(-6deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(0.96) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes welcomeGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.05);
+  }
+  50% {
+    box-shadow: 0 0 28px 2px rgba(255, 255, 255, 0.18);
+  }
+}
+
+@keyframes welcomeProgress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.menu-welcome-enter {
+  animation: welcomeRise 0.32s ease-out both;
+}
+
+.menu-welcome-stamp {
+  animation: welcomeStamp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.menu-welcome-glow {
+  animation: welcomeGlow 1.2s ease-in-out infinite;
+}
+
+.menu-welcome-progress {
+  transform-origin: left center;
+  animation: welcomeProgress 1.15s linear both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-welcome-enter,
+  .menu-welcome-stamp,
+  .menu-welcome-glow,
+  .menu-welcome-progress {
+    animation: none !important;
+  }
+}
+
 /* Dark-themed horizontal scrollbar (QR tab strips, etc.) */
 .scrollbar-dark-h {
   scrollbar-width: thin;

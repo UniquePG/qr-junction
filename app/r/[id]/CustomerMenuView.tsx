@@ -36,6 +36,7 @@ import { ItemTags } from '@/components/menu/ItemTags';
 import { OfferProvider } from '@/components/menu/offers/OfferContext';
 import { CollectionStrip, OfferRail } from '@/components/menu/offers/OfferRail';
 import { ItemPrice } from '@/components/menu/shared';
+import { MenuWelcomeOverlay } from '@/components/menu/MenuWelcomeOverlay';
 import {
   MenuLocaleProvider,
   useMenuLocale,
@@ -920,6 +921,13 @@ function CustomerMenuViewInner({
     >
     <OfferProvider value={offers} items={allItems} theme={theme}>
     <div className={`min-h-screen overflow-x-clip transition-colors duration-300 relative font-sans ${chrome.page}`}>
+      <MenuWelcomeOverlay
+        theme={theme}
+        restaurantId={restaurant.id}
+        restaurantName={restaurant.name}
+        logoUrl={restaurant.logoUrl}
+        disabled={Boolean(layoutPreview)}
+      />
       {layoutPreview && (
         <div className="sticky top-0 z-40 px-3 py-2 text-center text-[11px] font-bold leading-snug bg-[#001B50] text-white wrap-anywhere">
           Previewing {getMenuTheme(layoutPreview).name} — not applied to guests yet
