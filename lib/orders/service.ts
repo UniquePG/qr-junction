@@ -436,6 +436,63 @@ async function loadOwned(userId: number, publicId: string) {
   return order;
 }
 
+/** Lean ownership check for mutations — avoids shipping full items/events on every PATCH. */
+async function loadOwnedLean(userId: number, publicId: string) {
+  return prisma.menuOrder.findFirst({
+    where: { publicId, restaurant: { userId } },
+    select: {
+      id: true,
+      publicId: true,
+      publicToken: true,
+      status: true,
+      restaurantId: true,
+      rejectReason: true,
+      restaurant: { select: { prepMinutes: true } },
+    },
+  });
+}
+
+async function loadOwnedListDto(userId: number, publicId: string) {
+  const order = await prisma.menuOrder.findFirst({
+    where: { publicId, restaurant: { userId } },
+    include: listInclude,
+  });
+  return order ? toOrderDto(order) : null;
+}
+
+async function updateOwnedOrder(
+  id: number,
+  restaurantId: number,
+  data: Prisma.MenuOrderUpdateInput,
+) {
+  const updated = await prisma.menuOrder.update({
+    where: { id },
+    data,
+    include: listInclude,
+  });
+  const count = await placedCount(restaurantId);
+  broadcast(updated, "order.updated", count);
+  return { order: toOrderDto(updated), changed: true as const, placedCount: count };
+}
+
+/** Paid flag does not affect PLACED count — count in parallel with the write. */
+async function updateOwnedOrderPaid(
+  id: number,
+  restaurantId: number,
+  paid: boolean,
+) {
+  const [updated, count] = await Promise.all([
+    prisma.menuOrder.update({
+      where: { id },
+      data: { paidAt: paid ? new Date() : null },
+      include: listInclude,
+    }),
+    placedCount(restaurantId),
+  ]);
+  broadcast(updated, "order.updated", count);
+  return { order: toOrderDto(updated), changed: true as const, placedCount: count };
+}
+
 export async function listRestaurantOrders(userId: number) {
   const restaurant = await prisma.restaurant.findUnique({
     where: { userId },
@@ -668,30 +725,24 @@ export async function getRestaurantOrder(userId: number, publicId: string) {
 }
 
 export async function transitionOrder(userId: number, publicId: string, next: OrderStatus, reason?: string) {
-  const order = await loadOwned(userId, publicId);
+  const order = await loadOwnedLean(userId, publicId);
   if (!order) throw new OrderError(404, "NOT_FOUND", "Order not found.");
   if (!canMoveStatus(order.status, next)) {
-    return { order: toOrderDto(order), changed: false, placedCount: await placedCount(order.restaurantId) };
+    const [dto, count] = await Promise.all([
+      loadOwnedListDto(userId, publicId),
+      placedCount(order.restaurantId),
+    ]);
+    if (!dto) throw new OrderError(404, "NOT_FOUND", "Order not found.");
+    return { order: dto, changed: false, placedCount: count };
   }
   const note = next === "REJECTED" ? normalizeName(reason || "").slice(0, 160) || null : null;
-  const prep = await prisma.restaurant.findUnique({
-    where: { id: order.restaurantId },
-    select: { prepMinutes: true },
-  });
   const terminal = next === "SERVED" || next === "REJECTED";
-  const updated = await prisma.menuOrder.update({
-    where: { id: order.id },
-    data: {
-      status: next,
-      rejectReason: next === "REJECTED" ? note : order.rejectReason,
-      stageDueAt: terminal ? null : new Date(Date.now() + stageWindowMinutes(next, prep?.prepMinutes ?? 12) * 60_000),
-      events: { create: { status: next, note } },
-    },
-    include: orderInclude,
+  return updateOwnedOrder(order.id, order.restaurantId, {
+    status: next,
+    rejectReason: next === "REJECTED" ? note : order.rejectReason,
+    stageDueAt: terminal ? null : new Date(Date.now() + stageWindowMinutes(next, order.restaurant.prepMinutes ?? 12) * 60_000),
+    events: { create: { status: next, note } },
   });
-  const count = await placedCount(updated.restaurantId);
-  broadcast(updated, "order.updated", count);
-  return { order: toOrderDto(updated), changed: true, placedCount: count };
 }
 
 function parseDay(value: string | undefined, end = false) {
@@ -712,51 +763,44 @@ function readyMinutes(raw: number) {
 }
 
 export async function setOrderReadyIn(userId: number, publicId: string, minutes: number) {
-  const order = await loadOwned(userId, publicId);
+  const order = await loadOwnedLean(userId, publicId);
   if (!order) throw new OrderError(404, "NOT_FOUND", "Order not found.");
   if (order.status === "SERVED" || order.status === "REJECTED") {
-    return { order: toOrderDto(order), changed: false, placedCount: await placedCount(order.restaurantId) };
+    const [dto, count] = await Promise.all([
+      loadOwnedListDto(userId, publicId),
+      placedCount(order.restaurantId),
+    ]);
+    if (!dto) throw new OrderError(404, "NOT_FOUND", "Order not found.");
+    return { order: dto, changed: false, placedCount: count };
   }
-  const updated = await prisma.menuOrder.update({
-    where: { id: order.id },
-    data: { expectedReadyAt: new Date(Date.now() + readyMinutes(minutes) * 60_000) },
-    include: orderInclude,
+  return updateOwnedOrder(order.id, order.restaurantId, {
+    expectedReadyAt: new Date(Date.now() + readyMinutes(minutes) * 60_000),
   });
-  const count = await placedCount(updated.restaurantId);
-  broadcast(updated, "order.updated", count);
-  return { order: toOrderDto(updated), changed: true, placedCount: count };
 }
 
 export async function setOrderStageDue(userId: number, publicId: string, minutes: number) {
-  const order = await loadOwned(userId, publicId);
+  const order = await loadOwnedLean(userId, publicId);
   if (!order) throw new OrderError(404, "NOT_FOUND", "Order not found.");
   if (order.status === "SERVED" || order.status === "REJECTED") {
-    return { order: toOrderDto(order), changed: false, placedCount: await placedCount(order.restaurantId) };
+    const [dto, count] = await Promise.all([
+      loadOwnedListDto(userId, publicId),
+      placedCount(order.restaurantId),
+    ]);
+    if (!dto) throw new OrderError(404, "NOT_FOUND", "Order not found.");
+    return { order: dto, changed: false, placedCount: count };
   }
-  const updated = await prisma.menuOrder.update({
-    where: { id: order.id },
-    data: { stageDueAt: new Date(Date.now() + readyMinutes(minutes) * 60_000) },
-    include: orderInclude,
+  return updateOwnedOrder(order.id, order.restaurantId, {
+    stageDueAt: new Date(Date.now() + readyMinutes(minutes) * 60_000),
   });
-  const count = await placedCount(updated.restaurantId);
-  broadcast(updated, "order.updated", count);
-  return { order: toOrderDto(updated), changed: true, placedCount: count };
 }
 
 export async function setOrderPaid(userId: number, publicId: string, paid: boolean) {
-  const order = await loadOwned(userId, publicId);
+  const order = await loadOwnedLean(userId, publicId);
   if (!order) throw new OrderError(404, "NOT_FOUND", "Order not found.");
   if (order.status !== "SERVED") {
     throw new OrderError(400, "PAYMENT", "Mark payment after the plate is served.");
   }
-  const updated = await prisma.menuOrder.update({
-    where: { id: order.id },
-    data: { paidAt: paid ? new Date() : null },
-    include: orderInclude,
-  });
-  const count = await placedCount(updated.restaurantId);
-  broadcast(updated, "order.updated", count);
-  return { order: toOrderDto(updated), changed: true, placedCount: count };
+  return updateOwnedOrderPaid(order.id, order.restaurantId, paid);
 }
 
 export async function setPrepMinutes(userId: number, minutes: number) {

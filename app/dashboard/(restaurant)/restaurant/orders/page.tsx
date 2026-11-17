@@ -231,6 +231,8 @@ export default function RestaurantOrdersPage() {
   }, [prepReady]);
 
   const seenTick = useRef(alerts.liveTick);
+  /** Ignore WS echo right after our own mutation so optimistic UI is not overwritten by a slow refetch. */
+  const suppressLiveUntil = useRef(0);
 
   useEffect(() => {
     void load();
@@ -244,6 +246,7 @@ export default function RestaurantOrdersPage() {
   useEffect(() => {
     if (seenTick.current === alerts.liveTick) return;
     seenTick.current = alerts.liveTick;
+    if (Date.now() < suppressLiveUntil.current) return;
     // Live ticks only need fresh orders — tables/menus rarely change mid-shift.
     void loadOrdersOnly();
   }, [alerts.liveTick, loadOrdersOnly]);
@@ -253,7 +256,11 @@ export default function RestaurantOrdersPage() {
 
   const move = async (publicId: string, status: string, note?: string) => {
     const previous = orders;
-    setBusy(publicId + status);
+    const previousUnpaid = unpaidCount;
+    const terminal = status === "SERVED" || status === "REJECTED";
+    suppressLiveUntil.current = Date.now() + 2000;
+    // Soft pending — status flips immediately; avoid a long “Saving…” lock.
+    setBusy(publicId);
     setOrders((current) =>
       current.map((order) =>
         order.publicId === publicId
@@ -261,35 +268,33 @@ export default function RestaurantOrdersPage() {
               ...order,
               status,
               rejectReason: status === "REJECTED" ? note || order.rejectReason : order.rejectReason,
+              stageDueAt: terminal ? null : order.stageDueAt,
               updatedAt: new Date().toISOString(),
             }
           : order,
       ),
     );
+    if (status === "SERVED") setUnpaidCount((count) => count + 1);
+    setRejecting(null);
+    setReason("");
+    if (status === "SERVED") setServedNote("Plate served. It is waiting in Payments.");
+    // Terminal plates leave the floor via ACTIVE filter — release the button lock immediately.
+    if (terminal) setBusy("");
+
     const result = await restaurantService.updateOrder(publicId, { status, reason: note });
     setBusy("");
     if (!result.ok) {
       setOrders(previous);
+      setUnpaidCount(previousUnpaid);
       toast.error((result.data as { error?: string })?.error || "Could not update order.");
       return;
     }
     const updated = result.data?.order as Ticket | undefined;
     if (updated?.publicId) {
-      setOrders((current) => {
-        const next = current.map((order) => (order.publicId === updated.publicId ? { ...order, ...updated } : order));
-        if (status === "SERVED" || status === "REJECTED") {
-          // Keep a short finished preview; active filter handles the floor.
-          return next;
-        }
-        return next;
-      });
-      if (typeof result.data?.placedCount === "number") {
-        // placedCount is owned by OrderAlerts via WS; no local field here.
-      }
+      setOrders((current) =>
+        current.map((order) => (order.publicId === updated.publicId ? { ...order, ...updated } : order)),
+      );
     }
-    setRejecting(null);
-    setReason("");
-    if (status === "SERVED") setServedNote("Plate served. It is waiting in Payments.");
   };
 
   const savePrep = async () => {
@@ -302,6 +307,11 @@ export default function RestaurantOrdersPage() {
 
   const saveStage = async (publicId: string, minutes: number) => {
     const previous = orders;
+    suppressLiveUntil.current = Date.now() + 2000;
+    const dueAt = new Date(Date.now() + minutes * 60_000).toISOString();
+    setOrders((current) =>
+      current.map((order) => (order.publicId === publicId ? { ...order, stageDueAt: dueAt } : order)),
+    );
     const result = await restaurantService.updateOrder(publicId, { stageMinutes: minutes });
     if (!result.ok) {
       setOrders(previous);
@@ -312,8 +322,6 @@ export default function RestaurantOrdersPage() {
       setOrders((current) =>
         current.map((order) => (order.publicId === updated.publicId ? { ...order, ...updated } : order)),
       );
-    } else {
-      await loadOrdersOnly();
     }
   };
 
@@ -449,7 +457,7 @@ export default function RestaurantOrdersPage() {
           </div>
         )
       ) : (
-        <PaymentsBoard tables={tables} menus={menus} />
+        <PaymentsBoard tables={tables} menus={menus} onUnpaidDelta={(delta) => setUnpaidCount((count) => Math.max(0, count + delta))} />
       )}
 
       {openSpot ? (
@@ -524,12 +532,12 @@ function TableDrawer({
           ) : rows.map((order, seqIndex) => {
             const stage = ownerStage(order.status);
             const wait = waitLabel(order.stageDueAt, now);
-            const working = busy.startsWith(order.publicId);
+            const working = busy === order.publicId || busy.startsWith(order.publicId);
             const callCode = orderCallCode(order.publicId, order.tableNumber);
             const confirmingReject = rejecting === order.publicId;
             const canReject = order.status === "PLACED" || order.status === "ACCEPTED" || order.status === "PREPARING" || order.status === "READY";
             return (
-              <article key={order.publicId} className="relative overflow-hidden rounded-2xl bg-white p-4 pt-5">
+              <article key={order.publicId} className={`relative overflow-hidden rounded-2xl bg-white p-4 pt-5 transition-opacity ${working ? "opacity-80" : ""}`}>
                 <div
                   className="absolute left-0 top-0 rounded-br-2xl bg-[#1C1410] px-3 py-2 text-white shadow-[2px_2px_0_rgba(196,98,45,0.25)]"
                   aria-label={`Sequence ${seqIndex + 1}`}
@@ -563,8 +571,8 @@ function TableDrawer({
                 ) : null}
                 {stage ? (
                   <div className="mt-3">
-                    <button type="button" disabled={working} onClick={() => void onMove(order.publicId, stage.next)} className="h-11 w-full cursor-pointer rounded-xl border-none bg-[#C4622D] text-sm font-semibold text-white disabled:opacity-50">
-                      {working ? "Saving…" : stage.action}
+                    <button type="button" disabled={working} onClick={() => void onMove(order.publicId, stage.next)} className="h-11 w-full cursor-pointer rounded-xl border-none bg-[#C4622D] text-sm font-semibold text-white disabled:opacity-70">
+                      {stage.action}
                     </button>
                     <StageLine order={order} label={stage.title} waitText={wait ? `${wait.short} · by ${wait.clock}` : "Set this step"} onSave={(minutes) => onStage(order.publicId, minutes)} />
                   </div>
@@ -594,9 +602,9 @@ function TableDrawer({
                         type="button"
                         disabled={working}
                         onClick={() => void onMove(order.publicId, "REJECTED", reason)}
-                        className="h-10 cursor-pointer rounded-xl border-none bg-red-600 text-sm font-semibold text-white disabled:opacity-50"
+                        className="h-10 cursor-pointer rounded-xl border-none bg-red-600 text-sm font-semibold text-white disabled:opacity-70"
                       >
-                        {working ? "Rejecting…" : "Yes, reject"}
+                        Yes, reject
                       </button>
                     </div>
                   </div>
@@ -719,7 +727,51 @@ function OrderTimes({ order, servedAt, compact = true }: { order: Ticket; served
   );
 }
 
-function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[] }) {
+/** Mobile Safari/Chrome hide empty date placeholders — overlay our own label. */
+function DateField({
+  value,
+  onChange,
+  label,
+  placeholder = "dd/mm/yyyy",
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  label: string;
+  placeholder?: string;
+}) {
+  return (
+    <label className="relative block min-w-0">
+      <span className="sr-only">{label}</span>
+      {!value ? (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 left-3 right-9 z-[1] flex items-center truncate text-sm text-[#9A8778]"
+        >
+          {placeholder}
+        </span>
+      ) : null}
+      <input
+        type="date"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        aria-label={label}
+        className={`relative h-10 w-full min-w-0 appearance-none rounded-xl border border-[#E7DDD2] bg-white px-3 pr-9 text-sm ${
+          value ? "text-[#1C1410]" : "text-transparent caret-transparent"
+        } [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-2 [&::-webkit-calendar-picker-indicator]:top-1/2 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:-translate-y-1/2 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-date-and-time-value]:text-left`}
+      />
+    </label>
+  );
+}
+
+function PaymentsBoard({
+  tables,
+  menus,
+  onUnpaidDelta,
+}: {
+  tables: TableRow[];
+  menus: MenuRow[];
+  onUnpaidDelta?: (delta: number) => void;
+}) {
   const pageSize = 12;
   const [draftQ, setDraftQ] = useState("");
   const [draftFrom, setDraftFrom] = useState("");
@@ -734,30 +786,50 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
   const [total, setTotal] = useState(0);
   const [unpaidTotal, setUnpaidTotal] = useState(0);
   const [counts, setCounts] = useState({ unpaid: 0, paid: 0, rejected: 0, all: 0 });
-  const [loading, setLoading] = useState(true);
+  const [listLoading, setListLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [detail, setDetail] = useState<Ticket | null>(null);
   const [digitalBillEnabled, setDigitalBillEnabled] = useState(false);
   const [billPreview, setBillPreview] = useState<{ restaurant: BillRestaurant; order: BillOrder } | null>(null);
   const [billBusy, setBillBusy] = useState("");
   const requestSeq = useRef(0);
+  const statsFilterKey = useRef<string | null>(null);
+  const suppressLiveUntil = useRef(0);
   const alerts = useOrderAlerts();
   const seenTick = useRef(alerts.liveTick);
 
-  const load = useCallback(async (quiet = false) => {
+  const filtersKey = `${q}|${from}|${to}|${place}`;
+
+  const paymentMatchesTab = useCallback((order: Pick<Ticket, "status" | "paidAt">, tab: typeof pay) => {
+    if (tab === "unpaid") return order.status === "SERVED" && !order.paidAt;
+    if (tab === "paid") return order.status === "SERVED" && Boolean(order.paidAt);
+    if (tab === "rejected") return order.status === "REJECTED";
+    return order.status === "SERVED" || order.status === "REJECTED";
+  }, []);
+
+  const load = useCallback(async (opts?: { quiet?: boolean; refreshStats?: boolean }) => {
+    const quiet = Boolean(opts?.quiet);
+    const refreshStats = opts?.refreshStats ?? statsFilterKey.current !== filtersKey;
     const id = ++requestSeq.current;
-    if (!quiet) setLoading(true);
+    if (!quiet) {
+      setListLoading(true);
+      if (refreshStats) setStatsLoading(true);
+    }
     const result = await restaurantService.listFinishedOrders({ q, from, to, status: pay, place, page, pageSize });
     if (id !== requestSeq.current) return;
-    setLoading(false);
+    setListLoading(false);
+    if (refreshStats) setStatsLoading(false);
     if (!result.ok) return;
     setRows(result.data.orders || []);
     setDigitalBillEnabled(Boolean(result.data.digitalBillEnabled));
     setTotal(Number(result.data.total || 0));
+    // Soft-update summary numbers without blanking the cards on tab changes.
     setUnpaidTotal(Number(result.data.unpaidTotal || 0));
     setCounts(result.data.counts || { unpaid: 0, paid: 0, rejected: 0, all: 0 });
+    statsFilterKey.current = filtersKey;
     if (result.data.page && result.data.page !== page) setPage(result.data.page);
-  }, [from, page, pageSize, pay, place, q, to]);
+  }, [filtersKey, from, page, pageSize, pay, place, q, to]);
 
   const openBill = async (order: Ticket) => {
     setBillBusy(order.publicId + ":view");
@@ -795,13 +867,15 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
   };
 
   useEffect(() => {
-    void load(false);
+    void load();
   }, [load]);
 
   useEffect(() => {
     if (seenTick.current === alerts.liveTick) return;
     seenTick.current = alerts.liveTick;
-    void load(true);
+    if (Date.now() < suppressLiveUntil.current) return;
+    // Live status changes — refresh stats quietly (no skeleton flash).
+    void load({ quiet: true, refreshStats: true });
   }, [alerts.liveTick, load]);
 
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
@@ -809,16 +883,62 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
   const rangeEnd = Math.min(total, page * pageSize);
 
   const markPaid = async (order: Ticket, paid: boolean) => {
+    const snapshot = {
+      rows,
+      counts,
+      unpaidTotal,
+      total,
+      detail,
+    };
+    const paidAt = paid ? new Date().toISOString() : null;
+    const nextOrder: Ticket = { ...order, paidAt };
+    const staysOnTab = paymentMatchesTab(nextOrder, pay);
+    const amount = Number(order.total) || 0;
+
+    const unpaidDelta = paid ? -1 : 1;
+    suppressLiveUntil.current = Date.now() + 2000;
     setBusy(order.publicId);
+    setCounts((current) => ({
+      ...current,
+      unpaid: Math.max(0, current.unpaid + unpaidDelta),
+      paid: Math.max(0, current.paid + (paid ? 1 : -1)),
+    }));
+    setUnpaidTotal((current) => Math.max(0, Math.round((current + (paid ? -amount : amount)) * 100) / 100));
+    onUnpaidDelta?.(unpaidDelta);
+    if (staysOnTab) {
+      setRows((current) => current.map((row) => (row.publicId === order.publicId ? nextOrder : row)));
+      if (detail?.publicId === order.publicId) setDetail(nextOrder);
+    } else {
+      setRows((current) => current.filter((row) => row.publicId !== order.publicId));
+      setTotal((current) => Math.max(0, current - 1));
+      if (detail?.publicId === order.publicId) setDetail(null);
+    }
+
     const result = await restaurantService.updateOrder(order.publicId, { paid });
     setBusy("");
-    if (result.ok) await load(true);
+    if (!result.ok) {
+      setRows(snapshot.rows);
+      setCounts(snapshot.counts);
+      setUnpaidTotal(snapshot.unpaidTotal);
+      setTotal(snapshot.total);
+      setDetail(snapshot.detail);
+      onUnpaidDelta?.(-unpaidDelta);
+      toast.error((result.data as { error?: string })?.error || "Could not update payment.");
+      return;
+    }
+    const updated = result.data?.order as Ticket | undefined;
+    if (updated?.publicId && staysOnTab) {
+      setRows((current) => current.map((row) => (row.publicId === updated.publicId ? { ...row, ...updated } : row)));
+      setDetail((current) =>
+        current?.publicId === updated.publicId ? { ...current, ...updated } : current,
+      );
+    }
   };
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {loading ? (
+        {statsLoading ? (
           Array.from({ length: 4 }).map((_, index) => (
             <div key={`pay-skel-${index}`} className="min-h-[5.5rem] animate-pulse rounded-2xl bg-[#E7DDD2]/70 px-4 py-4">
               <div className="h-3 w-16 rounded bg-white/50" />
@@ -853,7 +973,7 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
       </div>
 
       <form
-        className="grid gap-2 rounded-2xl border border-[#E7DDD2] bg-white p-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(10rem,14rem)_auto_auto_auto]"
+        className="grid gap-2 rounded-2xl border border-[#E7DDD2] bg-white p-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(10rem,14rem)_auto_auto_auto_auto]"
         onSubmit={(event) => {
           event.preventDefault();
           setQ(draftQ);
@@ -879,9 +999,26 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
             </optgroup>
           ) : null}
         </select>
-        <input type="date" value={draftFrom} onChange={(event) => setDraftFrom(event.target.value)} aria-label="From date" className="h-10 rounded-xl border border-[#E7DDD2] px-3 text-sm" />
-        <input type="date" value={draftTo} onChange={(event) => setDraftTo(event.target.value)} aria-label="To date" className="h-10 rounded-xl border border-[#E7DDD2] px-3 text-sm" />
+        <DateField value={draftFrom} onChange={setDraftFrom} label="From date" placeholder="From · dd/mm/yyyy" />
+        <DateField value={draftTo} onChange={setDraftTo} label="To date" placeholder="To · dd/mm/yyyy" />
         <button type="submit" className="h-10 cursor-pointer rounded-xl border-none bg-[#1C1410] px-4 text-sm font-semibold text-white">Search</button>
+        <button
+          type="button"
+          disabled={!draftQ && !draftFrom && !draftTo && !q && !from && !to && !place}
+          onClick={() => {
+            setDraftQ("");
+            setDraftFrom("");
+            setDraftTo("");
+            setQ("");
+            setFrom("");
+            setTo("");
+            setPlace("");
+            setPage(1);
+          }}
+          className="h-10 cursor-pointer rounded-xl border border-[#E7DDD2] bg-white px-4 text-sm font-semibold text-[#2A211C] disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Reset
+        </button>
       </form>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -898,7 +1035,19 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
         ))}
       </div>
 
-      {loading ? <p className="text-sm text-[#6B5A50]">Loading payments…</p> : rows.length === 0 ? (
+      {listLoading ? (
+        <div className="grid gap-3 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={`pay-card-skel-${index}`} className="min-h-[10rem] animate-pulse rounded-2xl border border-[#E7DDD2] bg-white p-4">
+              <div className="h-5 w-28 rounded bg-[#E7DDD2]/80" />
+              <div className="mt-3 h-4 w-20 rounded bg-[#E7DDD2]/60" />
+              <div className="mt-4 h-4 w-full rounded bg-[#E7DDD2]/50" />
+              <div className="mt-2 h-4 w-3/4 rounded bg-[#E7DDD2]/40" />
+              <div className="mt-4 h-10 w-full rounded-xl bg-[#E7DDD2]/55" />
+            </div>
+          ))}
+        </div>
+      ) : rows.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-[#E7DDD2] bg-white px-4 py-10 text-center text-sm text-[#6B5A50]">Nothing in this list.</p>
       ) : (
         <div className="grid gap-3 lg:grid-cols-3">
@@ -939,7 +1088,7 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
                 ) : null}
                 <OrderTimes order={order} servedAt={servedAt} />
                 {order.status === "SERVED" ? (
-                  <button type="button" disabled={busy === order.publicId} onClick={() => void markPaid(order, !order.paidAt)} className={`mt-3 h-10 w-full cursor-pointer rounded-xl border-none text-sm font-semibold disabled:opacity-50 ${order.paidAt ? "bg-[#F6F1EA] text-[#1C1410]" : "bg-[#1C1410] text-white"}`}>
+                  <button type="button" disabled={busy === order.publicId} onClick={() => void markPaid(order, !order.paidAt)} className={`mt-3 h-10 w-full cursor-pointer rounded-xl border-none text-sm font-semibold disabled:opacity-70 ${order.paidAt ? "bg-[#F6F1EA] text-[#1C1410]" : "bg-[#1C1410] text-white"}`}>
                     {order.paidAt ? "Mark unpaid" : "Mark paid"}
                   </button>
                 ) : null}
@@ -974,9 +1123,9 @@ function PaymentsBoard({ tables, menus }: { tables: TableRow[]; menus: MenuRow[]
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-[#6B5A50]">{rangeStart}–{rangeEnd} of {total}</p>
           <div className="flex items-center gap-2">
-            <button type="button" disabled={page <= 1 || loading} onClick={() => setPage((current) => Math.max(1, current - 1))} className="h-9 cursor-pointer rounded-xl border border-[#E7DDD2] bg-white px-3 text-sm font-semibold text-[#1C1410] disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+            <button type="button" disabled={page <= 1 || listLoading} onClick={() => setPage((current) => Math.max(1, current - 1))} className="h-9 cursor-pointer rounded-xl border border-[#E7DDD2] bg-white px-3 text-sm font-semibold text-[#1C1410] disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
             <span className="text-sm text-[#6B5A50]">{page} / {pageCount}</span>
-            <button type="button" disabled={page >= pageCount || loading} onClick={() => setPage((current) => current + 1)} className="h-9 cursor-pointer rounded-xl border border-[#E7DDD2] bg-white px-3 text-sm font-semibold text-[#1C1410] disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+            <button type="button" disabled={page >= pageCount || listLoading} onClick={() => setPage((current) => current + 1)} className="h-9 cursor-pointer rounded-xl border border-[#E7DDD2] bg-white px-3 text-sm font-semibold text-[#1C1410] disabled:cursor-not-allowed disabled:opacity-40">Next</button>
           </div>
         </div>
       ) : null}
