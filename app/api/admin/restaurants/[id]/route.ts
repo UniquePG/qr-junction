@@ -85,8 +85,13 @@ export async function PATCH(
   }
 
   const body = await request.json().catch(() => ({}));
-  if (typeof body.orderingEnabled !== "boolean") {
-    return NextResponse.json({ error: "orderingEnabled must be true or false." }, { status: 400 });
+  const hasOrdering = typeof body.orderingEnabled === "boolean";
+  const hasCallWaiter = typeof body.callWaiterEnabled === "boolean";
+  if (!hasOrdering && !hasCallWaiter) {
+    return NextResponse.json(
+      { error: "Provide orderingEnabled or callWaiterEnabled as a boolean." },
+      { status: 400 },
+    );
   }
 
   try {
@@ -95,7 +100,8 @@ export async function PATCH(
       select: { userId: true },
     });
     if (!current) return NextResponse.json({ error: "Restaurant not found." }, { status: 404 });
-    if (body.orderingEnabled && !(await allows(current.userId, "restaurant.ordering"))) {
+
+    if (hasOrdering && body.orderingEnabled && !(await allows(current.userId, "restaurant.ordering"))) {
       return NextResponse.json(
         {
           error: "plan_limit",
@@ -105,10 +111,34 @@ export async function PATCH(
         { status: 402 },
       );
     }
+
+    if (
+      hasCallWaiter &&
+      body.callWaiterEnabled &&
+      !(await allows(current.userId, "restaurant.call_waiter"))
+    ) {
+      return NextResponse.json(
+        {
+          error: "plan_limit",
+          message: "This plan does not include call waiter. Grant an override first.",
+          feature: "restaurant.call_waiter",
+        },
+        { status: 402 },
+      );
+    }
+
     const restaurant = await prisma.restaurant.update({
       where: { id: restaurantId },
-      data: { orderingEnabled: body.orderingEnabled },
-      select: { id: true, name: true, orderingEnabled: true },
+      data: {
+        ...(hasOrdering ? { orderingEnabled: body.orderingEnabled } : {}),
+        ...(hasCallWaiter ? { callWaiterEnabled: body.callWaiterEnabled } : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+        orderingEnabled: true,
+        callWaiterEnabled: true,
+      },
     });
     const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
     await invalidateRestaurant(restaurant.id, {

@@ -2,9 +2,10 @@
 
 import { useAuth } from "@/components/AuthContext";
 import { SuiteBackProvider, useSuiteBackAction } from "@/components/suites/SuiteBack";
-import { ArrowLeft, LayoutDashboard, LogOut, MoreHorizontal, X } from "lucide-react";
+import { ArrowLeft, Bell, LayoutDashboard, LogOut, MoreHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import { useOrderAlerts } from "@/components/orders/OrderAlerts";
+import { WaiterRequestsSheet } from "@/components/orders/WaiterRequestsSheet";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
@@ -269,6 +270,7 @@ function SuiteShellFrame({
   const alerts = useOrderAlerts();
   const { user, logout } = useAuth();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [waiterOpen, setWaiterOpen] = useState(false);
   const suiteBack = useSuiteBackAction();
   const suiteHome = pathname.startsWith("/dashboard/restaurant")
     ? "/dashboard/restaurant"
@@ -277,6 +279,8 @@ function SuiteShellFrame({
       : "/dashboard";
   const nested = pathname.startsWith(`${suiteHome}/`);
   const stepBack = Boolean(suiteBack?.active) || nested;
+  const showWaiterControl = suiteHome === "/dashboard/restaurant";
+  const waiterPending = alerts.waiterPendingCount > 0;
 
   const isActive = (item: SuiteNavItem) => {
     if (item.match?.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
@@ -399,23 +403,49 @@ function SuiteShellFrame({
               </h2>
             </div>
           </div>
-          {place ? (
-            <Link
-              href={place.href || suiteHome}
-              aria-label={`${place.name} profile`}
-              className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-1 pr-1 no-underline transition hover:bg-[#F6F1EA] sm:pl-3"
-            >
-              <span className="min-w-0 text-right">
-                <span className="block max-w-[9.5rem] truncate text-sm font-semibold sm:max-w-[14rem]" style={{ color: theme.text }}>
-                  {place.name}
-                </span>
-                {place.detail ? (
-                  <span className="mt-0.5 hidden max-w-[14rem] truncate text-[11px] sm:block" style={{ color: "#6B5A50" }}>{place.detail}</span>
+          <div className="flex min-w-0 items-center gap-2">
+            {showWaiterControl ? (
+              <button
+                type="button"
+                onClick={() => {
+                  // Same tap unlocks waiter autoplay (separate from live-order sound).
+                  if (alerts.waiterSoundPreferred) alerts.enableWaiterSound();
+                  setWaiterOpen(true);
+                }}
+                aria-label="Waiter requests"
+                className={`relative inline-flex h-10 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold cursor-pointer ${
+                  waiterPending
+                    ? "border-[#C4622D]/40 bg-[#FFF1E8] text-[#C4622D] animate-[waiterBadgePulse_1.6s_ease-in-out_infinite]"
+                    : "border-[#E7DDD2] bg-white text-[#1C1410]"
+                }`}
+              >
+                <Bell className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Waiter</span>
+                {waiterPending ? (
+                  <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#C4622D] px-1.5 text-[10px] font-bold text-white">
+                    {alerts.waiterPendingCount}
+                  </span>
                 ) : null}
-              </span>
-              <PlaceAvatar place={place} className="h-9 w-9 rounded-full ring-1 ring-[#E7DDD2]" />
-            </Link>
-          ) : null}
+              </button>
+            ) : null}
+            {place ? (
+              <Link
+                href={place.href || suiteHome}
+                aria-label={`${place.name} profile`}
+                className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-1 pr-1 no-underline transition hover:bg-[#F6F1EA] sm:pl-3"
+              >
+                <span className="min-w-0 text-right">
+                  <span className="block max-w-[9.5rem] truncate text-sm font-semibold sm:max-w-[14rem]" style={{ color: theme.text }}>
+                    {place.name}
+                  </span>
+                  {place.detail ? (
+                    <span className="mt-0.5 hidden max-w-[14rem] truncate text-[11px] sm:block" style={{ color: "#6B5A50" }}>{place.detail}</span>
+                  ) : null}
+                </span>
+                <PlaceAvatar place={place} className="h-9 w-9 rounded-full ring-1 ring-[#E7DDD2]" />
+              </Link>
+            ) : null}
+          </div>
         </header>
         <main className="suite-shell-main flex-1 min-h-0 overflow-y-auto p-4 md:p-8 pb-32 md:pb-8 print:overflow-visible print:h-auto print:p-0">
           {children}
@@ -430,6 +460,10 @@ function SuiteShellFrame({
         onMore={() => setMoreOpen(true)}
         onNavigate={() => setMoreOpen(false)}
       />
+
+      {showWaiterControl ? (
+        <WaiterRequestsSheet open={waiterOpen} onClose={() => setWaiterOpen(false)} />
+      ) : null}
 
       {moreOpen ? (
         <div className="suite-chrome md:hidden fixed inset-0 z-50">

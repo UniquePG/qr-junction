@@ -62,6 +62,41 @@ export default function AdminRestaurantDetailPage() {
         </div>
       </AdminCard>
 
+      <AdminCard title="Call waiter unlock">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm text-slate-600">
+              {restaurant.callWaiterEnabled
+                ? "Call waiter is unlocked. The owner can still turn it off from Settings."
+                : "Call waiter is locked. Guests will not see the button until you unlock this."}
+            </p>
+            <p className="mt-2 text-xs text-slate-400">
+              Unlock requires the restaurant.call_waiter plan feature (or an override).
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => {
+              setSaving(true);
+              adminService.setCallWaiter(params.id, !restaurant.callWaiterEnabled)
+                .then((next) => setData((current: any) => ({
+                  ...current,
+                  restaurant: {
+                    ...current.restaurant,
+                    callWaiterEnabled: next.restaurant.callWaiterEnabled,
+                  },
+                })))
+                .catch(() => setError("Could not update call waiter."))
+                .finally(() => setSaving(false));
+            }}
+            className={`h-10 shrink-0 cursor-pointer rounded-xl border-none px-4 text-sm font-semibold text-white ${restaurant.callWaiterEnabled ? "bg-slate-700" : "bg-[#001B50]"}`}
+          >
+            {saving ? "Saving…" : restaurant.callWaiterEnabled ? "Lock call waiter" : "Unlock call waiter"}
+          </button>
+        </div>
+      </AdminCard>
+
       {restaurant.menus.map((menu: any) => (
         <AdminCard key={menu.id} title={`Menu: ${menu.name}`}>
           {menu.categories.map((category: any) => (

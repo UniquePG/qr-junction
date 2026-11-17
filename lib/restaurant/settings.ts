@@ -1,11 +1,21 @@
 export type RestaurantSettings = {
   digitalBill?: boolean;
   orderSound?: boolean;
+  /** Separate chime for call-waiter requests (not live orders). */
+  waiterSound?: boolean;
   /** Owner ops switch. Missing/undefined means accepting (production-safe default). */
   acceptingOrders?: boolean;
+  /** Owner ops switch for call waiter. Missing/undefined means on. */
+  callWaiter?: boolean;
 };
 
-const KNOWN_KEYS = new Set(["digitalBill", "orderSound", "acceptingOrders"]);
+const KNOWN_KEYS = new Set([
+  "digitalBill",
+  "orderSound",
+  "waiterSound",
+  "acceptingOrders",
+  "callWaiter",
+]);
 
 export function getRestaurantSettings(raw: unknown): Required<RestaurantSettings> {
   const source =
@@ -15,8 +25,10 @@ export function getRestaurantSettings(raw: unknown): Required<RestaurantSettings
   return {
     digitalBill: source.digitalBill === true,
     orderSound: source.orderSound === true,
+    waiterSound: source.waiterSound === true,
     // Default ON when unset so existing restaurants keep accepting orders.
     acceptingOrders: source.acceptingOrders !== false,
+    callWaiter: source.callWaiter !== false,
   };
 }
 

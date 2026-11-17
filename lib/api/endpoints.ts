@@ -47,6 +47,7 @@ export const endpoints = {
   conversions: "/api/conversions",
   public: {
     qrEvents: "/api/public/qr-events",
+    waiterRequests: "/api/public/waiter-requests",
   },
   billing: {
     current: "/api/billing",
@@ -69,6 +70,8 @@ export const endpoints = {
     order: (id: string) => `/api/restaurant/orders/${id}`,
     orderBill: (id: string) => `/api/restaurant/orders/${id}/bill`,
     settings: "/api/restaurant/settings",
+    waiterRequests: "/api/restaurant/waiter-requests",
+    waiterRequest: (id: string | number) => `/api/restaurant/waiter-requests/${id}`,
     offers: "/api/restaurant/offers",
     offer: (id: string | number) => `/api/restaurant/offers/${id}`,
   },

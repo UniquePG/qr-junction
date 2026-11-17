@@ -3,77 +3,144 @@
 import { openLiveSocket, type LiveEvent } from "@/lib/live/client";
 import { restaurantService } from "@/lib/api";
 import { formatTableLabel, orderCallCode } from "@/lib/orders/displayId";
-import { toast } from '@/lib/toast';
+import { WAITER_REASON_LABELS, type WaiterReason } from "@/lib/waiter/types";
+import { toast } from "@/lib/toast";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
-const SOUND_KEY = "qj-kitchen-sound";
-const SOUND_SRC = "/sounds/Notification3.mp3";
+const ORDER_SOUND_KEY = "qj-kitchen-sound";
+const WAITER_SOUND_KEY = "qj-waiter-sound";
+/** Live ordering chime — do not change. */
+const ORDER_SOUND_SRC = "/sounds/Notification3.mp3";
+/** Call waiter chime — separate from live ordering. */
+const WAITER_SOUND_SRC = "/sounds/call_waiter_ring2.mp3";
+
+export type WaiterRequestAlert = {
+  id: number;
+  tableNumber: string;
+  reason: string;
+  status: string;
+  createdAt: string;
+};
 
 type OrderAlertsValue = {
   placedCount: number;
+  waiterPendingCount: number;
+  waiterTick: number;
   liveTick: number;
   soundReady: boolean;
   orderSoundPreferred: boolean;
+  waiterSoundReady: boolean;
+  waiterSoundPreferred: boolean;
   enableSound: () => void;
+  enableWaiterSound: () => void;
   /** Call after saving Settings → orderSound so live alerts match without a refresh. */
   setOrderSoundPreferred: (preferred: boolean) => void;
+  setWaiterSoundPreferred: (preferred: boolean) => void;
+  refreshWaiterPending: () => Promise<void>;
 };
 
 const OrderAlertsContext = createContext<OrderAlertsValue>({
   placedCount: 0,
+  waiterPendingCount: 0,
+  waiterTick: 0,
   liveTick: 0,
   soundReady: false,
   orderSoundPreferred: false,
+  waiterSoundReady: false,
+  waiterSoundPreferred: false,
   enableSound: () => {},
+  enableWaiterSound: () => {},
   setOrderSoundPreferred: () => {},
+  setWaiterSoundPreferred: () => {},
+  refreshWaiterPending: async () => {},
 });
 
 export function useOrderAlerts() {
   return useContext(OrderAlertsContext);
 }
 
-function getPlayer(existing: HTMLAudioElement | null) {
-  const player = existing ?? new Audio(SOUND_SRC);
+function getPlayer(existing: HTMLAudioElement | null, src: string) {
+  const player = existing ?? new Audio();
+  // Always pin the expected file — reused elements can keep a stale src.
+  if (!player.src || !player.src.includes(src.replace(/^\//, ""))) {
+    player.src = src;
+  }
   player.preload = "auto";
   player.volume = 1;
   return player;
 }
 
+function reasonLabel(reason: string | undefined) {
+  if (reason && reason in WAITER_REASON_LABELS) {
+    return WAITER_REASON_LABELS[reason as WaiterReason];
+  }
+  return "Help";
+}
+
 export function OrderAlertsProvider({ children }: { children: React.ReactNode }) {
   const [placedCount, setPlacedCount] = useState(0);
+  const [waiterPendingCount, setWaiterPendingCount] = useState(0);
+  const [waiterTick, setWaiterTick] = useState(0);
   const [liveTick, setLiveTick] = useState(0);
   const [soundReady, setSoundReady] = useState(false);
   const [orderSoundPreferred, setOrderSoundPreferred] = useState(false);
-  const seen = useRef(new Set<string>());
-  const audio = useRef<HTMLAudioElement | null>(null);
-  const hadReady = useRef(false);
-  const preferredRef = useRef(false);
-  const unlockedRef = useRef(false);
+  const [waiterSoundReady, setWaiterSoundReady] = useState(false);
+  const [waiterSoundPreferred, setWaiterSoundPreferred] = useState(false);
 
-  const markUnlocked = useCallback(() => {
-    unlockedRef.current = true;
+  const seen = useRef(new Set<string>());
+  const orderAudio = useRef<HTMLAudioElement | null>(null);
+  const waiterAudio = useRef<HTMLAudioElement | null>(null);
+  const hadReady = useRef(false);
+
+  const orderPreferredRef = useRef(false);
+  const orderUnlockedRef = useRef(false);
+  const waiterPreferredRef = useRef(false);
+  const waiterUnlockedRef = useRef(false);
+
+  const markOrderUnlocked = useCallback(() => {
+    orderUnlockedRef.current = true;
     setSoundReady(true);
     try {
-      sessionStorage.setItem(SOUND_KEY, "1");
+      sessionStorage.setItem(ORDER_SOUND_KEY, "1");
     } catch {
       // private mode / blocked storage
     }
   }, []);
 
-  const markLocked = useCallback(() => {
-    unlockedRef.current = false;
+  const markOrderLocked = useCallback(() => {
+    orderUnlockedRef.current = false;
     setSoundReady(false);
     try {
-      sessionStorage.removeItem(SOUND_KEY);
+      sessionStorage.removeItem(ORDER_SOUND_KEY);
     } catch {
       // ignore
     }
   }, []);
 
-  const play = useCallback(() => {
-    if (!preferredRef.current) return;
-    const player = getPlayer(audio.current);
-    audio.current = player;
+  const markWaiterUnlocked = useCallback(() => {
+    waiterUnlockedRef.current = true;
+    setWaiterSoundReady(true);
+    try {
+      sessionStorage.setItem(WAITER_SOUND_KEY, "1");
+    } catch {
+      // private mode / blocked storage
+    }
+  }, []);
+
+  const markWaiterLocked = useCallback(() => {
+    waiterUnlockedRef.current = false;
+    setWaiterSoundReady(false);
+    try {
+      sessionStorage.removeItem(WAITER_SOUND_KEY);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const playOrder = useCallback(() => {
+    if (!orderPreferredRef.current) return;
+    const player = getPlayer(orderAudio.current, ORDER_SOUND_SRC);
+    orderAudio.current = player;
     try {
       player.pause();
       player.currentTime = 0;
@@ -83,30 +150,61 @@ export function OrderAlertsProvider({ children }: { children: React.ReactNode })
     void player
       .play()
       .then(() => {
-        markUnlocked();
+        markOrderUnlocked();
       })
       .catch(() => {
-        // Autoplay blocked until a user gesture unlocks audio.
-        markLocked();
+        markOrderLocked();
       });
-  }, [markLocked, markUnlocked]);
+  }, [markOrderLocked, markOrderUnlocked]);
+
+  const playWaiter = useCallback(() => {
+    if (!waiterPreferredRef.current) return;
+    const player = getPlayer(waiterAudio.current, WAITER_SOUND_SRC);
+    waiterAudio.current = player;
+    player.src = WAITER_SOUND_SRC;
+    try {
+      player.pause();
+      player.load();
+      player.currentTime = 0;
+    } catch {
+      // ignore seek/load errors before metadata
+    }
+    void player
+      .play()
+      .then(() => {
+        markWaiterUnlocked();
+      })
+      .catch(() => {
+        // Autoplay blocked until a real user gesture unlocks audio.
+        markWaiterLocked();
+      });
+  }, [markWaiterLocked, markWaiterUnlocked]);
 
   const setOrderSoundPreferredValue = useCallback(
     (preferred: boolean) => {
-      preferredRef.current = preferred;
+      orderPreferredRef.current = preferred;
       setOrderSoundPreferred(preferred);
-      if (!preferred) markLocked();
+      if (!preferred) markOrderLocked();
     },
-    [markLocked],
+    [markOrderLocked],
+  );
+
+  const setWaiterSoundPreferredValue = useCallback(
+    (preferred: boolean) => {
+      waiterPreferredRef.current = preferred;
+      setWaiterSoundPreferred(preferred);
+      if (!preferred) markWaiterLocked();
+    },
+    [markWaiterLocked],
   );
 
   const enableSound = useCallback(() => {
-    // Unlock must run inside a user gesture. Treat this as “sound wanted” for this session.
-    preferredRef.current = true;
+    orderPreferredRef.current = true;
     setOrderSoundPreferred(true);
-    const player = getPlayer(audio.current);
-    audio.current = player;
-    // Near-silent unlock so the first tap does not blast the kitchen chime.
+    // Optimistic unlock on the user gesture so settings UI does not flash "Tap to unlock".
+    markOrderUnlocked();
+    const player = getPlayer(orderAudio.current, ORDER_SOUND_SRC);
+    orderAudio.current = player;
     player.volume = 0.001;
     void player
       .play()
@@ -118,60 +216,112 @@ export function OrderAlertsProvider({ children }: { children: React.ReactNode })
           // ignore
         }
         player.volume = 1;
-        markUnlocked();
+        markOrderUnlocked();
       })
       .catch(() => {
         player.volume = 1;
-        markLocked();
+        markOrderLocked();
       });
-  }, [markLocked, markUnlocked]);
+  }, [markOrderLocked, markOrderUnlocked]);
 
-  // Load restaurant preference. Never claim "ready" without a real unlock gesture.
+  const enableWaiterSound = useCallback(() => {
+    waiterPreferredRef.current = true;
+    setWaiterSoundPreferred(true);
+    markWaiterUnlocked();
+    const player = getPlayer(waiterAudio.current, WAITER_SOUND_SRC);
+    waiterAudio.current = player;
+    player.volume = 0.001;
+    void player
+      .play()
+      .then(() => {
+        player.pause();
+        try {
+          player.currentTime = 0;
+        } catch {
+          // ignore
+        }
+        player.volume = 1;
+        markWaiterUnlocked();
+      })
+      .catch(() => {
+        player.volume = 1;
+        markWaiterLocked();
+      });
+  }, [markWaiterLocked, markWaiterUnlocked]);
+
+  const refreshWaiterPending = useCallback(async () => {
+    try {
+      const res = await restaurantService.listWaiterRequests();
+      if (!res.ok) return;
+      setWaiterPendingCount(Number(res.data.pendingCount) || 0);
+      setWaiterTick((tick) => tick + 1);
+    } catch {
+      // ignore before profile exists
+    }
+  }, []);
+
   useEffect(() => {
-    audio.current = getPlayer(null);
+    orderAudio.current = getPlayer(null, ORDER_SOUND_SRC);
+    waiterAudio.current = getPlayer(null, WAITER_SOUND_SRC);
     let cancelled = false;
+
+    const sessionFlag = (key: string) => {
+      try {
+        return sessionStorage.getItem(key) === "1";
+      } catch {
+        return false;
+      }
+    };
+
     const syncPreference = async () => {
       try {
         const res = await restaurantService.getSettings();
         if (!res.ok || cancelled) return;
-        const preferred = Boolean(res.data.settings?.orderSound);
-        preferredRef.current = preferred;
-        setOrderSoundPreferred(preferred);
-        if (!preferred) {
-          markLocked();
-          return;
-        }
-        // Preference on ≠ browser unlocked. Keep banner until a tap succeeds.
-        let hadSessionUnlock = false;
-        try {
-          hadSessionUnlock = sessionStorage.getItem(SOUND_KEY) === "1";
-        } catch {
-          hadSessionUnlock = false;
-        }
-        if (!hadSessionUnlock) {
-          setSoundReady(false);
-          unlockedRef.current = false;
+        const orderPreferred = Boolean(res.data.settings?.orderSound);
+        const waiterPreferred = Boolean(res.data.settings?.waiterSound);
+        orderPreferredRef.current = orderPreferred;
+        setOrderSoundPreferred(orderPreferred);
+        waiterPreferredRef.current = waiterPreferred;
+        setWaiterSoundPreferred(waiterPreferred);
+
+        if (!orderPreferred) {
+          markOrderLocked();
+        } else if (sessionFlag(ORDER_SOUND_KEY)) {
+          // Same tab/session already unlocked — keep banner hidden across refresh.
+          orderUnlockedRef.current = true;
+          setSoundReady(true);
         } else {
-          // Session says unlocked before, but reload still needs a gesture in most browsers.
+          orderUnlockedRef.current = false;
           setSoundReady(false);
-          unlockedRef.current = false;
+        }
+
+        if (!waiterPreferred) {
+          markWaiterLocked();
+        } else if (sessionFlag(WAITER_SOUND_KEY)) {
+          waiterUnlockedRef.current = true;
+          setWaiterSoundReady(true);
+        } else {
+          waiterUnlockedRef.current = false;
+          setWaiterSoundReady(false);
         }
       } catch {
         // Settings may 400 before profile exists — ignore.
       }
     };
     void syncPreference();
+    void refreshWaiterPending();
     return () => {
       cancelled = true;
     };
-  }, [markLocked]);
+  }, [markOrderLocked, markWaiterLocked, refreshWaiterPending]);
 
-  // Unlock on the first real user gesture while order sound is preferred.
+  // After refresh the Audio element is new — re-arm on the first gesture even if the
+  // session banner is already hidden. Failures clear the session flag and show the banner again.
   useEffect(() => {
-    if (!orderSoundPreferred || soundReady) return;
+    if (!orderSoundPreferred) return;
 
     const unlock = () => {
-      if (!preferredRef.current || unlockedRef.current) return;
+      if (!orderPreferredRef.current) return;
       enableSound();
     };
 
@@ -181,16 +331,58 @@ export function OrderAlertsProvider({ children }: { children: React.ReactNode })
       window.removeEventListener("pointerdown", unlock, true);
       window.removeEventListener("keydown", unlock, true);
     };
-  }, [enableSound, orderSoundPreferred, soundReady]);
+  }, [enableSound, orderSoundPreferred]);
+
+  useEffect(() => {
+    if (!waiterSoundPreferred) return;
+
+    const unlock = () => {
+      if (!waiterPreferredRef.current) return;
+      enableWaiterSound();
+    };
+
+    window.addEventListener("pointerdown", unlock, { once: true, capture: true });
+    window.addEventListener("keydown", unlock, { once: true, capture: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlock, true);
+      window.removeEventListener("keydown", unlock, true);
+    };
+  }, [enableWaiterSound, waiterSoundPreferred]);
 
   useEffect(() => {
     const onEvent = (event: LiveEvent) => {
       if (event.type === "ready") {
         if (typeof event.placedCount === "number") setPlacedCount(event.placedCount);
-        if (hadReady.current) setLiveTick((tick) => tick + 1);
+        if (typeof event.waiterPendingCount === "number") setWaiterPendingCount(event.waiterPendingCount);
+        if (hadReady.current) {
+          setLiveTick((tick) => tick + 1);
+          setWaiterTick((tick) => tick + 1);
+        }
         hadReady.current = true;
         return;
       }
+
+      if (event.type === "waiter.request.created" || event.type === "waiter.request.updated") {
+        if (typeof event.waiterPendingCount === "number") {
+          setWaiterPendingCount(event.waiterPendingCount);
+        } else {
+          void refreshWaiterPending();
+        }
+        setWaiterTick((tick) => tick + 1);
+        if (event.type !== "waiter.request.created") return;
+        const key = `waiter-${event.id || event.request?.id}`;
+        if (!key || seen.current.has(key)) return;
+        seen.current.add(key);
+        const where = formatTableLabel(event.request?.tableNumber);
+        const need = reasonLabel(event.request?.reason);
+        toast.info(`${where} · ${need}`);
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          new Notification("Waiter requested", { body: `${where} · ${need}` });
+        }
+        if (waiterPreferredRef.current) playWaiter();
+        return;
+      }
+
       if (event.type !== "order.placed" && event.type !== "order.updated") return;
       if (typeof event.placedCount === "number") setPlacedCount(event.placedCount);
       setLiveTick((tick) => tick + 1);
@@ -206,7 +398,7 @@ export function OrderAlertsProvider({ children }: { children: React.ReactNode })
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
         new Notification("New plate", { body: callCode ? `${where} · ${callCode}` : where });
       }
-      if (preferredRef.current) play();
+      if (orderPreferredRef.current) playOrder();
     };
 
     const connection = openLiveSocket(
@@ -217,17 +409,24 @@ export function OrderAlertsProvider({ children }: { children: React.ReactNode })
       onEvent,
     );
     return () => connection.close();
-  }, [play]);
+  }, [playOrder, playWaiter, refreshWaiterPending]);
 
   return (
     <OrderAlertsContext.Provider
       value={{
         placedCount,
+        waiterPendingCount,
+        waiterTick,
         liveTick,
         soundReady,
         orderSoundPreferred,
+        waiterSoundReady,
+        waiterSoundPreferred,
         enableSound,
+        enableWaiterSound,
         setOrderSoundPreferred: setOrderSoundPreferredValue,
+        setWaiterSoundPreferred: setWaiterSoundPreferredValue,
+        refreshWaiterPending,
       }}
     >
       {children}

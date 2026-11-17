@@ -383,8 +383,9 @@ model Restaurant {
   currency     String          @default("INR")
   taxRate      Decimal         @default(0.00) @db.Decimal(5, 2) @map("tax_rate")
   taxName      String          @default("GST") @map("tax_name")
-  orderingEnabled Boolean      @default(false) @map("ordering_enabled")
-  prepMinutes     Int          @default(12) @map("prep_minutes")
+  orderingEnabled   Boolean    @default(false) @map("ordering_enabled")
+  callWaiterEnabled Boolean    @default(false) @map("call_waiter_enabled")
+  prepMinutes       Int        @default(12) @map("prep_minutes")
   phone           String?
   whatsapp        String?
   email           String?
@@ -415,12 +416,30 @@ model Restaurant {
   categories   MenuCategory[]
   tables       RestaurantTable[]
   qrCodes      QRCode[]
-  orders       MenuOrder[]
-  locales      RestaurantLocale[]
-  offers       MenuOffer[]
+  orders         MenuOrder[]
+  locales        RestaurantLocale[]
+  offers         MenuOffer[]
+  waiterRequests WaiterRequest[]
 
   @@index([createdAt])
   @@map("restaurants")
+}
+
+model WaiterRequest {
+  id             Int       @id @default(autoincrement())
+  restaurantId   Int       @map("restaurant_id")
+  tableNumber    String    @map("table_number") @db.VarChar(64)
+  reason         String    @db.VarChar(32)
+  status         String    @default("PENDING") @db.VarChar(32)
+  guestKey       String?   @map("guest_key") @db.VarChar(64)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  acknowledgedAt DateTime? @map("acknowledged_at")
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, status, createdAt])
+  @@index([restaurantId, tableNumber, createdAt])
+  @@map("waiter_requests")
 }
 
 model RestaurantLocale {

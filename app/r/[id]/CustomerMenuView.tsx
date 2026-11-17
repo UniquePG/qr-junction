@@ -36,6 +36,7 @@ import { ItemTags } from '@/components/menu/ItemTags';
 import { OfferProvider } from '@/components/menu/offers/OfferContext';
 import { CollectionStrip, OfferRail } from '@/components/menu/offers/OfferRail';
 import { ItemPrice } from '@/components/menu/shared';
+import { CallWaiterButton } from '@/components/menu/CallWaiterButton';
 import { MenuWelcomeOverlay } from '@/components/menu/MenuWelcomeOverlay';
 import {
   MenuLocaleProvider,
@@ -213,6 +214,7 @@ interface Restaurant {
   orderingEnabled?: boolean;
   orderingPaused?: boolean;
   orderingUnlocked?: boolean;
+  callWaiterEnabled?: boolean;
   phone?: string | null;
   whatsapp?: string | null;
   email?: string | null;
@@ -974,11 +976,16 @@ function CustomerMenuViewInner({
             </div>
           </div>
 
-          {/* Table Diners Indicator */}
+          {/* Table Diners Indicator + Call Waiter */}
           {tableNumber && (
-            <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-100 shrink-0">
-              <Compass className="w-4 h-4 animate-spin-slow" />
-              Dining at {formatTableLabel(tableNumber)}
+            <div className="flex flex-wrap items-center justify-center gap-2 shrink-0 sm:justify-end">
+              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-100">
+                <Compass className="w-4 h-4 animate-spin-slow" />
+                Dining at {formatTableLabel(tableNumber)}
+              </div>
+              {!layoutPreview && restaurant.callWaiterEnabled ? (
+                <CallWaiterButton restaurantId={restaurant.id} tableNumber={tableNumber} />
+              ) : null}
             </div>
           )}
           </div>

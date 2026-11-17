@@ -4,9 +4,11 @@ type Listener = (event: OrderBusEvent) => void;
 
 export type OrderBusEvent = {
   id: string;
-  type: "order.placed" | "order.updated";
-  order: Record<string, unknown>;
+  type: "order.placed" | "order.updated" | "waiter.request.created" | "waiter.request.updated";
+  order?: Record<string, unknown>;
+  request?: Record<string, unknown>;
   placedCount?: number;
+  waiterPendingCount?: number;
 };
 
 type GlobalBus = {

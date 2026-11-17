@@ -24,4 +24,32 @@ export const publicService = {
       .then(() => undefined)
       .catch(() => undefined);
   },
+
+  createWaiterRequest(body: {
+    restaurantId: number;
+    tableNumber: string;
+    reason: string;
+    guestKey?: string | null;
+  }) {
+    return apiRequest<{
+      request: {
+        id: number;
+        restaurantId: number;
+        tableNumber: string;
+        reason: string;
+        status: string;
+        createdAt: string;
+        acknowledgedAt: string | null;
+      };
+      cooldownSeconds: number;
+      pendingCount: number;
+      error?: string;
+      code?: string;
+    }>({
+      method: "POST",
+      url: endpoints.public.waiterRequests,
+      data: body,
+      requireAuth: false,
+    });
+  },
 };

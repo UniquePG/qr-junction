@@ -3,7 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { getDbUserIdFromRequest } from "@/lib/authHelper";
 import { allows, requireWritable } from "@/lib/billing/guard";
 import { prisma } from "@/lib/prisma";
-import { resolveOrderingGate } from "@/lib/restaurant/gates";
+import { resolveCallWaiterGate, resolveOrderingGate } from "@/lib/restaurant/gates";
 import {
   getRestaurantSettings,
   isKnownSettingsKey,
@@ -16,20 +16,35 @@ export const dynamic = "force-dynamic";
 async function loadOwned(userId: number) {
   return prisma.restaurant.findUnique({
     where: { userId },
-    select: { id: true, settings: true, name: true, orderingEnabled: true },
+    select: {
+      id: true,
+      settings: true,
+      name: true,
+      orderingEnabled: true,
+      callWaiterEnabled: true,
+    },
   });
 }
 
-async function buildSettingsPayload(userId: number, restaurant: {
-  id: number;
-  settings: unknown;
-  orderingEnabled: boolean;
-}) {
+async function buildSettingsPayload(
+  userId: number,
+  restaurant: {
+    id: number;
+    settings: unknown;
+    orderingEnabled: boolean;
+    callWaiterEnabled: boolean;
+  },
+) {
   const settings = getRestaurantSettings(restaurant.settings);
   const digitalBillAllowed = await allows(userId, "restaurant.orders.digital_bill");
   const orderingGate = await resolveOrderingGate({
     userId,
     orderingEnabled: restaurant.orderingEnabled,
+    settings: restaurant.settings,
+  });
+  const callWaiterGate = await resolveCallWaiterGate({
+    userId,
+    callWaiterEnabled: restaurant.callWaiterEnabled,
     settings: restaurant.settings,
   });
 
@@ -38,19 +53,23 @@ async function buildSettingsPayload(userId: number, restaurant: {
     settings: {
       ...settings,
       digitalBill: digitalBillAllowed ? settings.digitalBill : false,
-      acceptingOrders: orderingGate.canManageAcceptingOrders
-        ? settings.acceptingOrders
-        : false,
+      acceptingOrders: orderingGate.canManageAcceptingOrders ? settings.acceptingOrders : false,
+      callWaiter: callWaiterGate.canManageCallWaiter ? settings.callWaiter : false,
     },
     entitlements: {
       digitalBill: digitalBillAllowed,
       ordering: orderingGate.planAllows,
+      callWaiter: callWaiterGate.planAllows,
     },
     capabilities: {
       orderingUnlocked: orderingGate.unlocked,
       canManageAcceptingOrders: orderingGate.canManageAcceptingOrders,
       orderingEffective: orderingGate.effective,
       orderingReason: orderingGate.reason,
+      callWaiterUnlocked: callWaiterGate.unlocked,
+      canManageCallWaiter: callWaiterGate.canManageCallWaiter,
+      callWaiterEffective: callWaiterGate.effective,
+      callWaiterReason: callWaiterGate.reason,
     },
   };
 }
@@ -134,6 +153,23 @@ export async function PATCH(request: Request) {
       }
     }
 
+    if (typeof patch.callWaiter === "boolean") {
+      const callWaiterGate = await resolveCallWaiterGate({
+        userId,
+        callWaiterEnabled: restaurant.callWaiterEnabled,
+        settings: restaurant.settings,
+      });
+      if (!callWaiterGate.canManageCallWaiter) {
+        return NextResponse.json(
+          {
+            error: "Call waiter is not unlocked for this restaurant yet.",
+            code: "CALL_WAITER_LOCKED",
+          },
+          { status: 403 },
+        );
+      }
+    }
+
     const next = mergeRestaurantSettings(restaurant.settings, patch);
     await prisma.restaurant.update({
       where: { id: restaurant.id },
@@ -147,6 +183,7 @@ export async function PATCH(request: Request) {
       id: restaurant.id,
       settings: next,
       orderingEnabled: restaurant.orderingEnabled,
+      callWaiterEnabled: restaurant.callWaiterEnabled,
     });
     return NextResponse.json(payload);
   } catch (error) {

@@ -795,13 +795,15 @@ function GuestOrderCard({
           {order.items.map((item, index) => (
             <li
               key={`${order.publicId}-${index}`}
-              className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2.5 gap-y-0.5 py-1.5"
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-0.5 py-1.5"
             >
-              <span className="pt-px text-[12px] font-bold tabular-nums text-[#8A7366]">
-                {item.quantity}×
-              </span>
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-medium leading-snug text-[#1C1410]">{item.name}</p>
+                <p className="flex min-w-0 items-baseline gap-1.5 text-[13px] leading-snug text-[#1C1410]">
+                  <span className="truncate font-medium">{item.name}</span>
+                  <span className="shrink-0 text-[11px] font-medium tabular-nums text-[#B0A094]">
+                    ×{item.quantity}
+                  </span>
+                </p>
                 <p className="mt-0.5 truncate text-[11px] tabular-nums text-[#8A7366]">
                   {item.variantLabel ? `${item.variantLabel} · ` : null}
                   {money(currencySymbol, item.unitPrice)} each

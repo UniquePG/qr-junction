@@ -111,6 +111,15 @@ export const adminService = {
     });
   },
 
+  setCallWaiter<T = any>(id: string | number, callWaiterEnabled: boolean) {
+    return apiData<T>({
+      method: "PATCH",
+      url: endpoints.admin.restaurant(id),
+      data: { callWaiterEnabled },
+      requireAuth: true,
+    });
+  },
+
   pages<T = any>(query?: Query) {
     return list(endpoints.admin.pages, query) as Promise<T>;
   },

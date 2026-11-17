@@ -179,13 +179,23 @@ export const restaurantService = {
 
   getSettings() {
     return apiRequest<{
-      settings: { digitalBill: boolean; orderSound: boolean; acceptingOrders: boolean };
-      entitlements: { digitalBill: boolean; ordering: boolean };
+      settings: {
+        digitalBill: boolean;
+        orderSound: boolean;
+        waiterSound: boolean;
+        acceptingOrders: boolean;
+        callWaiter: boolean;
+      };
+      entitlements: { digitalBill: boolean; ordering: boolean; callWaiter: boolean };
       capabilities: {
         orderingUnlocked: boolean;
         canManageAcceptingOrders: boolean;
         orderingEffective: boolean;
         orderingReason: string | null;
+        callWaiterUnlocked: boolean;
+        canManageCallWaiter: boolean;
+        callWaiterEffective: boolean;
+        callWaiterReason: string | null;
       };
     }>({
       method: "GET",
@@ -193,20 +203,76 @@ export const restaurantService = {
     });
   },
 
-  patchSettings(body: { digitalBill?: boolean; orderSound?: boolean; acceptingOrders?: boolean }) {
+  patchSettings(body: {
+    digitalBill?: boolean;
+    orderSound?: boolean;
+    waiterSound?: boolean;
+    acceptingOrders?: boolean;
+    callWaiter?: boolean;
+  }) {
     return apiRequest<{
-      settings: { digitalBill: boolean; orderSound: boolean; acceptingOrders: boolean };
-      entitlements: { digitalBill: boolean; ordering: boolean };
+      settings: {
+        digitalBill: boolean;
+        orderSound: boolean;
+        waiterSound: boolean;
+        acceptingOrders: boolean;
+        callWaiter: boolean;
+      };
+      entitlements: { digitalBill: boolean; ordering: boolean; callWaiter: boolean };
       capabilities: {
         orderingUnlocked: boolean;
         canManageAcceptingOrders: boolean;
         orderingEffective: boolean;
         orderingReason: string | null;
+        callWaiterUnlocked: boolean;
+        canManageCallWaiter: boolean;
+        callWaiterEffective: boolean;
+        callWaiterReason: string | null;
       };
     }>({
       method: "PATCH",
       url: endpoints.restaurant.settings,
       data: body,
+    });
+  },
+
+  listWaiterRequests() {
+    return apiRequest<{
+      success: boolean;
+      requests: Array<{
+        id: number;
+        restaurantId: number;
+        tableNumber: string;
+        reason: string;
+        status: string;
+        createdAt: string;
+        acknowledgedAt: string | null;
+      }>;
+      pendingCount: number;
+    }>({
+      method: "GET",
+      url: endpoints.restaurant.waiterRequests,
+      params: { status: "PENDING" },
+    });
+  },
+
+  acknowledgeWaiterRequest(id: string | number) {
+    return apiRequest<{
+      success: boolean;
+      request: {
+        id: number;
+        tableNumber: string;
+        reason: string;
+        status: string;
+        createdAt: string;
+        acknowledgedAt: string | null;
+      };
+      changed: boolean;
+      pendingCount: number;
+    }>({
+      method: "PATCH",
+      url: endpoints.restaurant.waiterRequest(id),
+      data: { status: "ACKNOWLEDGED" },
     });
   },
 

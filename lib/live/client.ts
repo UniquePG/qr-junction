@@ -4,11 +4,20 @@ export type LiveEvent = {
   type: string;
   id?: string;
   placedCount?: number;
+  waiterPendingCount?: number;
   message?: string;
   order?: {
     publicId?: string;
     publicToken?: string;
     tableNumber?: string | null;
+    [key: string]: unknown;
+  };
+  request?: {
+    id?: number;
+    tableNumber?: string | null;
+    reason?: string;
+    status?: string;
+    createdAt?: string;
     [key: string]: unknown;
   };
 };

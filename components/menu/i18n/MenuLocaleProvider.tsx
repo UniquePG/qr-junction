@@ -71,6 +71,7 @@ type RawRestaurant = {
   orderingEnabled?: boolean;
   orderingPaused?: boolean;
   orderingUnlocked?: boolean;
+  callWaiterEnabled?: boolean;
   phone?: string | null;
   whatsapp?: string | null;
   email?: string | null;

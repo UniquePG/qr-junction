@@ -74,10 +74,15 @@ async function watchKitchen(
   }
   const stop = subscribeOrder(restaurantChannel(restaurant.id), (event: OrderBusEvent) => send(socket, event));
   replace(stop);
-  const placedCount = await prisma.menuOrder.count({
-    where: { restaurantId: restaurant.id, status: "PLACED" },
-  });
-  send(socket, { type: "ready", placedCount });
+  const [placedCount, waiterPendingCount] = await Promise.all([
+    prisma.menuOrder.count({
+      where: { restaurantId: restaurant.id, status: "PLACED" },
+    }),
+    prisma.waiterRequest.count({
+      where: { restaurantId: restaurant.id, status: "PENDING" },
+    }),
+  ]);
+  send(socket, { type: "ready", placedCount, waiterPendingCount });
 }
 
 function handleConnection(socket: LiveSocket, request: IncomingMessage | null) {
