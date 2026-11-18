@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   CreditCard,
@@ -62,9 +62,17 @@ function pageTitle(pathname: string) {
 }
 
 export default function PlatformLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const staffBlocked = !loading && user?.restaurantAccess?.kind === "staff";
+
+  useEffect(() => {
+    if (!staffBlocked) return;
+    router.replace("/dashboard/restaurant");
+  }, [staffBlocked, router]);
 
   const handleLogout = async () => {
     try {
@@ -116,6 +124,14 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
       })}
     </>
   );
+
+  if (loading || staffBlocked) {
+    return (
+      <div className="min-h-dvh flex items-center justify-center bg-slate-50 text-sm text-slate-500">
+        {staffBlocked ? "Opening restaurant…" : "Loading…"}
+      </div>
+    );
+  }
 
   return (
     <div className="h-dvh bg-slate-50 text-slate-800 flex relative overflow-hidden">

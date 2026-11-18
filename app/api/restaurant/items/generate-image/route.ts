@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { generateDishImage } from '@/lib/ai';
 import { v2 as cloudinary } from 'cloudinary';
+import { restaurantAuth, restaurantErrorResponse } from '@/lib/restaurant/http';
+import { auditFromContext, clientIp } from '@/lib/restaurant/audit';
 
 export const maxDuration = 60;
 
@@ -13,10 +14,8 @@ cloudinary.config({
 
 export async function POST(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await restaurantAuth(request, ['menu.create', 'menu.update']);
+    if (auth.error) return auth.error;
 
     const body = await request.json();
     const { itemName } = body;
@@ -30,8 +29,9 @@ export async function POST(request: Request) {
     let generated;
     try {
       generated = await generateDishImage(promptText);
-    } catch (err: any) {
-      console.error('[Image] All providers failed:', err?.message || err);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('[Image] All providers failed:', message);
       return NextResponse.json(
         { error: 'AI Image Generation service is currently unavailable. Please try again later.' },
         { status: 500 }
@@ -45,16 +45,19 @@ export async function POST(request: Request) {
       folder: 'qrjunction',
     });
 
+    auditFromContext(auth.ctx, {
+      action: 'item.image_generate',
+      resourceType: 'menu_item',
+      summary: `Generated an AI image for “${String(itemName).trim().slice(0, 80)}”`,
+      meta: { provider: generated.provider },
+      ip: clientIp(request),
+    });
     return NextResponse.json({
       success: true,
       url: uploadResponse.secure_url,
       provider: generated.provider,
     });
-  } catch (error: any) {
-    console.error('AI Image generation endpoint error:', error);
-    return NextResponse.json(
-      { error: 'Image generation failed', details: error.message },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return restaurantErrorResponse(error, 'Image generation failed');
   }
 }

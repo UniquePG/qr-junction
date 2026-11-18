@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { Prisma } from '@prisma/client';
-import { planErrorResponse } from '@/lib/billing/errors';
 import { requireEnabled, requireQuota, requireWritable } from '@/lib/billing/guard';
 import { itemsOnMenu } from '@/lib/billing/resolve';
 import { isPopularFromTags, normalizeTags, parseItemConfig, withTags } from '@/lib/menu/item-config';
 import { syncItemTranslations } from '@/lib/menu/i18n/sync';
+import { restaurantAuth, restaurantErrorResponse } from '@/lib/restaurant/http';
+import { auditFromContext, clientIp } from '@/lib/restaurant/audit';
 
 function configFromBody(body: { tags?: unknown; config?: unknown }, existing?: unknown) {
   if (body.tags !== undefined) {
@@ -27,47 +27,36 @@ function popularFromBody(body: { tags?: unknown; config?: unknown; isPopular?: u
   return fallback;
 }
 
-async function checkCategoryOwnership(categoryId: number, userId: number) {
+async function checkCategoryInRestaurant(categoryId: number, restaurantId: number) {
   const category = await prisma.menuCategory.findFirst({
     where: {
       id: categoryId,
-      restaurant: { userId }
+      restaurantId,
     }
   });
   return !!category;
 }
 
-async function checkItemOwnership(itemId: number, userId: number) {
-  const item = await prisma.menuItem.findFirst({
-    where: {
-      id: itemId,
-      category: {
-        restaurant: { userId }
-      }
-    }
-  });
-  return !!item;
-}
-
 export async function POST(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await restaurantAuth(request, 'menu.create');
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurantId = ctx.restaurant.id;
+    const ownerUserId = ctx.ownerUserId;
 
     const body = await request.json();
-    const { 
-      categoryId, 
-      name, 
-      description, 
-      price, 
+    const {
+      categoryId,
+      name,
+      description,
+      price,
       variants,
-      image, 
-      isAvailable, 
-      isVeg, 
-      isNonVeg, 
-      isVegan, 
+      image,
+      isAvailable,
+      isVeg,
+      isNonVeg,
+      isVegan,
       isPopular,
       tags,
       config,
@@ -78,14 +67,14 @@ export async function POST(request: Request) {
     }
 
     const category = await prisma.menuCategory.findFirst({
-      where: { id: Number(categoryId), restaurant: { userId } },
+      where: { id: Number(categoryId), restaurantId },
       select: { menuId: true, restaurantId: true },
     });
     if (!category) {
       return NextResponse.json({ error: 'Category not found or access denied' }, { status: 403 });
     }
-    await requireWritable(userId);
-    await requireQuota(userId, 'restaurant.menu.items_per_menu', await itemsOnMenu(category.menuId));
+    await requireWritable(ownerUserId);
+    await requireQuota(ownerUserId, 'restaurant.menu.items_per_menu', await itemsOnMenu(category.menuId));
 
     const maxOrderItem = await prisma.menuItem.findFirst({
       where: { categoryId: Number(categoryId) },
@@ -93,7 +82,6 @@ export async function POST(request: Request) {
     });
     const nextOrder = maxOrderItem ? maxOrderItem.order + 1 : 0;
 
-    // Normalize variants: array of { label: string, price: number } or null
     const normalizedVariants = Array.isArray(variants) && variants.length > 0 ? variants : Prisma.JsonNull;
     const normalizedConfig = configFromBody({ tags, config });
     const popular = popularFromBody({ tags, config, isPopular }, false) ?? false;
@@ -122,33 +110,52 @@ export async function POST(request: Request) {
 
     const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
     await invalidateRestaurant(category.restaurantId, { menu: category.menuId, menusIndex: true });
+    auditFromContext(ctx, {
+      action: 'item.create',
+      resourceType: 'menu_item',
+      resourceId: item.id,
+      summary: `Added item “${item.name}” (₹${Number(item.price)})`,
+      meta: { name: item.name, price: Number(item.price), categoryId: item.categoryId },
+      ip: clientIp(request),
+    });
     return NextResponse.json({ success: true, item });
-  } catch (error: any) {
-    const denied = planErrorResponse(error);
-    if (denied) return denied;
-    console.error('Error creating menu item:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: unknown) {
+    return restaurantErrorResponse(error, 'Internal Server Error');
   }
 }
 
 export async function PUT(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const body = await request.json().catch(() => null);
+
+    // Toggling sold-out on its own only needs `menu.availability` (full edits need `menu.update`).
+    const keys = Object.keys(body || {});
+    const availabilityToggleOnly =
+      body && typeof body === 'object' && body.id && typeof body.isAvailable === 'boolean' &&
+      keys.every((key) => key === 'id' || key === 'isAvailable');
+
+    const auth = await restaurantAuth(
+      request,
+      availabilityToggleOnly ? ['menu.update', 'menu.availability'] : 'menu.update',
+    );
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurantId = ctx.restaurant.id;
+    const ownerUserId = ctx.ownerUserId;
+
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    await requireEnabled(userId, 'restaurant.menu.edit');
+    await requireEnabled(ownerUserId, 'restaurant.menu.edit');
 
-    const body = await request.json();
-    
     if (body.items && Array.isArray(body.items)) {
       const updates = body.items.map((it: { id: number; order: number }) =>
         prisma.menuItem.updateMany({
           where: {
             id: it.id,
             category: {
-              restaurant: { userId }
+              restaurantId,
             }
           },
           data: {
@@ -157,29 +164,23 @@ export async function PUT(request: Request) {
         })
       );
       await prisma.$transaction(updates);
-      const restaurant = await prisma.restaurant.findUnique({
-        where: { userId },
-        select: { id: true },
-      });
-      if (restaurant) {
-        const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
-        await invalidateRestaurant(restaurant.id, { menu: "all", menusIndex: true });
-      }
+      const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
+      await invalidateRestaurant(restaurantId, { menu: "all", menusIndex: true });
       return NextResponse.json({ success: true, message: 'Items reordered successfully' });
     }
 
-    const { 
+    const {
       id,
       categoryId,
-      name, 
-      description, 
-      price, 
+      name,
+      description,
+      price,
       variants,
-      image, 
-      isAvailable, 
-      isVeg, 
-      isNonVeg, 
-      isVegan, 
+      image,
+      isAvailable,
+      isVeg,
+      isNonVeg,
+      isVegan,
       isPopular,
       tags,
       config,
@@ -191,13 +192,15 @@ export async function PUT(request: Request) {
     }
 
     const existing = await prisma.menuItem.findFirst({
-      where: { id: Number(id), category: { restaurant: { userId } } },
+      where: { id: Number(id), category: { restaurantId } },
       select: {
         id: true,
         config: true,
         name: true,
         description: true,
         variants: true,
+        price: true,
+        isAvailable: true,
         category: { select: { restaurantId: true } },
       },
     });
@@ -206,14 +209,13 @@ export async function PUT(request: Request) {
     }
 
     if (categoryId !== undefined) {
-      const hasCatAccess = await checkCategoryOwnership(Number(categoryId), userId);
+      const hasCatAccess = await checkCategoryInRestaurant(Number(categoryId), restaurantId);
       if (!hasCatAccess) {
         return NextResponse.json({ error: 'New category not found or access denied' }, { status: 403 });
       }
     }
 
-    // Normalize variants: empty array → null (clear), populated array → store, undefined → leave unchanged
-    let normalizedVariants: any[] | typeof Prisma.JsonNull | undefined = undefined;
+    let normalizedVariants: unknown[] | typeof Prisma.JsonNull | undefined = undefined;
     if (variants !== undefined) {
       normalizedVariants = Array.isArray(variants) && variants.length > 0 ? variants : Prisma.JsonNull;
     }
@@ -227,7 +229,7 @@ export async function PUT(request: Request) {
         name: name !== undefined ? name : undefined,
         description: description !== undefined ? description : undefined,
         price: price !== undefined ? Number(price) : undefined,
-        variants: normalizedVariants,
+        variants: normalizedVariants as Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined,
         config: normalizedConfig,
         image: image !== undefined ? image : undefined,
         isAvailable: isAvailable !== undefined ? Boolean(isAvailable) : undefined,
@@ -251,23 +253,61 @@ export async function PUT(request: Request) {
 
     const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
     await invalidateRestaurant(existing.category.restaurantId, { menu: "all", menusIndex: true });
+
+    const availabilityOnly =
+      isAvailable !== undefined &&
+      name === undefined &&
+      description === undefined &&
+      price === undefined &&
+      variants === undefined &&
+      image === undefined &&
+      categoryId === undefined &&
+      tags === undefined &&
+      config === undefined;
+    if (availabilityOnly && Boolean(isAvailable) !== existing.isAvailable) {
+      auditFromContext(ctx, {
+        action: 'item.availability',
+        resourceType: 'menu_item',
+        resourceId: item.id,
+        summary: `Marked “${item.name}” ${item.isAvailable ? 'available' : 'unavailable'}`,
+        meta: { isAvailable: item.isAvailable },
+        ip: clientIp(request),
+      });
+    } else {
+      const changed: string[] = [];
+      if (name !== undefined && name !== existing.name) changed.push('name');
+      if (description !== undefined && (description ?? null) !== (existing.description ?? null)) changed.push('description');
+      if (price !== undefined && Number(price) !== Number(existing.price)) changed.push('price');
+      if (isAvailable !== undefined && Boolean(isAvailable) !== existing.isAvailable) changed.push('availability');
+      if (variants !== undefined) changed.push('variants');
+      if (image !== undefined) changed.push('image');
+      if (categoryId !== undefined) changed.push('category');
+      if (tags !== undefined || config !== undefined) changed.push('tags');
+      auditFromContext(ctx, {
+        action: 'item.update',
+        resourceType: 'menu_item',
+        resourceId: item.id,
+        summary: changed.length
+          ? `Updated item “${item.name}” (${changed.join(', ')})`
+          : `Updated item “${item.name}”`,
+        meta: { changed },
+        ip: clientIp(request),
+      });
+    }
     return NextResponse.json({ success: true, item });
-  } catch (error: any) {
-    const denied = planErrorResponse(error);
-    if (denied) return denied;
-    console.error('Error updating menu item:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: unknown) {
+    return restaurantErrorResponse(error, 'Internal Server Error');
   }
 }
 
 export async function DELETE(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await restaurantAuth(request, 'menu.delete');
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurantId = ctx.restaurant.id;
 
-    await requireEnabled(userId, 'restaurant.menu.edit');
+    await requireEnabled(ctx.ownerUserId, 'restaurant.menu.edit');
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -277,8 +317,8 @@ export async function DELETE(request: Request) {
     }
 
     const existing = await prisma.menuItem.findFirst({
-      where: { id: Number(id), category: { restaurant: { userId } } },
-      select: { id: true, category: { select: { restaurantId: true, menuId: true } } },
+      where: { id: Number(id), category: { restaurantId } },
+      select: { id: true, name: true, category: { select: { restaurantId: true, menuId: true } } },
     });
     if (!existing) {
       return NextResponse.json({ error: 'Item not found or access denied' }, { status: 403 });
@@ -287,6 +327,14 @@ export async function DELETE(request: Request) {
     await prisma.menuItem.delete({
       where: { id: Number(id) },
     });
+    auditFromContext(ctx, {
+      action: 'item.delete',
+      resourceType: 'menu_item',
+      resourceId: existing.id,
+      summary: `Deleted item “${existing.name}”`,
+      meta: { name: existing.name },
+      ip: clientIp(request),
+    });
 
     const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
     await invalidateRestaurant(existing.category.restaurantId, {
@@ -294,10 +342,7 @@ export async function DELETE(request: Request) {
       menusIndex: true,
     });
     return NextResponse.json({ success: true, message: 'Item deleted' });
-  } catch (error: any) {
-    const denied = planErrorResponse(error);
-    if (denied) return denied;
-    console.error('Error deleting menu item:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: unknown) {
+    return restaurantErrorResponse(error, 'Internal Server Error');
   }
 }

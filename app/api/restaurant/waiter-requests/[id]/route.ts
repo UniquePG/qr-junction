@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getDbUserIdFromRequest } from "@/lib/authHelper";
 import { requireWritable } from "@/lib/billing/guard";
-import { prisma } from "@/lib/prisma";
+import { auditFromContext } from "@/lib/restaurant/audit";
+import { restaurantAuth, restaurantErrorResponse } from "@/lib/restaurant/http";
 import { acknowledgeWaiterRequest, WaiterError } from "@/lib/waiter/service";
 
 export const dynamic = "force-dynamic";
@@ -11,17 +11,10 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    await requireWritable(userId);
-
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
-    if (!restaurant) {
-      return NextResponse.json({ error: "Create your restaurant profile first." }, { status: 400 });
-    }
+    const auth = await restaurantAuth(request, "waiter.ack");
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    await requireWritable(ctx.ownerUserId);
 
     const { id } = await params;
     const requestId = Number(id);
@@ -35,9 +28,18 @@ export async function PATCH(
     }
 
     const result = await acknowledgeWaiterRequest({
-      restaurantId: restaurant.id,
+      restaurantId: ctx.restaurant.id,
       requestId,
+      actorUserId: ctx.actorUserId,
     });
+    if (result.changed) {
+      auditFromContext(ctx, {
+        action: "waiter.ack",
+        resourceType: "waiter_request",
+        resourceId: requestId,
+        summary: `Acknowledged waiter call #${requestId}`,
+      });
+    }
     return NextResponse.json({ success: true, ...result });
   } catch (error) {
     if (error instanceof WaiterError) {
@@ -46,7 +48,6 @@ export async function PATCH(
         { status: error.status },
       );
     }
-    console.error(error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return restaurantErrorResponse(error, "Internal Server Error");
   }
 }

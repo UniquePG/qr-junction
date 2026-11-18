@@ -110,9 +110,9 @@ function toBillOrder(order: {
   };
 }
 
-export async function loadStaffBill(userId: number, publicId: string) {
+export async function loadStaffBill(restaurantId: number, publicId: string) {
   const order = await prisma.menuOrder.findFirst({
-    where: { publicId, restaurant: { userId } },
+    where: { publicId, restaurantId },
     include: {
       customer: { select: { name: true } },
       items: { orderBy: { id: "asc" } },

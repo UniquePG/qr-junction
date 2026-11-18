@@ -5,6 +5,7 @@ import { getDbUserIdFromIdToken } from "@/lib/authHelper";
 import { getSessionUserId } from "@/lib/session";
 import { orderChannel, restaurantChannel, subscribeOrder, type OrderBusEvent } from "@/lib/orders/bus";
 import { prisma } from "@/lib/prisma";
+import { ctxCan, resolveRestaurantContext } from "@/lib/restaurant/access";
 
 type LiveSocket = WebSocket & { liveReady?: boolean };
 
@@ -63,23 +64,21 @@ async function watchKitchen(
     socket.close();
     return;
   }
-  const restaurant = await prisma.restaurant.findUnique({
-    where: { userId },
-    select: { id: true },
-  });
-  if (!restaurant) {
+  const ctx = await resolveRestaurantContext(userId);
+  if (!ctx || (!ctxCan(ctx, "orders.view") && !ctxCan(ctx, "waiter.view"))) {
     send(socket, { type: "error", message: "Restaurant not found." });
     socket.close();
     return;
   }
-  const stop = subscribeOrder(restaurantChannel(restaurant.id), (event: OrderBusEvent) => send(socket, event));
+  const restaurantId = ctx.restaurant.id;
+  const stop = subscribeOrder(restaurantChannel(restaurantId), (event: OrderBusEvent) => send(socket, event));
   replace(stop);
   const [placedCount, waiterPendingCount] = await Promise.all([
     prisma.menuOrder.count({
-      where: { restaurantId: restaurant.id, status: "PLACED" },
+      where: { restaurantId, status: "PLACED" },
     }),
     prisma.waiterRequest.count({
-      where: { restaurantId: restaurant.id, status: "PENDING" },
+      where: { restaurantId, status: "PENDING" },
     }),
   ]);
   send(socket, { type: "ready", placedCount, waiterPendingCount });

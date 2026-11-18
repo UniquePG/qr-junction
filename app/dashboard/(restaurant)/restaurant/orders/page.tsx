@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, Eye, Printer, X } from "lucide-react";
+import { useAuth } from "@/components/AuthContext";
 import BillReceiptView from "@/components/orders/BillReceiptView";
 import { useOrderAlerts } from "@/components/orders/OrderAlerts";
 import { restaurantService } from "@/lib/api";
@@ -9,6 +10,7 @@ import type { BillOrder, BillRestaurant } from "@/lib/orders/bill";
 import { formatTableLabel, orderCallCode } from "@/lib/orders/displayId";
 import { waitLabel } from "@/lib/orders/eta";
 import { customerStatusCopy, ownerStage } from "@/lib/orders/status";
+import { hasPermission } from "@/lib/restaurant/staff/permissions";
 import Link from "next/link";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "@/lib/toast";
@@ -150,6 +152,10 @@ function KitchenTimeCard({ draft, onChange, onSave }: { draft: string; onChange:
 
 export default function RestaurantOrdersPage() {
   const alerts = useOrderAlerts();
+  const { user } = useAuth();
+  const permissions = user?.restaurantAccess?.permissions ?? "ALL";
+  const canTables = permissions === "ALL" || hasPermission(permissions, "tables.view");
+  const canMenus = permissions === "ALL" || hasPermission(permissions, "menu.view");
   const [orders, setOrders] = useState<Ticket[]>([]);
   const [tables, setTables] = useState<TableRow[]>([]);
   const [menus, setMenus] = useState<MenuRow[]>([]);
@@ -194,19 +200,19 @@ export default function RestaurantOrdersPage() {
   const load = useCallback(async () => {
     const [orderResult, tableResult, menuResult] = await Promise.all([
       restaurantService.listOrders(),
-      restaurantService.listTables(),
-      restaurantService.listMenus(),
+      canTables ? restaurantService.listTables() : Promise.resolve(null),
+      canMenus ? restaurantService.listMenus() : Promise.resolve(null),
     ]);
 
     let tablesData: TableRow[] = [];
     let menusData: MenuRow[] = [];
-    if (tableResult.ok) {
+    if (tableResult?.ok) {
       const body = (tableResult.data?.tables ? tableResult.data : await tableResult.json()) as {
         tables?: TableRow[];
       };
       tablesData = Array.isArray(body.tables) ? body.tables : [];
     }
-    if (menuResult.ok) {
+    if (menuResult?.ok) {
       const body = (menuResult.data?.menus ? menuResult.data : await menuResult.json()) as {
         menus?: MenuRow[];
       };
@@ -228,7 +234,7 @@ export default function RestaurantOrdersPage() {
     }
     setLayoutReady(true);
     setBoardLoading(false);
-  }, [prepReady]);
+  }, [prepReady, canTables, canMenus]);
 
   const seenTick = useRef(alerts.liveTick);
   /** Ignore WS echo right after our own mutation so optimistic UI is not overwritten by a slow refetch. */
@@ -462,6 +468,7 @@ export default function RestaurantOrdersPage() {
 
       {openSpot ? (
         <TableDrawer
+          mayReject={permissions === "ALL" || hasPermission(permissions, "orders.reject")}
           spot={openSpot}
           now={now}
           busy={busy}
@@ -497,7 +504,9 @@ function TableDrawer({
   onStage,
   onHistory,
   onPayments,
+  mayReject,
 }: {
+  mayReject: boolean;
   spot: Spot;
   now: number;
   busy: string;
@@ -535,7 +544,7 @@ function TableDrawer({
             const working = busy === order.publicId || busy.startsWith(order.publicId);
             const callCode = orderCallCode(order.publicId, order.tableNumber);
             const confirmingReject = rejecting === order.publicId;
-            const canReject = order.status === "PLACED" || order.status === "ACCEPTED" || order.status === "PREPARING" || order.status === "READY";
+            const canReject = mayReject && (order.status === "PLACED" || order.status === "ACCEPTED" || order.status === "PREPARING" || order.status === "READY");
             return (
               <article key={order.publicId} className={`relative overflow-hidden rounded-2xl bg-white p-4 pt-5 transition-opacity ${working ? "opacity-80" : ""}`}>
                 <div

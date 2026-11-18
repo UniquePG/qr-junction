@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { QRStatus } from '@prisma/client';
+import {
+  RestaurantAccessError,
+  requireAnyRestaurantPermission,
+  resolveRestaurantContext,
+} from '@/lib/restaurant/access';
+import { auditFromContext, clientIp } from '@/lib/restaurant/audit';
 
 export async function GET(
   request: Request,
@@ -63,13 +69,31 @@ export async function PUT(
     const body = await request.json();
 
     // Check ownership and existence
-    const existing = await prisma.qRCode.findFirst({
+    let existing = await prisma.qRCode.findFirst({
       where: {
         id: qrCodeId,
         userId,
         status: { not: QRStatus.DELETED },
       },
     });
+
+    // Restaurant staff may restyle the venue's table / menu QR codes (design fields only).
+    let staffDesignOnly = false;
+    const restaurantCtx = await resolveRestaurantContext(userId);
+    if (!existing && restaurantCtx?.kind === 'staff') {
+      const venueQr = await prisma.qRCode.findFirst({
+        where: {
+          id: qrCodeId,
+          restaurantId: restaurantCtx.restaurant.id,
+          status: { not: QRStatus.DELETED },
+        },
+      });
+      if (venueQr) {
+        requireAnyRestaurantPermission(restaurantCtx, ['tables.manage', 'menu.update']);
+        existing = venueQr;
+        staffDesignOnly = true;
+      }
+    }
 
     if (!existing) {
       return NextResponse.json({ error: 'QR Code not found' }, { status: 404 });
@@ -107,9 +131,9 @@ export async function PUT(
     const updated = await prisma.qRCode.update({
       where: { id: qrCodeId },
       data: {
-        name: name || undefined,
-        destination: destination || undefined,
-        status: status || undefined,
+        name: staffDesignOnly ? undefined : name || undefined,
+        destination: staffDesignOnly ? undefined : destination || undefined,
+        status: staffDesignOnly ? undefined : status || undefined,
         fgColor: fgColor || undefined,
         bgColor: bgColor || undefined,
         logoUrl: logoUrl !== undefined ? logoUrl : undefined,
@@ -126,8 +150,26 @@ export async function PUT(
       },
     });
 
+    if (restaurantCtx && existing.restaurantId === restaurantCtx.restaurant.id) {
+      const changed: string[] = [];
+      if (fgColor || bgColor) changed.push('colors');
+      if (logoUrl !== undefined) changed.push('logo');
+      if (customDesign !== undefined) changed.push('frame/style');
+      auditFromContext(restaurantCtx, {
+        action: 'qr.design',
+        resourceType: 'qr_code',
+        resourceId: updated.id,
+        summary: `Updated QR design “${updated.name}”${changed.length ? ` (${changed.join(', ')})` : ''}`,
+        meta: { changed },
+        ip: clientIp(request),
+      });
+    }
+
     return NextResponse.json({ success: true, qrCode: updated });
   } catch (error: any) {
+    if (error instanceof RestaurantAccessError) {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: error.status });
+    }
     console.error('Error updating QR code:', error);
     return NextResponse.json(
       { error: 'Internal Server Error', details: error.message },

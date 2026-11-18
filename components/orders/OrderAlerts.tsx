@@ -1,11 +1,18 @@
 "use client";
 
+import { useAuth } from "@/components/AuthContext";
 import { openLiveSocket, type LiveEvent } from "@/lib/live/client";
 import { restaurantService } from "@/lib/api";
 import { formatTableLabel, orderCallCode } from "@/lib/orders/displayId";
+import { hasPermission, type StaffPermissionKey } from "@/lib/restaurant/staff/permissions";
 import { WAITER_REASON_LABELS, type WaiterReason } from "@/lib/waiter/types";
 import { toast } from "@/lib/toast";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+
+function staffCan(permissions: string[] | "ALL" | null | undefined, key: StaffPermissionKey) {
+  if (permissions == null) return true; // owner/bootstrap before access loads
+  return hasPermission(permissions, key);
+}
 
 const ORDER_SOUND_KEY = "qj-kitchen-sound";
 const WAITER_SOUND_KEY = "qj-waiter-sound";
@@ -78,6 +85,12 @@ function reasonLabel(reason: string | undefined) {
 }
 
 export function OrderAlertsProvider({ children }: { children: React.ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
+  const permissions = user?.restaurantAccess?.permissions ?? null;
+  const canSettings = staffCan(permissions, "settings.view");
+  const canWaiter = staffCan(permissions, "waiter.view");
+  const canOrders = staffCan(permissions, "orders.view");
+
   const [placedCount, setPlacedCount] = useState(0);
   const [waiterPendingCount, setWaiterPendingCount] = useState(0);
   const [waiterTick, setWaiterTick] = useState(0);
@@ -250,6 +263,7 @@ export function OrderAlertsProvider({ children }: { children: React.ReactNode })
   }, [markWaiterLocked, markWaiterUnlocked]);
 
   const refreshWaiterPending = useCallback(async () => {
+    if (!canWaiter) return;
     try {
       const res = await restaurantService.listWaiterRequests();
       if (!res.ok) return;
@@ -258,9 +272,11 @@ export function OrderAlertsProvider({ children }: { children: React.ReactNode })
     } catch {
       // ignore before profile exists
     }
-  }, []);
+  }, [canWaiter]);
 
   useEffect(() => {
+    if (authLoading || !user?.restaurantAccess) return;
+
     orderAudio.current = getPlayer(null, ORDER_SOUND_SRC);
     waiterAudio.current = getPlayer(null, WAITER_SOUND_SRC);
     let cancelled = false;
@@ -273,37 +289,48 @@ export function OrderAlertsProvider({ children }: { children: React.ReactNode })
       }
     };
 
+    const applySoundPrefs = (orderPreferred: boolean, waiterPreferred: boolean) => {
+      if (cancelled) return;
+      orderPreferredRef.current = orderPreferred;
+      setOrderSoundPreferred(orderPreferred);
+      waiterPreferredRef.current = waiterPreferred;
+      setWaiterSoundPreferred(waiterPreferred);
+
+      if (!orderPreferred) {
+        markOrderLocked();
+      } else if (sessionFlag(ORDER_SOUND_KEY)) {
+        // Same tab/session already unlocked — keep banner hidden across refresh.
+        orderUnlockedRef.current = true;
+        setSoundReady(true);
+      } else {
+        orderUnlockedRef.current = false;
+        setSoundReady(false);
+      }
+
+      if (!waiterPreferred) {
+        markWaiterLocked();
+      } else if (sessionFlag(WAITER_SOUND_KEY)) {
+        waiterUnlockedRef.current = true;
+        setWaiterSoundReady(true);
+      } else {
+        waiterUnlockedRef.current = false;
+        setWaiterSoundReady(false);
+      }
+    };
+
     const syncPreference = async () => {
+      // Only hit settings when the staff role can view them; otherwise use local defaults.
+      if (!canSettings) {
+        applySoundPrefs(canOrders, canWaiter);
+        return;
+      }
       try {
         const res = await restaurantService.getSettings();
         if (!res.ok || cancelled) return;
-        const orderPreferred = Boolean(res.data.settings?.orderSound);
-        const waiterPreferred = Boolean(res.data.settings?.waiterSound);
-        orderPreferredRef.current = orderPreferred;
-        setOrderSoundPreferred(orderPreferred);
-        waiterPreferredRef.current = waiterPreferred;
-        setWaiterSoundPreferred(waiterPreferred);
-
-        if (!orderPreferred) {
-          markOrderLocked();
-        } else if (sessionFlag(ORDER_SOUND_KEY)) {
-          // Same tab/session already unlocked — keep banner hidden across refresh.
-          orderUnlockedRef.current = true;
-          setSoundReady(true);
-        } else {
-          orderUnlockedRef.current = false;
-          setSoundReady(false);
-        }
-
-        if (!waiterPreferred) {
-          markWaiterLocked();
-        } else if (sessionFlag(WAITER_SOUND_KEY)) {
-          waiterUnlockedRef.current = true;
-          setWaiterSoundReady(true);
-        } else {
-          waiterUnlockedRef.current = false;
-          setWaiterSoundReady(false);
-        }
+        applySoundPrefs(
+          Boolean(res.data.settings?.orderSound),
+          Boolean(res.data.settings?.waiterSound),
+        );
       } catch {
         // Settings may 400 before profile exists — ignore.
       }
@@ -313,7 +340,16 @@ export function OrderAlertsProvider({ children }: { children: React.ReactNode })
     return () => {
       cancelled = true;
     };
-  }, [markOrderLocked, markWaiterLocked, refreshWaiterPending]);
+  }, [
+    authLoading,
+    user?.restaurantAccess,
+    canSettings,
+    canOrders,
+    canWaiter,
+    markOrderLocked,
+    markWaiterLocked,
+    refreshWaiterPending,
+  ]);
 
   // After refresh the Audio element is new — re-arm on the first gesture even if the
   // session banner is already hidden. Failures clear the session flag and show the banner again.

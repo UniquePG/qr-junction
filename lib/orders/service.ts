@@ -428,18 +428,18 @@ export async function getOrderByToken(token: string) {
   return toOrderDto(order, { publicToken: true, digitalBillEnabled });
 }
 
-async function loadOwned(userId: number, publicId: string) {
+async function loadOwned(restaurantId: number, publicId: string) {
   const order = await prisma.menuOrder.findFirst({
-    where: { publicId, restaurant: { userId } },
+    where: { publicId, restaurantId },
     include: orderInclude,
   });
   return order;
 }
 
 /** Lean ownership check for mutations — avoids shipping full items/events on every PATCH. */
-async function loadOwnedLean(userId: number, publicId: string) {
+async function loadOwnedLean(restaurantId: number, publicId: string) {
   return prisma.menuOrder.findFirst({
-    where: { publicId, restaurant: { userId } },
+    where: { publicId, restaurantId },
     select: {
       id: true,
       publicId: true,
@@ -452,9 +452,9 @@ async function loadOwnedLean(userId: number, publicId: string) {
   });
 }
 
-async function loadOwnedListDto(userId: number, publicId: string) {
+async function loadOwnedListDto(restaurantId: number, publicId: string) {
   const order = await prisma.menuOrder.findFirst({
-    where: { publicId, restaurant: { userId } },
+    where: { publicId, restaurantId },
     include: listInclude,
   });
   return order ? toOrderDto(order) : null;
@@ -493,15 +493,17 @@ async function updateOwnedOrderPaid(
   return { order: toOrderDto(updated), changed: true as const, placedCount: count };
 }
 
-export async function listRestaurantOrders(userId: number) {
+export async function listRestaurantOrders(restaurantId: number, ownerUserId: number) {
   const restaurant = await prisma.restaurant.findUnique({
-    where: { userId },
-    select: { id: true, orderingEnabled: true, prepMinutes: true, settings: true },
+    where: { id: restaurantId },
+    select: { id: true, userId: true, orderingEnabled: true, prepMinutes: true, settings: true },
   });
-  if (!restaurant) throw new OrderError(404, "NOT_FOUND", "Restaurant not found.");
+  if (!restaurant || restaurant.userId !== ownerUserId) {
+    throw new OrderError(404, "NOT_FOUND", "Restaurant not found.");
+  }
 
   const orderingGate = await resolveOrderingGate({
-    userId,
+    userId: ownerUserId,
     orderingEnabled: restaurant.orderingEnabled,
     settings: restaurant.settings,
   });
@@ -523,7 +525,7 @@ export async function listRestaurantOrders(userId: number) {
   const cached = await getCachedActiveOrders<BoardPayload>(restaurant.id);
   if (cached) return cached;
 
-  const digitalBillEnabled = await isDigitalBillEffective(userId, restaurant.settings);
+  const digitalBillEnabled = await isDigitalBillEffective(ownerUserId, restaurant.settings);
   const finishedWhere: Prisma.MenuOrderWhereInput = {
     restaurantId: restaurant.id,
     status: { in: ["SERVED", "REJECTED"] },
@@ -594,15 +596,18 @@ function paymentPlaceWhere(place: string): Prisma.MenuOrderWhereInput | null {
 }
 
 export async function listFinishedOrders(
-  userId: number,
+  restaurantId: number,
+  ownerUserId: number,
   input: { q?: string; from?: string; to?: string; status?: string; place?: string; page?: number; pageSize?: number },
 ) {
   const restaurant = await prisma.restaurant.findUnique({
-    where: { userId },
-    select: { id: true, settings: true },
+    where: { id: restaurantId },
+    select: { id: true, userId: true, settings: true },
   });
-  if (!restaurant) throw new OrderError(404, "NOT_FOUND", "Restaurant not found.");
-  const digitalBillEnabled = await isDigitalBillEffective(userId, restaurant.settings);
+  if (!restaurant || restaurant.userId !== ownerUserId) {
+    throw new OrderError(404, "NOT_FOUND", "Restaurant not found.");
+  }
+  const digitalBillEnabled = await isDigitalBillEffective(ownerUserId, restaurant.settings);
   const q = String(input.q || "").trim().slice(0, 80);
   const createdAt: Prisma.DateTimeFilter = {};
   const from = parseDay(input.from);
@@ -708,8 +713,8 @@ export async function listFinishedOrders(
   };
 }
 
-export async function getRestaurantOrder(userId: number, publicId: string) {
-  const order = await loadOwned(userId, publicId);
+export async function getRestaurantOrder(restaurantId: number, publicId: string) {
+  const order = await loadOwned(restaurantId, publicId);
   if (!order) throw new OrderError(404, "NOT_FOUND", "Order not found.");
   const history = await prisma.menuOrder.findMany({
     where: {
@@ -724,12 +729,18 @@ export async function getRestaurantOrder(userId: number, publicId: string) {
   return toOrderDto(order, { history: history.map((row) => toOrderDto(row)) });
 }
 
-export async function transitionOrder(userId: number, publicId: string, next: OrderStatus, reason?: string) {
-  const order = await loadOwnedLean(userId, publicId);
+export async function transitionOrder(
+  restaurantId: number,
+  publicId: string,
+  next: OrderStatus,
+  reason?: string,
+  actorUserId?: number | null,
+) {
+  const order = await loadOwnedLean(restaurantId, publicId);
   if (!order) throw new OrderError(404, "NOT_FOUND", "Order not found.");
   if (!canMoveStatus(order.status, next)) {
     const [dto, count] = await Promise.all([
-      loadOwnedListDto(userId, publicId),
+      loadOwnedListDto(restaurantId, publicId),
       placedCount(order.restaurantId),
     ]);
     if (!dto) throw new OrderError(404, "NOT_FOUND", "Order not found.");
@@ -741,7 +752,7 @@ export async function transitionOrder(userId: number, publicId: string, next: Or
     status: next,
     rejectReason: next === "REJECTED" ? note : order.rejectReason,
     stageDueAt: terminal ? null : new Date(Date.now() + stageWindowMinutes(next, order.restaurant.prepMinutes ?? 12) * 60_000),
-    events: { create: { status: next, note } },
+    events: { create: { status: next, note, actorUserId: actorUserId ?? null } },
   });
 }
 
@@ -762,12 +773,12 @@ function readyMinutes(raw: number) {
   return minutes;
 }
 
-export async function setOrderReadyIn(userId: number, publicId: string, minutes: number) {
-  const order = await loadOwnedLean(userId, publicId);
+export async function setOrderReadyIn(restaurantId: number, publicId: string, minutes: number) {
+  const order = await loadOwnedLean(restaurantId, publicId);
   if (!order) throw new OrderError(404, "NOT_FOUND", "Order not found.");
   if (order.status === "SERVED" || order.status === "REJECTED") {
     const [dto, count] = await Promise.all([
-      loadOwnedListDto(userId, publicId),
+      loadOwnedListDto(restaurantId, publicId),
       placedCount(order.restaurantId),
     ]);
     if (!dto) throw new OrderError(404, "NOT_FOUND", "Order not found.");
@@ -778,12 +789,12 @@ export async function setOrderReadyIn(userId: number, publicId: string, minutes:
   });
 }
 
-export async function setOrderStageDue(userId: number, publicId: string, minutes: number) {
-  const order = await loadOwnedLean(userId, publicId);
+export async function setOrderStageDue(restaurantId: number, publicId: string, minutes: number) {
+  const order = await loadOwnedLean(restaurantId, publicId);
   if (!order) throw new OrderError(404, "NOT_FOUND", "Order not found.");
   if (order.status === "SERVED" || order.status === "REJECTED") {
     const [dto, count] = await Promise.all([
-      loadOwnedListDto(userId, publicId),
+      loadOwnedListDto(restaurantId, publicId),
       placedCount(order.restaurantId),
     ]);
     if (!dto) throw new OrderError(404, "NOT_FOUND", "Order not found.");
@@ -794,8 +805,8 @@ export async function setOrderStageDue(userId: number, publicId: string, minutes
   });
 }
 
-export async function setOrderPaid(userId: number, publicId: string, paid: boolean) {
-  const order = await loadOwnedLean(userId, publicId);
+export async function setOrderPaid(restaurantId: number, publicId: string, paid: boolean) {
+  const order = await loadOwnedLean(restaurantId, publicId);
   if (!order) throw new OrderError(404, "NOT_FOUND", "Order not found.");
   if (order.status !== "SERVED") {
     throw new OrderError(400, "PAYMENT", "Mark payment after the plate is served.");
@@ -803,12 +814,12 @@ export async function setOrderPaid(userId: number, publicId: string, paid: boole
   return updateOwnedOrderPaid(order.id, order.restaurantId, paid);
 }
 
-export async function setPrepMinutes(userId: number, minutes: number) {
+export async function setPrepMinutes(restaurantId: number, minutes: number) {
   const next = Math.round(Number(minutes));
   if (!Number.isFinite(next) || next < 5 || next > 90) {
     throw new OrderError(400, "ETA", "Usual kitchen time must be between 5 and 90 minutes.");
   }
-  const restaurant = await prisma.restaurant.findUnique({ where: { userId }, select: { id: true } });
+  const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId }, select: { id: true } });
   if (!restaurant) throw new OrderError(404, "NOT_FOUND", "Restaurant not found.");
   const updated = await prisma.restaurant.update({
     where: { id: restaurant.id },

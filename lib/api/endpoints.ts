@@ -74,6 +74,12 @@ export const endpoints = {
     waiterRequest: (id: string | number) => `/api/restaurant/waiter-requests/${id}`,
     offers: "/api/restaurant/offers",
     offer: (id: string | number) => `/api/restaurant/offers/${id}`,
+    staff: "/api/restaurant/staff",
+    staffMember: (id: string | number) => `/api/restaurant/staff/${id}`,
+    staffRoles: "/api/restaurant/staff/roles",
+    staffRole: (id: string | number) => `/api/restaurant/staff/roles/${id}`,
+    staffPermissions: "/api/restaurant/staff/permissions",
+    logs: "/api/restaurant/logs",
   },
   admin: {
     me: "/api/admin/me",

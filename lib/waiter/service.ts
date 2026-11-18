@@ -214,6 +214,7 @@ export async function listPendingWaiterRequests(restaurantId: number) {
 export async function acknowledgeWaiterRequest(input: {
   restaurantId: number;
   requestId: number;
+  actorUserId?: number | null;
 }) {
   const existing = await prisma.waiterRequest.findFirst({
     where: { id: input.requestId, restaurantId: input.restaurantId },
@@ -231,6 +232,7 @@ export async function acknowledgeWaiterRequest(input: {
     data: {
       status: "ACKNOWLEDGED",
       acknowledgedAt: new Date(),
+      acknowledgedByUserId: input.actorUserId ?? null,
     },
   });
 

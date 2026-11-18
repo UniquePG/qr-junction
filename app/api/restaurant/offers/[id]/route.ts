@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { getDbUserIdFromRequest } from "@/lib/authHelper";
-import { planErrorResponse } from "@/lib/billing/errors";
 import { requireEnabled, requireWritable } from "@/lib/billing/guard";
 import { invalidateRestaurant } from "@/lib/cache/invalidate";
 import {
@@ -13,6 +11,8 @@ import {
 } from "@/lib/offers/rules";
 import type { MenuOfferStatus } from "@/lib/offers/types";
 import { prisma } from "@/lib/prisma";
+import { restaurantAuth, restaurantErrorResponse } from "@/lib/restaurant/http";
+import { auditFromContext, clientIp } from "@/lib/restaurant/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -60,56 +60,54 @@ function serializeOffer(offer: {
   };
 }
 
-async function loadOwnedOffer(userId: number, offerId: number) {
-  const restaurant = await prisma.restaurant.findUnique({
-    where: { userId },
-    select: { id: true },
-  });
-  if (!restaurant) return null;
-  const offer = await prisma.menuOffer.findFirst({
-    where: { id: offerId, restaurantId: restaurant.id },
+async function loadOffer(restaurantId: number, offerId: number) {
+  return prisma.menuOffer.findFirst({
+    where: { id: offerId, restaurantId },
     include: { targets: { select: { kind: true, refId: true } } },
   });
-  if (!offer) return null;
-  return { restaurant, offer };
 }
 
 export async function GET(
   request: Request,
-  ctx: { params: Promise<{ id: string }> },
+  routeCtx: { params: Promise<{ id: string }> },
 ) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const { id } = await ctx.params;
+    const auth = await restaurantAuth(request, "offers.view");
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+
+    const { id } = await routeCtx.params;
     const offerId = parseInt(id, 10);
     if (!Number.isFinite(offerId)) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const owned = await loadOwnedOffer(userId, offerId);
-    if (!owned) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    return NextResponse.json({ success: true, offer: serializeOffer(owned.offer) });
+    const offer = await loadOffer(ctx.restaurant.id, offerId);
+    if (!offer) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ success: true, offer: serializeOffer(offer) });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return restaurantErrorResponse(error, "Internal Server Error");
   }
 }
 
 export async function PATCH(
   request: Request,
-  ctx: { params: Promise<{ id: string }> },
+  routeCtx: { params: Promise<{ id: string }> },
 ) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    await requireWritable(userId);
-    await requireEnabled(userId, "restaurant.offers");
+    const auth = await restaurantAuth(request, "offers.manage");
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurantId = ctx.restaurant.id;
+    const ownerUserId = ctx.ownerUserId;
 
-    const { id } = await ctx.params;
+    await requireWritable(ownerUserId);
+    await requireEnabled(ownerUserId, "restaurant.offers");
+
+    const { id } = await routeCtx.params;
     const offerId = parseInt(id, 10);
     if (!Number.isFinite(offerId)) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const owned = await loadOwnedOffer(userId, offerId);
-    if (!owned) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const existing = await loadOffer(restaurantId, offerId);
+    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object") {
@@ -125,7 +123,7 @@ export async function PATCH(
       }
       data.type = b.type;
     }
-    const nextType = (data.type as string | undefined) || owned.offer.type;
+    const nextType = (data.type as string | undefined) || existing.type;
 
     if (b.title != null) {
       const title = String(b.title).trim().slice(0, 80);
@@ -170,7 +168,7 @@ export async function PATCH(
     if (b.schedule !== undefined) {
       const schedule = parseSchedule(b.schedule);
       if (schedule && (schedule.windows?.length || schedule.daysOfWeek?.length)) {
-        await requireEnabled(userId, "restaurant.offers.custom");
+        await requireEnabled(ownerUserId, "restaurant.offers.custom");
       }
       data.schedule = schedule ? (schedule as Prisma.InputJsonValue) : Prisma.JsonNull;
     }
@@ -194,7 +192,7 @@ export async function PATCH(
       } else {
         const mid = Math.floor(Number(b.menuId));
         const menu = await prisma.menu.findFirst({
-          where: { id: mid, restaurantId: owned.restaurant.id },
+          where: { id: mid, restaurantId },
           select: { id: true },
         });
         if (!menu) return NextResponse.json({ error: "Menu not found." }, { status: 404 });
@@ -219,40 +217,56 @@ export async function PATCH(
       });
     });
 
-    await invalidateRestaurant(owned.restaurant.id, { menu: "all" });
+    await invalidateRestaurant(restaurantId, { menu: "all" });
+    const statusChanged = b.status != null && updated.status !== existing.status;
+    auditFromContext(ctx, {
+      action: statusChanged ? "offer.status" : "offer.update",
+      resourceType: "offer",
+      resourceId: updated.id,
+      summary: statusChanged
+        ? `Set offer “${updated.title}” to ${updated.status}`
+        : `Updated offer “${updated.title}”`,
+      meta: { status: updated.status, fields: Object.keys(b) },
+      ip: clientIp(request),
+    });
     return NextResponse.json({ success: true, offer: serializeOffer(updated) });
   } catch (error) {
-    const plan = planErrorResponse(error);
-    if (plan) return plan;
-    console.error(error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return restaurantErrorResponse(error, "Internal Server Error");
   }
 }
 
 export async function DELETE(
   request: Request,
-  ctx: { params: Promise<{ id: string }> },
+  routeCtx: { params: Promise<{ id: string }> },
 ) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    await requireWritable(userId);
-    await requireEnabled(userId, "restaurant.offers");
+    const auth = await restaurantAuth(request, "offers.manage");
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurantId = ctx.restaurant.id;
 
-    const { id } = await ctx.params;
+    await requireWritable(ctx.ownerUserId);
+    await requireEnabled(ctx.ownerUserId, "restaurant.offers");
+
+    const { id } = await routeCtx.params;
     const offerId = parseInt(id, 10);
     if (!Number.isFinite(offerId)) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const owned = await loadOwnedOffer(userId, offerId);
-    if (!owned) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const existing = await loadOffer(restaurantId, offerId);
+    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     await prisma.menuOffer.delete({ where: { id: offerId } });
-    await invalidateRestaurant(owned.restaurant.id, { menu: "all" });
+    await invalidateRestaurant(restaurantId, { menu: "all" });
+    auditFromContext(ctx, {
+      action: "offer.delete",
+      resourceType: "offer",
+      resourceId: offerId,
+      summary: `Deleted offer “${existing.title}”`,
+      meta: { title: existing.title },
+      ip: clientIp(request),
+    });
     return NextResponse.json({ success: true });
   } catch (error) {
-    const plan = planErrorResponse(error);
-    if (plan) return plan;
-    console.error(error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return restaurantErrorResponse(error, "Internal Server Error");
   }
 }

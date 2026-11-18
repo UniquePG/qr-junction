@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { dateFilter, parseAdminRange } from "@/lib/adminQuery";
-import { getDbUserIdFromRequest } from "@/lib/authHelper";
 import { allows } from "@/lib/billing/guard";
 import { statsRangeCacheKey, TTL } from "@/lib/cache/keys";
 import { prisma } from "@/lib/prisma";
 import { resolveOrderingGate } from "@/lib/restaurant/gates";
+import { restaurantAuth, restaurantErrorResponse } from "@/lib/restaurant/http";
 
 const ZONE = "Asia/Kolkata";
 type Bucket = "hour" | "day" | "week";
@@ -66,11 +66,13 @@ const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 export async function GET(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await restaurantAuth(request, "analytics.view");
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const ownerUserId = ctx.ownerUserId;
 
     const restaurant = await prisma.restaurant.findUnique({
-      where: { userId },
+      where: { id: ctx.restaurant.id },
       select: { id: true, currency: true, orderingEnabled: true, settings: true, userId: true },
     });
     if (!restaurant) return NextResponse.json({ success: true, restaurant: null });
@@ -82,9 +84,9 @@ export async function GET(request: Request) {
     let allTime = range.isAllTime;
 
     const [advancedAnalytics, orderingGate] = await Promise.all([
-      allows(userId, "platform.analytics.advanced"),
+      allows(ownerUserId, "platform.analytics.advanced"),
       resolveOrderingGate({
-        userId: restaurant.userId,
+        userId: ctx.ownerUserId,
         orderingEnabled: restaurant.orderingEnabled,
         settings: restaurant.settings,
       }),
@@ -416,7 +418,6 @@ export async function GET(request: Request) {
     await cacheSetJson(cacheKey, payload, TTL.stats);
     return NextResponse.json(payload);
   } catch (error) {
-    console.error("Restaurant analytics error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return restaurantErrorResponse(error, "Internal Server Error");
   }
 }

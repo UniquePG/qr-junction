@@ -84,7 +84,7 @@ export const FEATURES: FeatureSeed[] = [
   feature({ key: "restaurant.orders.bill_attach", suite: "restaurant", kind: "BOOLEAN", label: "Attach a bill to an order", shipped: false, early: false, sortOrder: 240, free: on(false), starter: on(true), growth: on(true) }),
   feature({ key: "restaurant.orders.digital_bill", suite: "restaurant", kind: "BOOLEAN", label: "Digital bill sent to the customer", shipped: true, early: false, sortOrder: 250, free: on(false), starter: on(false), growth: on(true) }),
   feature({ key: "restaurant.orders.item_reviews", suite: "restaurant", kind: "BOOLEAN", label: "Reviews on dishes", shipped: false, early: false, sortOrder: 260, free: on(false), starter: on(false), growth: on(true) }),
-  feature({ key: "restaurant.staff.seats", suite: "restaurant", kind: "QUOTA", label: "Staff logins", shipped: false, early: false, sortOrder: 270, free: cap(1), starter: cap(5), growth: cap(10) }),
+  feature({ key: "restaurant.staff.seats", suite: "restaurant", kind: "QUOTA", label: "Staff logins", shipped: true, early: false, sortOrder: 270, free: cap(1), starter: cap(5), growth: cap(10) }),
   feature({ key: "reviews.qr.count", suite: "reviews", kind: "QUOTA", label: "Review QR codes", shipped: true, early: false, sortOrder: 310, free: cap(1), starter: cap(5), growth: cap(-1) }),
   feature({ key: "reviews.ai_suggestions", suite: "reviews", kind: "BOOLEAN", label: "AI review suggestions", shipped: true, early: false, sortOrder: 320, free: on(false), starter: on(true), growth: on(true) }),
   feature({ key: "reviews.smart_redirect", suite: "reviews", kind: "BOOLEAN", label: "Smart public review redirect", shipped: true, early: false, sortOrder: 330, free: on(false), starter: on(true), growth: on(true) }),

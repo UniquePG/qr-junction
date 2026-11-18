@@ -4,6 +4,15 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { usePathname } from "next/navigation";
 import { authService } from "@/lib/api";
 
+export type RestaurantAccessInfo = {
+  kind: "owner" | "staff";
+  restaurantId: number;
+  restaurantName: string;
+  staffId: number | null;
+  roleName: string | null;
+  permissions: string[] | "ALL";
+};
+
 export interface AuthUser {
   uid: string;
   id: number;
@@ -13,6 +22,7 @@ export interface AuthUser {
   emailVerified: boolean;
   provider: string | null;
   role: string;
+  restaurantAccess: RestaurantAccessInfo | null;
 }
 
 interface AuthContextType {
@@ -35,7 +45,7 @@ function shouldSkipAuthBootstrap(pathname: string | null) {
   return /^\/(r|q|p)(\/|$)/.test(pathname);
 }
 
-function mapPublicUser(raw: any): AuthUser {
+function mapPublicUser(raw: any, restaurantAccess: any = null): AuthUser {
   const id = Number(raw?.id) || 0;
   return {
     uid: String(id),
@@ -46,6 +56,16 @@ function mapPublicUser(raw: any): AuthUser {
     emailVerified: Boolean(raw?.emailVerified),
     provider: raw?.provider ?? "password",
     role: raw?.role || "USER",
+    restaurantAccess: restaurantAccess
+      ? {
+          kind: restaurantAccess.kind === "staff" ? "staff" : "owner",
+          restaurantId: Number(restaurantAccess.restaurantId) || 0,
+          restaurantName: String(restaurantAccess.restaurantName || ""),
+          staffId: restaurantAccess.staffId == null ? null : Number(restaurantAccess.staffId),
+          roleName: restaurantAccess.roleName ?? null,
+          permissions: restaurantAccess.permissions === "ALL" ? "ALL" : Array.isArray(restaurantAccess.permissions) ? restaurantAccess.permissions.map(String) : [],
+        }
+      : null,
   };
 }
 
@@ -63,7 +83,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       const data = await res.json().catch(() => null);
       if (data?.user) {
-        setUser(mapPublicUser(data.user));
+        setUser(mapPublicUser(data.user, data.restaurantAccess));
       } else {
         setUser(null);
       }

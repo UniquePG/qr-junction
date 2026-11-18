@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { after } from "next/server";
-import { getDbUserIdFromRequest } from "@/lib/authHelper";
-import { planErrorResponse } from "@/lib/billing/errors";
 import { requireAllowed, requireWritable } from "@/lib/billing/guard";
 import { resolveOne } from "@/lib/billing/resolve";
 import {
@@ -17,13 +15,8 @@ import {
   startLocaleTranslationJob,
 } from "@/lib/menu/i18n/sync";
 import { prisma } from "@/lib/prisma";
-
-async function getOwnedRestaurant(userId: number) {
-  return prisma.restaurant.findUnique({
-    where: { userId },
-    select: { id: true },
-  });
-}
+import { restaurantAuth, restaurantErrorResponse } from "@/lib/restaurant/http";
+import { auditFromContext, clientIp } from "@/lib/restaurant/audit";
 
 function planAllowedCodes(feature: {
   quota: number;
@@ -35,23 +28,19 @@ function planAllowedCodes(feature: {
 
 export async function GET(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await restaurantAuth(request, "menu.view");
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurantId = ctx.restaurant.id;
+    const ownerUserId = ctx.ownerUserId;
 
-    const restaurant = await getOwnedRestaurant(userId);
-    if (!restaurant) {
-      return NextResponse.json({ error: "Restaurant profile not found" }, { status: 400 });
-    }
+    await ensureEnglishLocale(restaurantId);
 
-    await ensureEnglishLocale(restaurant.id);
-
-    const feature = await resolveOne(userId, "restaurant.menu.languages");
+    const feature = await resolveOne(ownerUserId, "restaurant.menu.languages");
     const allowed = planAllowedCodes(feature);
 
     const rows = await prisma.restaurantLocale.findMany({
-      where: { restaurantId: restaurant.id },
+      where: { restaurantId },
       orderBy: { code: "asc" },
     });
 
@@ -78,24 +67,17 @@ export async function GET(request: Request) {
       planAllowed: allowed,
     });
   } catch (error) {
-    const denied = planErrorResponse(error);
-    if (denied) return denied;
-    console.error("Error listing menu locales:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return restaurantErrorResponse(error, "Internal Server Error");
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const restaurant = await getOwnedRestaurant(userId);
-    if (!restaurant) {
-      return NextResponse.json({ error: "Restaurant profile not found" }, { status: 400 });
-    }
+    const auth = await restaurantAuth(request, "menu.update");
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurantId = ctx.restaurant.id;
+    const ownerUserId = ctx.ownerUserId;
 
     const body = await request.json().catch(() => ({}));
     const code = body?.code;
@@ -103,14 +85,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unsupported language code" }, { status: 400 });
     }
 
-    await requireWritable(userId);
-    await requireAllowed(userId, "restaurant.menu.languages", code);
-    await ensureEnglishLocale(restaurant.id);
+    await requireWritable(ownerUserId);
+    await requireAllowed(ownerUserId, "restaurant.menu.languages", code);
+    await ensureEnglishLocale(restaurantId);
 
     const locale = await prisma.restaurantLocale.upsert({
-      where: { restaurantId_code: { restaurantId: restaurant.id, code } },
+      where: { restaurantId_code: { restaurantId, code } },
       create: {
-        restaurantId: restaurant.id,
+        restaurantId,
         code,
         active: true,
         status: "pending",
@@ -124,9 +106,17 @@ export async function POST(request: Request) {
     });
 
     after(() => {
-      startLocaleTranslationJob(restaurant.id, code);
+      startLocaleTranslationJob(restaurantId, code);
     });
 
+    auditFromContext(ctx, {
+      action: "locale.enable",
+      resourceType: "locale",
+      resourceId: code,
+      summary: `Enabled menu language ${MENU_I18N_LABELS[code]}`,
+      meta: { code },
+      ip: clientIp(request),
+    });
     return NextResponse.json({
       success: true,
       locale: {
@@ -137,24 +127,17 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    const denied = planErrorResponse(error);
-    if (denied) return denied;
-    console.error("Error enabling menu locale:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return restaurantErrorResponse(error, "Internal Server Error");
   }
 }
 
 export async function PATCH(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const restaurant = await getOwnedRestaurant(userId);
-    if (!restaurant) {
-      return NextResponse.json({ error: "Restaurant profile not found" }, { status: 400 });
-    }
+    const auth = await restaurantAuth(request, "menu.update");
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurantId = ctx.restaurant.id;
+    const ownerUserId = ctx.ownerUserId;
 
     const body = await request.json().catch(() => ({}));
     const code = body?.code;
@@ -166,11 +149,11 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "English cannot be disabled" }, { status: 400 });
     }
 
-    await requireWritable(userId);
+    await requireWritable(ownerUserId);
 
     const action = typeof body?.action === "string" ? body.action : "";
     const existing = await prisma.restaurantLocale.findUnique({
-      where: { restaurantId_code: { restaurantId: restaurant.id, code } },
+      where: { restaurantId_code: { restaurantId, code } },
     });
 
     if (action === "deactivate") {
@@ -181,11 +164,19 @@ export async function PATCH(request: Request) {
         where: { id: existing.id },
         data: { active: false },
       });
+      auditFromContext(ctx, {
+        action: "locale.disable",
+        resourceType: "locale",
+        resourceId: code,
+        summary: `Disabled menu language ${MENU_I18N_LABELS[code]}`,
+        meta: { code },
+        ip: clientIp(request),
+      });
       return NextResponse.json({ success: true, locale });
     }
 
     if (action === "activate") {
-      await requireAllowed(userId, "restaurant.menu.languages", code);
+      await requireAllowed(ownerUserId, "restaurant.menu.languages", code);
       if (!existing) {
         return NextResponse.json(
           { error: "Enable the language first so translations can be generated" },
@@ -196,15 +187,23 @@ export async function PATCH(request: Request) {
         where: { id: existing.id },
         data: { active: true },
       });
+      auditFromContext(ctx, {
+        action: "locale.enable",
+        resourceType: "locale",
+        resourceId: code,
+        summary: `Enabled menu language ${MENU_I18N_LABELS[code]}`,
+        meta: { code },
+        ip: clientIp(request),
+      });
       return NextResponse.json({ success: true, locale });
     }
 
     if (action === "retry") {
-      await requireAllowed(userId, "restaurant.menu.languages", code);
+      await requireAllowed(ownerUserId, "restaurant.menu.languages", code);
       const locale = await prisma.restaurantLocale.upsert({
-        where: { restaurantId_code: { restaurantId: restaurant.id, code } },
+        where: { restaurantId_code: { restaurantId, code } },
         create: {
-          restaurantId: restaurant.id,
+          restaurantId,
           code,
           active: true,
           status: "pending",
@@ -217,7 +216,7 @@ export async function PATCH(request: Request) {
         },
       });
       after(() => {
-        startLocaleTranslationJob(restaurant.id, code);
+        startLocaleTranslationJob(restaurantId, code);
       });
       return NextResponse.json({ success: true, locale });
     }
@@ -227,9 +226,6 @@ export async function PATCH(request: Request) {
       { status: 400 },
     );
   } catch (error) {
-    const denied = planErrorResponse(error);
-    if (denied) return denied;
-    console.error("Error updating menu locale:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return restaurantErrorResponse(error, "Internal Server Error");
   }
 }

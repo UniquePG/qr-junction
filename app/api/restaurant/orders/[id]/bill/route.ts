@@ -1,21 +1,29 @@
 import { NextResponse } from "next/server";
-import { getDbUserIdFromRequest } from "@/lib/authHelper";
 import { buildBillPdfBytes } from "@/lib/orders/bill-pdf";
 import { loadStaffBill } from "@/lib/orders/bill-load";
 import { OrderError } from "@/lib/orders/service";
+import { auditFromContext, clientIp } from "@/lib/restaurant/audit";
+import { restaurantAuth, restaurantErrorResponse } from "@/lib/restaurant/http";
 
 export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(request: Request, { params }: Params) {
-  const userId = await getDbUserIdFromRequest(request);
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await restaurantAuth(request, "orders.bill");
+  if (auth.error) return auth.error;
   const { id } = await params;
   const format = new URL(request.url).searchParams.get("format") || "pdf";
 
   try {
-    const { restaurant, order } = await loadStaffBill(userId, id);
+    const { restaurant, order } = await loadStaffBill(auth.ctx.restaurant.id, id);
+    auditFromContext(auth.ctx, {
+      action: format === "json" ? "order.bill_view" : "order.bill_download",
+      resourceType: "menu_order",
+      resourceId: id,
+      summary: format === "json" ? `Viewed bill for order ${id}` : `Downloaded bill for order ${id}`,
+      ip: clientIp(request),
+    });
     if (format === "json") {
       return NextResponse.json({ restaurant, order });
     }
@@ -33,7 +41,6 @@ export async function GET(request: Request, { params }: Params) {
     if (error instanceof OrderError) {
       return NextResponse.json({ error: error.message, code: error.code }, { status: error.status });
     }
-    console.error(error);
-    return NextResponse.json({ error: "Could not build this bill." }, { status: 500 });
+    return restaurantErrorResponse(error, "Could not build this bill.");
   }
 }

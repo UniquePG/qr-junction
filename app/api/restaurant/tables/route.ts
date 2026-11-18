@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getDbUserIdFromRequest } from '@/lib/authHelper';
-import { planErrorResponse } from '@/lib/billing/errors';
 import { requireQuota, requireWritable } from '@/lib/billing/guard';
 import { generateUniqueShortCode } from '@/utils/shortCode';
+import { restaurantAuth, restaurantErrorResponse } from '@/lib/restaurant/http';
+import { auditFromContext, clientIp } from '@/lib/restaurant/audit';
 import { QRType, QRStatus } from '@prisma/client';
 
 /** Keep list payloads small — frame/logo preset only, no heavy design blobs. */
@@ -21,30 +21,21 @@ function slimCustomDesign(design: unknown) {
 
 export async function GET(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
-
-    if (!restaurant) {
-      return NextResponse.json({ success: true, tables: [] });
-    }
+    const auth = await restaurantAuth(request, 'tables.view');
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurantId = ctx.restaurant.id;
 
     const { cacheGetJson, cacheSetJson } = await import("@/lib/cache/redis");
     const { restaurantCacheKey, TTL } = await import("@/lib/cache/keys");
-    const cacheKey = restaurantCacheKey(restaurant.id, "tables");
+    const cacheKey = restaurantCacheKey(restaurantId, "tables");
     const cached = await cacheGetJson<{ success: true; tables: unknown[] }>(cacheKey);
     if (cached) {
       return NextResponse.json(cached);
     }
 
     const tables = await prisma.restaurantTable.findMany({
-      where: { restaurantId: restaurant.id },
+      where: { restaurantId },
       select: {
         id: true,
         restaurantId: true,
@@ -87,33 +78,25 @@ export async function GET(request: Request) {
     const payload = { success: true as const, tables: slimTables };
     await cacheSetJson(cacheKey, payload, TTL.tables);
     return NextResponse.json(payload);
-  } catch (error: any) {
-    console.error('Error fetching tables:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: unknown) {
+    return restaurantErrorResponse(error, 'Internal Server Error');
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { userId },
-    });
-
-    if (!restaurant) {
-      return NextResponse.json({ error: 'Restaurant profile not found. Please complete profile settings first.' }, { status: 400 });
-    }
+    const auth = await restaurantAuth(request, 'tables.manage');
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurant = { id: ctx.restaurant.id, name: ctx.restaurant.name };
+    const ownerUserId = ctx.ownerUserId;
 
     const body = await request.json();
     const { tableNumber, menuId, capacity } = body;
 
     const tableCount = await prisma.restaurantTable.count({ where: { restaurantId: restaurant.id } });
-    await requireWritable(userId);
-    await requireQuota(userId, 'restaurant.tables', tableCount);
+    await requireWritable(ownerUserId);
+    await requireQuota(ownerUserId, 'restaurant.tables', tableCount);
 
     if (!tableNumber) {
       return NextResponse.json({ error: 'Table number/name is required' }, { status: 400 });
@@ -152,7 +135,7 @@ export async function POST(request: Request) {
           tableNumber: String(tableNumber),
           menuId: menuIdParsed,
         },
-        userId,
+        userId: ownerUserId,
         restaurantId: restaurant.id,
         fgColor: '#000000',
         bgColor: '#FFFFFF',
@@ -176,31 +159,28 @@ export async function POST(request: Request) {
 
     const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
     await invalidateRestaurant(restaurant.id, { tables: true });
+    auditFromContext(ctx, {
+      action: 'table.create',
+      resourceType: 'table',
+      resourceId: table.id,
+      summary: `Added table “${table.tableNumber}”`,
+      meta: { tableNumber: table.tableNumber, capacity: table.capacity, menuId: table.menuId },
+      ip: clientIp(request),
+    });
     return NextResponse.json({ success: true, table });
-  } catch (error: any) {
-    const denied = planErrorResponse(error);
-    if (denied) return denied;
-    console.error('Error creating table:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: unknown) {
+    return restaurantErrorResponse(error, 'Internal Server Error');
   }
 }
 
 export async function PUT(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await restaurantAuth(request, 'tables.manage');
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurant = { id: ctx.restaurant.id, name: ctx.restaurant.name };
 
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { userId },
-    });
-
-    if (!restaurant) {
-      return NextResponse.json({ error: 'Restaurant profile not found.' }, { status: 400 });
-    }
-
-    await requireWritable(userId);
+    await requireWritable(ctx.ownerUserId);
 
     const body = await request.json();
     const { id, tableNumber, menuId, capacity } = body;
@@ -238,7 +218,6 @@ export async function PUT(request: Request) {
     const finalCapacity = capacity !== undefined ? Number(capacity) : existingTable.capacity;
 
     const table = await prisma.$transaction(async (tx) => {
-      // 1. Update table details
       const updated = await tx.restaurantTable.update({
         where: { id: Number(id) },
         data: {
@@ -252,7 +231,6 @@ export async function PUT(request: Request) {
         },
       });
 
-      // 2. Update linked QR Code details if it exists
       if (existingTable.qrCodeId) {
         await tx.qRCode.update({
           where: { id: existingTable.qrCodeId },
@@ -272,23 +250,34 @@ export async function PUT(request: Request) {
 
     const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
     await invalidateRestaurant(restaurant.id, { tables: true });
+    auditFromContext(ctx, {
+      action: 'table.update',
+      resourceType: 'table',
+      resourceId: table.id,
+      summary:
+        existingTable.tableNumber !== table.tableNumber
+          ? `Updated table “${existingTable.tableNumber}” → “${table.tableNumber}”`
+          : `Updated table “${table.tableNumber}”`,
+      meta: {
+        before: { tableNumber: existingTable.tableNumber, capacity: existingTable.capacity, menuId: existingTable.menuId },
+        after: { tableNumber: table.tableNumber, capacity: table.capacity, menuId: table.menuId },
+      },
+      ip: clientIp(request),
+    });
     return NextResponse.json({ success: true, table });
-  } catch (error: any) {
-    const denied = planErrorResponse(error);
-    if (denied) return denied;
-    console.error('Error updating table:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: unknown) {
+    return restaurantErrorResponse(error, 'Internal Server Error');
   }
 }
 
 export async function DELETE(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await restaurantAuth(request, 'tables.manage');
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurantId = ctx.restaurant.id;
 
-    await requireWritable(userId);
+    await requireWritable(ctx.ownerUserId);
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -300,7 +289,7 @@ export async function DELETE(request: Request) {
     const table = await prisma.restaurantTable.findFirst({
       where: {
         id: Number(id),
-        restaurant: { userId },
+        restaurantId,
       },
     });
 
@@ -320,11 +309,16 @@ export async function DELETE(request: Request) {
 
     const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
     await invalidateRestaurant(table.restaurantId, { tables: true });
+    auditFromContext(ctx, {
+      action: 'table.delete',
+      resourceType: 'table',
+      resourceId: table.id,
+      summary: `Deleted table “${table.tableNumber}”`,
+      meta: { tableNumber: table.tableNumber },
+      ip: clientIp(request),
+    });
     return NextResponse.json({ success: true, message: 'Table and its QR code deleted' });
-  } catch (error: any) {
-    const denied = planErrorResponse(error);
-    if (denied) return denied;
-    console.error('Error deleting table:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: unknown) {
+    return restaurantErrorResponse(error, 'Internal Server Error');
   }
 }

@@ -1,10 +1,12 @@
 "use client";
 
+import { useAuth } from "@/components/AuthContext";
 import { OrderAlertsProvider } from "@/components/orders/OrderAlerts";
 import { restaurantService } from "@/lib/api/services/restaurant";
 import { SuiteShell, type SuiteNavItem, type SuitePlace, type SuiteTheme } from "@/components/suites/SuiteShell";
 import { RESTAURANT_PROFILE_EVENT } from "@/lib/restaurant/events";
 import { restaurantKeys } from "@/lib/restaurant/queryKeys";
+import { hasPermission, NAV_PERMISSION, type StaffPermissionKey } from "@/lib/restaurant/staff/permissions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BarChart3,
@@ -14,10 +16,13 @@ import {
   Percent,
   QrCode,
   ScanLine,
+  ScrollText,
   Settings,
   Store,
+  Users,
   UtensilsCrossed,
 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
 const theme: SuiteTheme = {
@@ -51,12 +56,14 @@ function placeFromRestaurant(restaurant: {
   };
 }
 
-const items: SuiteNavItem[] = [
+const ALL_ITEMS: SuiteNavItem[] = [
   { name: "Home", href: "/dashboard/restaurant", icon: LayoutDashboard, mobile: true },
   { name: "Menus", href: "/dashboard/restaurant/menu", icon: UtensilsCrossed, mobile: true },
   { name: "Offers", href: "/dashboard/restaurant/offers", icon: Percent },
   { name: "Tables", href: "/dashboard/restaurant/tables", icon: QrCode, mobile: true },
   { name: "Orders", href: "/dashboard/restaurant/orders", icon: ClipboardList, mobile: true, center: true },
+  { name: "Staff", href: "/dashboard/restaurant/staff", icon: Users },
+  { name: "Logs", href: "/dashboard/restaurant/logs", icon: ScrollText },
   { name: "Profile", href: "/dashboard/restaurant/profile", icon: Store },
   { name: "Settings", href: "/dashboard/restaurant/settings", icon: Settings },
   { name: "Scanner", href: "/dashboard/restaurant/scanner", icon: ScanLine },
@@ -64,7 +71,25 @@ const items: SuiteNavItem[] = [
   { name: "Plan", href: "/dashboard/restaurant/billing", icon: CreditCard },
 ];
 
+function canSeeNav(permissions: string[] | "ALL" | null | undefined, href: string) {
+  if (permissions === "ALL" || permissions == null) return true;
+  const key = NAV_PERMISSION[href] as StaffPermissionKey | undefined;
+  if (!key) return true;
+  return hasPermission(permissions, key);
+}
+
+/** Longest matching nav href for the current path (e.g. /staff/roles → /staff). */
+function navHrefForPath(pathname: string): string | null {
+  const matches = Object.keys(NAV_PERMISSION)
+    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+    .sort((a, b) => b.length - a.length);
+  return matches[0] || null;
+}
+
 export default function RestaurantSuiteLayout({ children }: { children: React.ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const profileQuery = useQuery({
     queryKey: [...restaurantKeys.profile(), "shell"] as const,
@@ -87,19 +112,55 @@ export default function RestaurantSuiteLayout({ children }: { children: React.Re
     return () => window.removeEventListener(RESTAURANT_PROFILE_EVENT, onProfile);
   }, [queryClient]);
 
+  const permissions = user?.restaurantAccess?.permissions ?? "ALL";
+  const canProfile = canSeeNav(permissions, "/dashboard/restaurant/profile");
+
   const place: SuitePlace = useMemo(() => {
-    if (profileQuery.data) return placeFromRestaurant(profileQuery.data);
+    const href = canProfile ? "/dashboard/restaurant/profile" : "/dashboard/restaurant";
+    if (profileQuery.data) {
+      return { ...placeFromRestaurant(profileQuery.data), href };
+    }
     return {
-      name: "Restaurant",
+      name: user?.restaurantAccess?.restaurantName?.trim() || "Restaurant",
       logoUrl: null,
       detail: "Restaurant",
-      href: "/dashboard/restaurant/profile",
+      href,
     };
-  }, [profileQuery.data]);
+  }, [profileQuery.data, canProfile, user?.restaurantAccess?.restaurantName]);
+
+  const items = useMemo(
+    () => ALL_ITEMS.filter((item) => canSeeNav(permissions, item.href)),
+    [permissions],
+  );
+
+  const showWaiter =
+    permissions === "ALL" || hasPermission(permissions, "waiter.view");
+
+  const deniedPath =
+    !authLoading &&
+    user?.restaurantAccess?.kind === "staff" &&
+    (() => {
+      const href = navHrefForPath(pathname || "");
+      return href ? !canSeeNav(permissions, href) : false;
+    })();
+
+  useEffect(() => {
+    if (deniedPath) router.replace("/dashboard/restaurant");
+  }, [deniedPath, router]);
+
+  if (deniedPath) {
+    return (
+      <OrderAlertsProvider>
+        <SuiteShell theme={theme} items={items} place={place} showWaiterControl={showWaiter}>
+          <p className="text-sm text-[#6B5A50]">You do not have access to this page.</p>
+        </SuiteShell>
+      </OrderAlertsProvider>
+    );
+  }
 
   return (
     <OrderAlertsProvider>
-      <SuiteShell theme={theme} items={items} place={place}>
+      <SuiteShell theme={theme} items={items} place={place} showWaiterControl={showWaiter}>
         {children}
       </SuiteShell>
     </OrderAlertsProvider>

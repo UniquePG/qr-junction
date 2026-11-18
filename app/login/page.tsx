@@ -23,7 +23,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (authLoading || !user) return;
-    router.push(needsEmailVerification(user) ? "/verify-email" : "/dashboard");
+    if (needsEmailVerification(user)) {
+      router.push("/verify-email");
+      return;
+    }
+    router.push(user.restaurantAccess?.kind === "staff" ? "/dashboard/restaurant" : "/dashboard");
   }, [user, authLoading, router]);
 
   const handleCredentialsLogin = async (e: React.FormEvent) => {
@@ -71,7 +75,7 @@ export default function LoginPage() {
       }
       await refreshUser();
       toast.success("Signed in with Google successfully!");
-      router.push("/dashboard");
+      // Destination comes from auth effect (staff → restaurant suite).
     } catch (error: any) {
       console.error("Google login error:", error);
       if (error.code !== "auth/popup-closed-by-user") {

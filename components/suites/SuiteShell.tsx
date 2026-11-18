@@ -240,15 +240,17 @@ export function SuiteShell({
   items,
   place,
   children,
+  showWaiterControl,
 }: {
   theme: SuiteTheme;
   items: SuiteNavItem[];
   place?: SuitePlace | null;
   children: React.ReactNode;
+  showWaiterControl?: boolean;
 }) {
   return (
     <SuiteBackProvider>
-      <SuiteShellFrame theme={theme} items={items} place={place}>
+      <SuiteShellFrame theme={theme} items={items} place={place} showWaiterControl={showWaiterControl}>
         {children}
       </SuiteShellFrame>
     </SuiteBackProvider>
@@ -260,11 +262,13 @@ function SuiteShellFrame({
   items,
   place,
   children,
+  showWaiterControl: showWaiterControlProp,
 }: {
   theme: SuiteTheme;
   items: SuiteNavItem[];
   place?: SuitePlace | null;
   children: React.ReactNode;
+  showWaiterControl?: boolean;
 }) {
   const pathname = usePathname();
   const alerts = useOrderAlerts();
@@ -279,7 +283,8 @@ function SuiteShellFrame({
       : "/dashboard";
   const nested = pathname.startsWith(`${suiteHome}/`);
   const stepBack = Boolean(suiteBack?.active) || nested;
-  const showWaiterControl = suiteHome === "/dashboard/restaurant";
+  const showWaiterControl =
+    showWaiterControlProp ?? suiteHome === "/dashboard/restaurant";
   const waiterPending = alerts.waiterPendingCount > 0;
 
   const isActive = (item: SuiteNavItem) => {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getDbUserIdFromRequest } from "@/lib/authHelper";
 import { createTimer } from "@/lib/perf/timing";
+import { restaurantAuth, restaurantErrorResponse } from "@/lib/restaurant/http";
 
 const menuTreeInclude = {
   categories: {
@@ -17,17 +17,16 @@ const menuTreeInclude = {
 export async function GET(request: Request) {
   const timer = createTimer();
   try {
-    const userId = await getDbUserIdFromRequest(request);
+    const auth = await restaurantAuth(request, "menu.view");
     timer.mark("auth");
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
 
     const { searchParams } = new URL(request.url);
     const menuIdParam = searchParams.get("menuId");
 
     const restaurant = await prisma.restaurant.findUnique({
-      where: { userId },
+      where: { id: ctx.restaurant.id },
       select: {
         id: true,
         name: true,
@@ -87,7 +86,6 @@ export async function GET(request: Request) {
     timer.log("GET /api/restaurant/menu miss");
     return response;
   } catch (error) {
-    console.error("Error fetching menu:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return restaurantErrorResponse(error, "Internal Server Error");
   }
 }

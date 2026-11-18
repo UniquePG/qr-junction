@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDbUserIdFromRequest } from "@/lib/authHelper";
+import { restaurantAuth } from "@/lib/restaurant/http";
 
 export const dynamic = "force-dynamic";
 
@@ -102,8 +102,8 @@ async function lookupCities(country: string, state: string) {
 }
 
 export async function GET(request: Request) {
-  const userId = await getDbUserIdFromRequest(request);
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await restaurantAuth(request, "profile.update");
+  if (auth.error) return auth.error;
 
   const { searchParams } = new URL(request.url);
   const kind = searchParams.get("kind");
@@ -117,6 +117,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unknown lookup." }, { status: 400 });
   } catch (error) {
     console.error("Address lookup failed:", error);
-    return NextResponse.json({ error: "Place lookup is unavailable right now. Type the address instead." }, { status: 502 });
+    return NextResponse.json(
+      { error: "Place lookup is unavailable right now. Type the address instead." },
+      { status: 502 },
+    );
   }
 }

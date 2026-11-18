@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
-import { getDbUserIdFromRequest } from "@/lib/authHelper";
-import { planErrorResponse } from "@/lib/billing/errors";
 import { allows, requireEnabled, requireWritable } from "@/lib/billing/guard";
 import { invalidateRestaurant } from "@/lib/cache/invalidate";
 import {
@@ -13,15 +11,10 @@ import {
 } from "@/lib/offers/rules";
 import type { MenuOfferStatus } from "@/lib/offers/types";
 import { prisma } from "@/lib/prisma";
+import { restaurantAuth, restaurantErrorResponse } from "@/lib/restaurant/http";
+import { auditFromContext, clientIp } from "@/lib/restaurant/audit";
 
 export const dynamic = "force-dynamic";
-
-async function ownedRestaurant(userId: number) {
-  return prisma.restaurant.findUnique({
-    where: { userId },
-    select: { id: true },
-  });
-}
 
 function serializeOffer(offer: {
   id: number;
@@ -69,13 +62,11 @@ function serializeOffer(offer: {
 
 export async function GET(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const restaurant = await ownedRestaurant(userId);
-    if (!restaurant) {
-      return NextResponse.json({ success: true, offers: [], entitlements: { offers: false, custom: false } });
-    }
+    const auth = await restaurantAuth(request, "offers.view");
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurantId = ctx.restaurant.id;
+    const ownerUserId = ctx.ownerUserId;
 
     const url = new URL(request.url);
     const menuIdRaw = url.searchParams.get("menuId");
@@ -83,7 +74,7 @@ export async function GET(request: Request) {
 
     const offers = await prisma.menuOffer.findMany({
       where: {
-        restaurantId: restaurant.id,
+        restaurantId,
         ...(menuId && Number.isFinite(menuId) ? { OR: [{ menuId: null }, { menuId }] } : {}),
       },
       include: { targets: { select: { kind: true, refId: true } } },
@@ -94,27 +85,25 @@ export async function GET(request: Request) {
       success: true,
       offers: offers.map(serializeOffer),
       entitlements: {
-        offers: await allows(userId, "restaurant.offers"),
-        custom: await allows(userId, "restaurant.offers.custom"),
+        offers: await allows(ownerUserId, "restaurant.offers"),
+        custom: await allows(ownerUserId, "restaurant.offers.custom"),
       },
     });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return restaurantErrorResponse(error, "Internal Server Error");
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    await requireWritable(userId);
-    await requireEnabled(userId, "restaurant.offers");
+    const auth = await restaurantAuth(request, "offers.manage");
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurantId = ctx.restaurant.id;
+    const ownerUserId = ctx.ownerUserId;
 
-    const restaurant = await ownedRestaurant(userId);
-    if (!restaurant) {
-      return NextResponse.json({ error: "Create your restaurant profile first." }, { status: 400 });
-    }
+    await requireWritable(ownerUserId);
+    await requireEnabled(ownerUserId, "restaurant.offers");
 
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object") {
@@ -149,7 +138,7 @@ export async function POST(request: Request) {
     const hasCustomSchedule =
       Boolean(schedule?.windows?.length) || Boolean(schedule?.daysOfWeek?.length);
     if (hasCustomSchedule) {
-      await requireEnabled(userId, "restaurant.offers.custom");
+      await requireEnabled(ownerUserId, "restaurant.offers.custom");
     }
 
     let menuId: number | null = null;
@@ -160,7 +149,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Invalid menu." }, { status: 400 });
       }
       const menu = await prisma.menu.findFirst({
-        where: { id, restaurantId: restaurant.id },
+        where: { id, restaurantId },
         select: { id: true },
       });
       if (!menu) return NextResponse.json({ error: "Menu not found." }, { status: 404 });
@@ -184,7 +173,7 @@ export async function POST(request: Request) {
     const offer = await prisma.$transaction(async (tx) => {
       const created = await tx.menuOffer.create({
         data: {
-          restaurantId: restaurant.id,
+          restaurantId,
           menuId,
           type,
           status,
@@ -213,13 +202,18 @@ export async function POST(request: Request) {
       });
     });
 
-    await invalidateRestaurant(restaurant.id, { menu: "all" });
+    await invalidateRestaurant(restaurantId, { menu: "all" });
 
+    auditFromContext(ctx, {
+      action: "offer.create",
+      resourceType: "offer",
+      resourceId: offer.id,
+      summary: `Created offer “${offer.title}” (${offer.status})`,
+      meta: { title: offer.title, type: offer.type, status: offer.status },
+      ip: clientIp(request),
+    });
     return NextResponse.json({ success: true, offer: serializeOffer(offer) }, { status: 201 });
   } catch (error) {
-    const plan = planErrorResponse(error);
-    if (plan) return plan;
-    console.error(error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return restaurantErrorResponse(error, "Internal Server Error");
   }
 }

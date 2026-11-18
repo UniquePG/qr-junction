@@ -12,11 +12,24 @@ type DbUser = Awaited<ReturnType<typeof prisma.user.findUnique>> & {
   emailVerified?: boolean;
 };
 
+/**
+ * Accounts created by a restaurant owner for staff (provider "staff") only exist to work in
+ * that restaurant. Once their access is disabled or removed they must not keep a usable session.
+ */
+async function staffAccessRevoked(userId: number, provider: string | null): Promise<boolean> {
+  if (provider !== "staff") return false;
+  const active = await prisma.restaurantStaff.count({ where: { userId, status: "ACTIVE" } });
+  return active === 0;
+}
+
 async function loadAuthUser(userId: number): Promise<AuthUser | null> {
-  return prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { id: true, provider: true, emailVerified: true },
   });
+  if (!user) return null;
+  if (await staffAccessRevoked(user.id, user.provider)) return null;
+  return user;
 }
 
 async function loadUser(userId: number) {
@@ -30,6 +43,7 @@ export async function getSessionDbUser(request: Request) {
     if (!userId) return null;
     const user = await loadUser(userId);
     if (!user) return null;
+    if (await staffAccessRevoked(user.id, user.provider)) return null;
     return { ...user, emailVerified: Boolean(user.emailVerified) };
   } catch (error) {
     console.error("Error getting session DB user:", error);

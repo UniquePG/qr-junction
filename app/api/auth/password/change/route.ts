@@ -5,6 +5,7 @@ import { getSessionDbUser } from "@/lib/authHelper";
 import { adminAuth } from "@/lib/firebaseAdmin";
 import { hashPassword, passwordPolicyError } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
+import { auditForUser } from "@/lib/restaurant/audit";
 
 export async function POST(request: Request) {
   try {
@@ -87,6 +88,18 @@ export async function POST(request: Request) {
       } catch (error) {
         console.warn("Firebase password sync failed after local change:", error);
       }
+    }
+
+    try {
+      await auditForUser(user.id, {
+        action: "auth.password_change",
+        resourceType: "user",
+        resourceId: user.id,
+        summary: "Changed own password",
+        ip,
+      });
+    } catch (auditError) {
+      console.warn("[audit] password change", auditError);
     }
 
     return NextResponse.json({

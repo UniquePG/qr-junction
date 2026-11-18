@@ -1,33 +1,19 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { generateUniqueShortCode } from '@/utils/shortCode';
-import { planErrorResponse } from '@/lib/billing/errors';
 import { requireAllowed, requireEnabled, requireQuota, requireWritable } from '@/lib/billing/guard';
 import { syncMenuTranslations } from '@/lib/menu/i18n/sync';
+import { restaurantAuth, restaurantErrorResponse } from '@/lib/restaurant/http';
+import { auditFromContext, clientIp } from '@/lib/restaurant/audit';
 import { QRType, QRStatus } from '@prisma/client';
-
-// Helper to verify restaurant ownership
-async function getRestaurantByUserId(userId: number) {
-  return await prisma.restaurant.findUnique({
-    where: { userId },
-  });
-}
 
 export async function GET(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { userId },
-      select: { id: true, name: true },
-    });
-    if (!restaurant) {
-      return NextResponse.json({ success: true, menus: [] });
-    }
+    const auth = await restaurantAuth(request, 'menu.view');
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurant = { id: ctx.restaurant.id, name: ctx.restaurant.name };
+    const ownerUserId = ctx.ownerUserId;
 
     const { cacheGetJson, cacheSetJson } = await import("@/lib/cache/redis");
     const { restaurantCacheKey, TTL } = await import("@/lib/cache/keys");
@@ -55,7 +41,7 @@ export async function GET(request: Request) {
 
     const qrCodes = await prisma.qRCode.findMany({
       where: {
-        userId,
+        userId: ownerUserId,
         type: QRType.RESTAURANT_MENU,
         restaurantId: restaurant.id,
       },
@@ -93,7 +79,7 @@ export async function GET(request: Request) {
                 restaurantId: restaurant.id,
                 menuId: menu.id,
               },
-              userId,
+              userId: ownerUserId,
               restaurantId: restaurant.id,
               fgColor: "#000000",
               bgColor: "#FFFFFF",
@@ -139,23 +125,18 @@ export async function GET(request: Request) {
     const payload = { success: true as const, menus: menusWithQr };
     await cacheSetJson(cacheKey, payload, TTL.menusIndex);
     return NextResponse.json(payload);
-  } catch (error: any) {
-    console.error('Error fetching menus:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: unknown) {
+    return restaurantErrorResponse(error, 'Internal Server Error');
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const restaurant = await getRestaurantByUserId(userId);
-    if (!restaurant) {
-      return NextResponse.json({ error: 'Restaurant profile not found' }, { status: 400 });
-    }
+    const auth = await restaurantAuth(request, 'menu.create');
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurant = { id: ctx.restaurant.id, name: ctx.restaurant.name };
+    const ownerUserId = ctx.ownerUserId;
 
     const body = await request.json();
     const { name, description, theme, isDefault } = body;
@@ -164,18 +145,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Menu name is required' }, { status: 400 });
     }
 
-    // Check if this is the first menu, if so, force it to be default
     const existingCount = await prisma.menu.count({
       where: { restaurantId: restaurant.id }
     });
-    await requireWritable(userId);
-    await requireQuota(userId, 'restaurant.menu.count', existingCount);
-    await requireAllowed(userId, 'restaurant.menu.themes', theme || 'modern');
+    await requireWritable(ownerUserId);
+    await requireQuota(ownerUserId, 'restaurant.menu.count', existingCount);
+    await requireAllowed(ownerUserId, 'restaurant.menu.themes', theme || 'modern');
     const makeDefault = existingCount === 0 || !!isDefault;
 
     const newMenu = await prisma.$transaction(async (tx) => {
       if (makeDefault) {
-        // Unset any existing default menus
         await tx.menu.updateMany({
           where: { restaurantId: restaurant.id },
           data: { isDefault: false },
@@ -193,7 +172,6 @@ export async function POST(request: Request) {
       });
     });
 
-    // Create QR Code for the menu
     const shortCode = await generateUniqueShortCode();
     const qrCode = await prisma.qRCode.create({
       data: {
@@ -204,7 +182,7 @@ export async function POST(request: Request) {
           restaurantId: restaurant.id,
           menuId: newMenu.id,
         },
-        userId,
+        userId: ownerUserId,
         restaurantId: restaurant.id,
         fgColor: '#000000',
         bgColor: '#FFFFFF',
@@ -233,26 +211,27 @@ export async function POST(request: Request) {
 
     const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
     await invalidateRestaurant(restaurant.id, { menusIndex: true, menu: newMenu.id, overview: true });
+    auditFromContext(ctx, {
+      action: 'menu.create',
+      resourceType: 'menu',
+      resourceId: newMenu.id,
+      summary: `Created menu “${newMenu.name}”`,
+      meta: { name: newMenu.name, theme: newMenu.theme, isDefault: newMenu.isDefault },
+      ip: clientIp(request),
+    });
     return NextResponse.json({ success: true, menu: menuWithQr });
-  } catch (error: any) {
-    const denied = planErrorResponse(error);
-    if (denied) return denied;
-    console.error('Error creating menu:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: unknown) {
+    return restaurantErrorResponse(error, 'Internal Server Error');
   }
 }
 
 export async function PUT(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const restaurant = await getRestaurantByUserId(userId);
-    if (!restaurant) {
-      return NextResponse.json({ error: 'Restaurant profile not found' }, { status: 400 });
-    }
+    const auth = await restaurantAuth(request, 'menu.update');
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurant = { id: ctx.restaurant.id, name: ctx.restaurant.name };
+    const ownerUserId = ctx.ownerUserId;
 
     const body = await request.json();
     const { id, name, description, theme, isDefault } = body;
@@ -261,7 +240,6 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Menu ID is required' }, { status: 400 });
     }
 
-    // Verify ownership of the menu
     const existingMenu = await prisma.menu.findFirst({
       where: {
         id: Number(id),
@@ -273,12 +251,11 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Menu not found or access denied' }, { status: 404 });
     }
 
-    await requireEnabled(userId, 'restaurant.menu.edit');
-    if (theme) await requireAllowed(userId, 'restaurant.menu.themes', theme);
+    await requireEnabled(ownerUserId, 'restaurant.menu.edit');
+    if (theme) await requireAllowed(ownerUserId, 'restaurant.menu.themes', theme);
 
     const updatedMenu = await prisma.$transaction(async (tx) => {
       if (isDefault && !existingMenu.isDefault) {
-        // Unset any existing default menus
         await tx.menu.updateMany({
           where: { restaurantId: restaurant.id },
           data: { isDefault: false },
@@ -299,12 +276,13 @@ export async function PUT(request: Request) {
     if (name) {
       const qrCodes = await prisma.qRCode.findMany({
         where: {
-          userId,
+          userId: ownerUserId,
           type: QRType.RESTAURANT_MENU,
+          restaurantId: restaurant.id,
         }
       });
       const targetQr = qrCodes.find(q => {
-        const dest = q.destination as any;
+        const dest = q.destination as { menuId?: number; tableNumber?: string } | null;
         return dest && dest.menuId === Number(id) && !dest.tableNumber;
       });
       if (targetQr) {
@@ -327,15 +305,15 @@ export async function PUT(request: Request) {
       });
     }
 
-    // Fetch the updated menu with its QR code to return consistent model
     const qrCodes = await prisma.qRCode.findMany({
       where: {
-        userId,
+        userId: ownerUserId,
         type: QRType.RESTAURANT_MENU,
+        restaurantId: restaurant.id,
       }
     });
     const qr = qrCodes.find(q => {
-      const dest = q.destination as any;
+      const dest = q.destination as { menuId?: number; tableNumber?: string } | null;
       return dest && dest.menuId === updatedMenu.id && !dest.tableNumber;
     });
 
@@ -356,26 +334,34 @@ export async function PUT(request: Request) {
 
     const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
     await invalidateRestaurant(restaurant.id, { menusIndex: true, menu: updatedMenu.id, overview: true });
+    const changed: string[] = [];
+    if (name !== undefined && name !== existingMenu.name) changed.push('name');
+    if (description !== undefined && (description ?? null) !== (existingMenu.description ?? null)) changed.push('description');
+    if (theme !== undefined && theme !== existingMenu.theme) changed.push('theme');
+    if (isDefault !== undefined && Boolean(isDefault) !== existingMenu.isDefault) changed.push('default');
+    auditFromContext(ctx, {
+      action: 'menu.update',
+      resourceType: 'menu',
+      resourceId: updatedMenu.id,
+      summary: changed.length
+        ? `Updated menu “${updatedMenu.name}” (${changed.join(', ')})`
+        : `Updated menu “${updatedMenu.name}”`,
+      meta: { changed },
+      ip: clientIp(request),
+    });
     return NextResponse.json({ success: true, menu: menuWithQr });
-  } catch (error: any) {
-    const denied = planErrorResponse(error);
-    if (denied) return denied;
-    console.error('Error updating menu:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: unknown) {
+    return restaurantErrorResponse(error, 'Internal Server Error');
   }
 }
 
 export async function DELETE(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const restaurant = await getRestaurantByUserId(userId);
-    if (!restaurant) {
-      return NextResponse.json({ error: 'Restaurant profile not found' }, { status: 400 });
-    }
+    const auth = await restaurantAuth(request, 'menu.delete');
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const restaurant = { id: ctx.restaurant.id };
+    const ownerUserId = ctx.ownerUserId;
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -386,7 +372,6 @@ export async function DELETE(request: Request) {
 
     const menuIdParsed = Number(id);
 
-    // Verify ownership
     const existingMenu = await prisma.menu.findFirst({
       where: {
         id: menuIdParsed,
@@ -398,9 +383,8 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Menu not found or access denied' }, { status: 404 });
     }
 
-    await requireEnabled(userId, 'restaurant.menu.edit');
+    await requireEnabled(ownerUserId, 'restaurant.menu.edit');
 
-    // Check count: do not allow deleting the only menu
     const totalMenus = await prisma.menu.count({
       where: { restaurantId: restaurant.id }
     });
@@ -410,12 +394,10 @@ export async function DELETE(request: Request) {
     }
 
     await prisma.$transaction(async (tx) => {
-      // Delete the menu
       await tx.menu.delete({
         where: { id: menuIdParsed },
       });
 
-      // If we deleted the default menu, set another one as default
       if (existingMenu.isDefault) {
         const fallbackMenu = await tx.menu.findFirst({
           where: { restaurantId: restaurant.id },
@@ -429,15 +411,15 @@ export async function DELETE(request: Request) {
       }
     });
 
-    // Delete matching QR Code
     const qrCodes = await prisma.qRCode.findMany({
       where: {
-        userId,
+        userId: ownerUserId,
         type: QRType.RESTAURANT_MENU,
+        restaurantId: restaurant.id,
       }
     });
     const targetQr = qrCodes.find(q => {
-      const dest = q.destination as any;
+      const dest = q.destination as { menuId?: number; tableNumber?: string } | null;
       return dest && dest.menuId === menuIdParsed && !dest.tableNumber;
     });
     if (targetQr) {
@@ -448,11 +430,16 @@ export async function DELETE(request: Request) {
 
     const { invalidateRestaurant } = await import("@/lib/cache/invalidate");
     await invalidateRestaurant(restaurant.id, { menusIndex: true, menu: "all", tables: true, overview: true });
+    auditFromContext(ctx, {
+      action: 'menu.delete',
+      resourceType: 'menu',
+      resourceId: menuIdParsed,
+      summary: `Deleted menu “${existingMenu.name}”`,
+      meta: { name: existingMenu.name },
+      ip: clientIp(request),
+    });
     return NextResponse.json({ success: true, message: 'Menu deleted successfully' });
-  } catch (error: any) {
-    const denied = planErrorResponse(error);
-    if (denied) return denied;
-    console.error('Error deleting menu:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: unknown) {
+    return restaurantErrorResponse(error, 'Internal Server Error');
   }
 }

@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getDbUserIdFromRequest } from '@/lib/authHelper';
 import { completeChat } from '@/lib/ai';
-import { planErrorResponse } from '@/lib/billing/errors';
 import { assertAiImportAvailable, consumeAiImport } from '@/lib/billing/guard';
+import { restaurantAuth, restaurantErrorResponse } from '@/lib/restaurant/http';
+import { auditFromContext, clientIp } from '@/lib/restaurant/audit';
 
 export const maxDuration = 60; // Max allowed duration on Vercel Hobby plan is 60 seconds
 
@@ -62,10 +62,10 @@ function parseMenuJson(raw: string): any | null {
 
 export async function POST(request: Request) {
   try {
-    const userId = await getDbUserIdFromRequest(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await restaurantAuth(request, ['scanner.use', 'menu.create']);
+    if (auth.error) return auth.error;
+    const { ctx } = auth;
+    const ownerUserId = ctx.ownerUserId;
 
     const body = await request.json();
     const { fileUrl, fileType } = body;
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'fileUrl is required' }, { status: 400 });
     }
 
-    await assertAiImportAvailable(userId);
+    await assertAiImportAvailable(ownerUserId);
 
     const isPdf = fileType === 'application/pdf' || fileUrl.toLowerCase().endsWith('.pdf');
     let textContent = '';
@@ -193,12 +193,28 @@ IMPORTANT: If no size variants exist for an item, omit the 'variants' field or s
       );
     }
 
-    await consumeAiImport(userId);
+    await consumeAiImport(ownerUserId);
+    const scannedItems = Array.isArray(resultJson?.categories)
+      ? resultJson.categories.reduce(
+          (sum: number, category: { items?: unknown[] }) =>
+            sum + (Array.isArray(category?.items) ? category.items.length : 0),
+          0,
+        )
+      : 0;
+    auditFromContext(ctx, {
+      action: 'menu.scan',
+      resourceType: 'menu',
+      summary: `Scanned a menu with AI (${scannedItems} item${scannedItems === 1 ? '' : 's'} found)`,
+      meta: { items: scannedItems, fileType: fileType || null },
+      ip: clientIp(request),
+    });
     return NextResponse.json({ success: true, menu: resultJson });
-  } catch (error: any) {
-    const denied = planErrorResponse(error);
-    if (denied) return denied;
-    console.error('Menu Scan API Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : undefined;
+    const response = restaurantErrorResponse(error, 'Internal Server Error');
+    if (response.status === 500 && message) {
+      return NextResponse.json({ error: 'Internal Server Error', details: message }, { status: 500 });
+    }
+    return response;
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDbUserIdFromRequest } from "@/lib/authHelper";
 import { prisma } from "@/lib/prisma";
+import { auditForUser, clientIp } from "@/lib/restaurant/audit";
 import { ensureAccountSubscription } from "@/lib/billing/seed";
 import { razorpayConfigured, razorpayPost } from "@/lib/billing/razorpay";
 
@@ -68,6 +69,19 @@ export async function POST(request: Request) {
       payload: { planCode: plan.code, interval, providerSubscriptionId: providerSubscription.id },
     },
   });
+
+  try {
+    await auditForUser(userId, {
+      action: "billing.checkout",
+      resourceType: "subscription",
+      resourceId: subscription.id,
+      summary: `Started checkout for ${plan.name} (${interval === "YEAR" ? "yearly" : "monthly"})`,
+      meta: { planCode: plan.code, interval },
+      ip: clientIp(request),
+    });
+  } catch (auditError) {
+    console.warn("[audit] checkout", auditError);
+  }
 
   return NextResponse.json({ url: providerSubscription.short_url, subscriptionId: providerSubscription.id });
 }

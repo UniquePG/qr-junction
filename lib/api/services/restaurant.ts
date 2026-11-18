@@ -321,4 +321,108 @@ export const restaurantService = {
       url: endpoints.restaurant.offer(id),
     });
   },
+
+  listStaff() {
+    return apiRequest<{
+      seats: { used: number; limit?: number | null; ownerUserId: number };
+      staff: any[];
+    }>({
+      method: "GET",
+      url: endpoints.restaurant.staff,
+    });
+  },
+
+  createStaff(body: unknown) {
+    return apiRequest<{ staff: any }>({
+      method: "POST",
+      url: endpoints.restaurant.staff,
+      data: body,
+    });
+  },
+
+  updateStaff(id: string | number, body: unknown) {
+    return apiRequest<{ staff: any }>({
+      method: "PATCH",
+      url: endpoints.restaurant.staffMember(id),
+      data: body,
+    });
+  },
+
+  removeStaff(id: string | number) {
+    return apiRequest({
+      method: "DELETE",
+      url: endpoints.restaurant.staffMember(id),
+    });
+  },
+
+  listRoles() {
+    return apiRequest<{ roles: any[] }>({
+      method: "GET",
+      url: endpoints.restaurant.staffRoles,
+    });
+  },
+
+  createRole(body: unknown) {
+    return apiRequest<{ role: any }>({
+      method: "POST",
+      url: endpoints.restaurant.staffRoles,
+      data: body,
+    });
+  },
+
+  updateRole(id: string | number, body: unknown) {
+    return apiRequest<{ role: any }>({
+      method: "PATCH",
+      url: endpoints.restaurant.staffRole(id),
+      data: body,
+    });
+  },
+
+  deleteRole(id: string | number) {
+    return apiRequest({
+      method: "DELETE",
+      url: endpoints.restaurant.staffRole(id),
+    });
+  },
+
+  listStaffPermissions() {
+    return apiRequest<{
+      groups: Array<{ group: string; permissions: Array<{ key: string; label: string; group: string }> }>;
+      templates: Array<{ id: string; name: string; description: string; permissions: string[] }>;
+    }>({
+      method: "GET",
+      url: endpoints.restaurant.staffPermissions,
+    });
+  },
+
+  listLogs(params?: {
+    page?: number;
+    pageSize?: number;
+    action?: string;
+    category?: string;
+    actorUserId?: number;
+    actorKind?: string;
+    q?: string;
+    from?: string;
+    to?: string;
+    dayStart?: string;
+    meta?: 0 | 1;
+  }) {
+    return apiRequest<{
+      page: number;
+      pageSize: number;
+      total: number;
+      pages?: number;
+      stats?: { today: number; week: number; actors: number };
+      facets?: {
+        actors: Array<{ id: number; name: string | null; email: string; count: number }>;
+        actions: Array<{ action: string; count: number }>;
+      };
+      logs: any[];
+    }>({
+      method: "GET",
+      url: endpoints.restaurant.logs,
+      params,
+    });
+  },
 };

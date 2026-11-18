@@ -103,6 +103,8 @@ model User {
   landingPages   LandingPage[]
   profile        Profile?
   restaurant           Restaurant?
+  restaurantStaff      RestaurantStaff[]
+  restaurantAuditLogs  RestaurantAuditLog[]
   emailOtp             EmailOtp?
   passwordResetTokens  PasswordResetToken[]
   subscriptions        Subscription[]
@@ -420,20 +422,101 @@ model Restaurant {
   locales        RestaurantLocale[]
   offers         MenuOffer[]
   waiterRequests WaiterRequest[]
+  roles          RestaurantRole[]
+  staff          RestaurantStaff[]
+  auditLogs      RestaurantAuditLog[]
 
   @@index([createdAt])
   @@map("restaurants")
 }
 
+enum RestaurantStaffStatus {
+  ACTIVE
+  DISABLED
+  INVITED
+}
+
+enum RestaurantActorKind {
+  OWNER
+  STAFF
+  SYSTEM
+}
+
+model RestaurantRole {
+  id           Int      @id @default(autoincrement())
+  restaurantId Int      @map("restaurant_id")
+  name         String   @db.VarChar(80)
+  description  String?  @db.VarChar(240)
+  permissions  Json     // string[] of permission keys
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  restaurant Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  staff      RestaurantStaff[]
+
+  @@unique([restaurantId, name])
+  @@index([restaurantId])
+  @@map("restaurant_roles")
+}
+
+model RestaurantStaff {
+  id              Int                   @id @default(autoincrement())
+  restaurantId    Int                   @map("restaurant_id")
+  userId          Int                   @map("user_id")
+  roleId          Int                   @map("role_id")
+  displayName     String                @map("display_name") @db.VarChar(80)
+  phone           String?               @db.VarChar(32)
+  avatarUrl       String?               @map("avatar_url")
+  joinedAt        DateTime?             @map("joined_at")
+  status          RestaurantStaffStatus @default(ACTIVE)
+  documents       Json?                 // reserved for future ID proofs
+  createdByUserId Int                   @map("created_by_user_id")
+  createdAt       DateTime              @default(now()) @map("created_at")
+  updatedAt       DateTime              @updatedAt @map("updated_at")
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       RestaurantRole @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@unique([restaurantId, userId])
+  @@index([userId, status])
+  @@index([restaurantId, status])
+  @@index([roleId])
+  @@map("restaurant_staff")
+}
+
+model RestaurantAuditLog {
+  id           BigInt              @id @default(autoincrement())
+  restaurantId Int                 @map("restaurant_id")
+  actorUserId  Int                 @map("actor_user_id")
+  actorKind    RestaurantActorKind @map("actor_kind")
+  action       String              @db.VarChar(80)
+  resourceType String              @map("resource_type") @db.VarChar(64)
+  resourceId   String?             @map("resource_id") @db.VarChar(80)
+  summary      String              @db.VarChar(280)
+  meta         Json?
+  ip           String?             @db.VarChar(64)
+  createdAt    DateTime            @default(now()) @map("created_at")
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  actor      User       @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, createdAt(sort: Desc)])
+  @@index([restaurantId, actorUserId, createdAt(sort: Desc)])
+  @@index([restaurantId, action, createdAt(sort: Desc)])
+  @@map("restaurant_audit_logs")
+}
+
 model WaiterRequest {
-  id             Int       @id @default(autoincrement())
-  restaurantId   Int       @map("restaurant_id")
-  tableNumber    String    @map("table_number") @db.VarChar(64)
-  reason         String    @db.VarChar(32)
-  status         String    @default("PENDING") @db.VarChar(32)
-  guestKey       String?   @map("guest_key") @db.VarChar(64)
-  createdAt      DateTime  @default(now()) @map("created_at")
-  acknowledgedAt DateTime? @map("acknowledged_at")
+  id                  Int       @id @default(autoincrement())
+  restaurantId        Int       @map("restaurant_id")
+  tableNumber         String    @map("table_number") @db.VarChar(64)
+  reason              String    @db.VarChar(32)
+  status              String    @default("PENDING") @db.VarChar(32)
+  guestKey            String?   @map("guest_key") @db.VarChar(64)
+  createdAt           DateTime  @default(now()) @map("created_at")
+  acknowledgedAt      DateTime? @map("acknowledged_at")
+  acknowledgedByUserId Int?     @map("acknowledged_by_user_id")
 
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
@@ -710,11 +793,12 @@ model MenuOfferTarget {
 }
 
 model MenuOrderEvent {
-  id        Int             @id @default(autoincrement())
-  orderId   Int             @map("order_id")
-  status    MenuOrderStatus
-  note      String?         @db.Text
-  createdAt DateTime        @default(now()) @map("created_at")
+  id          Int             @id @default(autoincrement())
+  orderId     Int             @map("order_id")
+  status      MenuOrderStatus
+  note        String?         @db.Text
+  actorUserId Int?            @map("actor_user_id")
+  createdAt   DateTime        @default(now()) @map("created_at")
 
   order     MenuOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
