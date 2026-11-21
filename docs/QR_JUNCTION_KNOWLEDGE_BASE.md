@@ -99,7 +99,7 @@ The restaurant suite provides:
 - Item descriptions, prices, price variants, images, availability, dietary flags, and popularity.
 - Several menu presentation themes.
 - Restaurant tables that can be associated with a menu and QR code.
-- Public mobile menu pages at `/r/{restaurantId}` and `/r/{restaurantId}/{menuId}`.
+- Public mobile menu pages at `/menu/{restaurant-name}/{menuId}?table={encryptedTableCode}`. The name segment is cosmetic (lowercase, spaces become `-`); the menu is resolved by `menuId`. The table code is AES-256-GCM encrypted (key: `TABLE_CODE_SECRET`, falls back to `AUTH_SECRET`), minted by `/q/{shortCode}` and verified server-side on orders and waiter calls. Legacy `/r/{restaurantId}[/{menuId}]` links redirect to the new URL.
 - Restaurant analytics and table QR management.
 
 Source areas:

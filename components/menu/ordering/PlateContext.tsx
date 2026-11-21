@@ -20,6 +20,7 @@ export type LiveOrder = {
   publicToken: string;
   status: string;
   tableNumber: string | null;
+  customerName?: string | null;
   subtotal: number;
   tax: number;
   total: number;
@@ -117,6 +118,7 @@ export function PlateProvider({
   restaurantId,
   menuId,
   tableNumber,
+  tableCode = null,
   currencySymbol,
   onOpenItem,
   children,
@@ -126,6 +128,7 @@ export function PlateProvider({
   restaurantId: number;
   menuId: number;
   tableNumber: string | null;
+  tableCode?: string | null;
   currencySymbol: string;
   onOpenItem: (item: MenuItem) => void;
   children: React.ReactNode;
@@ -287,7 +290,7 @@ export function PlateProvider({
         body: JSON.stringify({
           restaurantId,
           menuId,
-          tableNumber,
+          tableCode,
           customerName: customer.name,
           customerPhone: customer.phone,
           note,
@@ -313,7 +316,7 @@ export function PlateProvider({
     } finally {
       setSending(false);
     }
-  }, [customer, lines, menuId, note, refreshQuote, remember, restaurantId, sendKey, tableNumber]);
+  }, [customer, lines, menuId, note, refreshQuote, remember, restaurantId, sendKey, tableCode]);
 
   const watchKey = liveOrders
     .filter((order) => order.status !== "REJECTED" && !(order.status === "SERVED" && order.paidAt))

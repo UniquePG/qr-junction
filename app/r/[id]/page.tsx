@@ -1,125 +1,32 @@
-import React from 'react';
 import { prisma } from '@/lib/prisma';
-import { notFound } from 'next/navigation';
-import CustomerMenuView from './CustomerMenuView';
-import { Metadata } from 'next';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { isMenuTheme } from '@/components/menu/themeCatalog';
-import { guestRestaurantSelect, toGuestRestaurant } from '@/lib/restaurant/guest';
-import { loadGuestLocales } from '@/lib/menu/i18n/guestLocales';
-import { resolveGuestOffers } from '@/lib/offers/resolve';
+import { menuPath } from '@/lib/menu/slug';
 
-interface PageProps {
+/** Legacy /r/<restaurantId> link: forwards to the canonical /menu/<name>/<menuId> URL. The raw ?table= value is dropped. */
+export default async function LegacyRestaurantMenuRedirect({
+  params,
+  searchParams,
+}: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ table?: string; previewTheme?: string }>;
-}
-
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  searchParams: Promise<{ previewTheme?: string }>;
+}) {
   const { id } = await params;
-  const restaurant = await prisma.restaurant.findUnique({
-    where: { id: parseInt(id, 10) },
-    select: guestRestaurantSelect,
-  });
-
-  if (!restaurant) {
-    return {
-      title: 'Menu Not Found - QR Junction',
-    };
-  }
-
-  return {
-    title: `${restaurant.name} - Digital Menu`,
-    description: restaurant.description || `Browse the live menu for ${restaurant.name}.`,
-    openGraph: {
-      title: `${restaurant.name} - Live Digital Menu`,
-      description: restaurant.description || `Browse the live menu for ${restaurant.name}.`,
-      images: restaurant.logoUrl ? [{ url: restaurant.logoUrl }] : [],
-    },
-  };
-}
-
-export default async function RestaurantMenuPage({ params, searchParams }: PageProps) {
-  const { id } = await params;
-  const { table, previewTheme } = await searchParams;
-  const layoutPreview = isMenuTheme(previewTheme) ? previewTheme : null;
-
+  const { previewTheme } = await searchParams;
   const restaurantId = parseInt(id, 10);
-  if (isNaN(restaurantId)) {
-    notFound();
-  }
+  if (isNaN(restaurantId)) notFound();
 
   const restaurant = await prisma.restaurant.findUnique({
     where: { id: restaurantId },
-    select: guestRestaurantSelect,
+    select: { name: true },
   });
+  if (!restaurant) notFound();
 
-  if (!restaurant) {
-    notFound();
-  }
+  const menu =
+    (await prisma.menu.findFirst({ where: { restaurantId, isDefault: true }, select: { id: true } })) ??
+    (await prisma.menu.findFirst({ where: { restaurantId }, orderBy: { id: 'asc' }, select: { id: true } }));
+  if (!menu) notFound();
 
-  // Find default menu
-  let menu = await prisma.menu.findFirst({
-    where: { restaurantId, isDefault: true },
-    include: {
-      categories: {
-        orderBy: { order: 'asc' },
-        include: {
-          items: {
-            orderBy: { order: 'asc' },
-          },
-        },
-      },
-    },
-  });
-
-  if (!menu) {
-    // Fallback to first menu
-    menu = await prisma.menu.findFirst({
-      where: { restaurantId },
-      include: {
-        categories: {
-          orderBy: { order: 'asc' },
-          include: {
-            items: {
-              orderBy: { order: 'asc' },
-            },
-          },
-        },
-      },
-    });
-  }
-
-  if (!menu) {
-    notFound(); // No menus created yet
-  }
-
-  const locales = await loadGuestLocales(restaurantId);
-  const guestRestaurant = await toGuestRestaurant(restaurant);
-  const offerItems = menu.categories.flatMap((cat) =>
-    cat.items.map((item) => ({
-      id: item.id,
-      categoryId: cat.id,
-      price: Number(item.price),
-    })),
-  );
-  const offers = await resolveGuestOffers({
-    restaurantId,
-    menuId: menu.id,
-    items: offerItems,
-  });
-
-  // Serialize to plain JSON objects to prevent Next.js from throwing errors about passing Prisma Decimal/Date objects to Client Components
-  const serializedRestaurant = JSON.parse(JSON.stringify(guestRestaurant));
-  const serializedMenu = JSON.parse(JSON.stringify(menu));
-  const serializedOffers = JSON.parse(JSON.stringify(offers));
-
-  return (
-    <CustomerMenuView 
-      restaurant={serializedRestaurant} 
-      menu={layoutPreview ? { ...serializedMenu, theme: layoutPreview } : serializedMenu}
-      tableNumber={table || null}
-      layoutPreview={layoutPreview}
-      locales={locales}
-      offers={serializedOffers}
-    />
-  );
+  const path = menuPath({ name: restaurant.name, menuId: menu.id });
+  permanentRedirect(isMenuTheme(previewTheme) ? `${path}?previewTheme=${encodeURIComponent(previewTheme)}` : path);
 }

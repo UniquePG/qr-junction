@@ -4,6 +4,8 @@ import { resolveGeoLocation } from '@/lib/geo';
 import { DeviceType } from '@prisma/client';
 import { reserveScan } from '@/lib/billing/guard';
 import { qrPausedTemplate, qrTextTemplate } from '@/lib/HtmlTemplates/htmlTemplates';
+import { menuPath } from '@/lib/menu/slug';
+import { encryptTableCode } from '@/lib/menu/tableCode';
 
 export async function GET(
   request: NextRequest,
@@ -187,14 +189,49 @@ export async function GET(
       // Route to dynamic review landing page
       redirectUrl = `/q/${shortCode}/review?utm_source=${utmSource}&utm_medium=${utmMedium}&utm_campaign=${utmCampaign}`;
     } else if (qrCode.type === 'RESTAURANT_MENU') {
-      const restaurantId = dest.restaurantId || qrCode.restaurantId;
-      const tableNumber = dest.tableNumber || '';
-      const menuId = dest.menuId || '';
-      if (menuId) {
-        redirectUrl = `/r/${restaurantId}/${menuId}${tableNumber ? `?table=${encodeURIComponent(tableNumber)}` : ''}`;
-      } else {
-        redirectUrl = `/r/${restaurantId}${tableNumber ? `?table=${encodeURIComponent(tableNumber)}` : ''}`;
+      const restaurantId = Number(dest.restaurantId || qrCode.restaurantId);
+      const tableNumber = dest.tableNumber ? String(dest.tableNumber) : '';
+      const restaurant = restaurantId
+        ? await prisma.restaurant.findUnique({ where: { id: restaurantId }, select: { id: true, name: true } })
+        : null;
+
+      if (!restaurant) {
+        return new NextResponse('Menu not found', { status: 404 });
       }
+
+      // Resolve the menu: the QR's menu, then the table's menu, then the default / first menu.
+      let table: { id: number; menuId: number | null } | null = null;
+      if (tableNumber || qrCode.type === 'RESTAURANT_MENU') {
+        table =
+          (await prisma.restaurantTable.findFirst({
+            where: { qrCodeId: qrCode.id, restaurantId: restaurant.id },
+            select: { id: true, menuId: true },
+          })) ??
+          (tableNumber
+            ? await prisma.restaurantTable.findFirst({
+                where: { restaurantId: restaurant.id, tableNumber },
+                select: { id: true, menuId: true },
+              })
+            : null);
+      }
+
+      let menuId: number | null = Number(dest.menuId) || table?.menuId || null;
+      if (menuId) {
+        const owned = await prisma.menu.findFirst({ where: { id: menuId, restaurantId: restaurant.id }, select: { id: true } });
+        if (!owned) menuId = null;
+      }
+      if (!menuId) {
+        const fallback =
+          (await prisma.menu.findFirst({ where: { restaurantId: restaurant.id, isDefault: true }, select: { id: true } })) ??
+          (await prisma.menu.findFirst({ where: { restaurantId: restaurant.id }, orderBy: { id: 'asc' }, select: { id: true } }));
+        menuId = fallback?.id ?? null;
+      }
+      if (!menuId) {
+        return new NextResponse('Menu not found', { status: 404 });
+      }
+
+      const tableCode = table ? encryptTableCode({ tableId: table.id, restaurantId: restaurant.id }) : null;
+      redirectUrl = menuPath({ name: restaurant.name, menuId, tableCode });
     } else {
       // Fallback
       redirectUrl = dest.url || '/';

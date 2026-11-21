@@ -1,6 +1,7 @@
 import { publishOrder, restaurantChannel } from "@/lib/orders/bus";
 import { prisma } from "@/lib/prisma";
 import { resolveCallWaiterGate } from "@/lib/restaurant/gates";
+import { resolveTableFromCode } from "@/lib/menu/tableCode";
 import {
   WAITER_COOLDOWN_SECONDS,
   WAITER_MAX_PENDING_PER_RESTAURANT,
@@ -90,7 +91,8 @@ function cooldownRemainingSeconds(createdAt: Date, now = Date.now()) {
 
 export async function createWaiterRequest(input: {
   restaurantId: number;
-  tableNumber: unknown;
+  /** Encrypted table code from the menu URL. */
+  tableCode: unknown;
   reason: unknown;
   guestKey?: string | null;
 }) {
@@ -99,9 +101,10 @@ export async function createWaiterRequest(input: {
     throw new WaiterError("Restaurant not found.", "NOT_FOUND", 404);
   }
 
-  const tableNumber = normalizeTableNumber(input.tableNumber);
+  const table = await resolveTableFromCode(input.tableCode, restaurantId);
+  const tableNumber = table ? normalizeTableNumber(table.tableNumber) : null;
   if (!tableNumber) {
-    throw new WaiterError("Table is required.", "TABLE_REQUIRED", 400);
+    throw new WaiterError("Table is required. Please scan your table's QR code again.", "TABLE_REQUIRED", 400);
   }
 
   if (!isWaiterReason(input.reason)) {

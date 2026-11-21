@@ -42,7 +42,7 @@ const AuthContext = createContext<AuthContextType>({
 /** Guest surfaces never use auth — skip /api/auth/me to avoid 401 noise. */
 function shouldSkipAuthBootstrap(pathname: string | null) {
   if (!pathname) return false;
-  return /^\/(r|q|p)(\/|$)/.test(pathname);
+  return /^\/(r|q|p|menu)(\/|$)/.test(pathname);
 }
 
 function mapPublicUser(raw: any, restaurantAccess: any = null): AuthUser {

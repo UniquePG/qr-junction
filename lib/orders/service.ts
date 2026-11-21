@@ -8,6 +8,7 @@ import { canMoveStatus, type OrderStatus } from "@/lib/orders/status";
 import { loadPricingOffers } from "@/lib/offers/resolve";
 import { isDigitalBillEffective } from "@/lib/restaurant/digitalBill";
 import { resolveOrderingGate } from "@/lib/restaurant/gates";
+import { resolveTableFromCode } from "@/lib/menu/tableCode";
 
 const ACTIVE = ["PLACED", "ACCEPTED", "PREPARING", "READY"] as const;
 
@@ -319,7 +320,8 @@ async function uniqueOrderId() {
 export async function createOrder(input: {
   restaurantId: number;
   menuId: number;
-  tableNumber?: string | null;
+  /** Encrypted table code from the menu URL; the raw table name is never accepted. */
+  tableCode?: string | null;
   customerName: string;
   customerPhone: string;
   note?: string | null;
@@ -344,12 +346,8 @@ export async function createOrder(input: {
     return { order: toOrderDto(existing, { publicToken: true, digitalBillEnabled }), created: false };
   }
   let tableNumber: string | null = null;
-  const requestedTable = String(input.tableNumber || "").trim().slice(0, 40);
-  if (requestedTable) {
-    const table = await prisma.restaurantTable.findFirst({
-      where: { restaurantId: priced.restaurant.id, tableNumber: requestedTable },
-      select: { tableNumber: true },
-    });
+  if (input.tableCode) {
+    const table = await resolveTableFromCode(input.tableCode, priced.restaurant.id);
     tableNumber = table?.tableNumber ?? null;
   }
 

@@ -742,6 +742,11 @@ function GuestOrderCard({
             <p className="mt-1 text-[14px] font-bold leading-snug text-[#1C1410]">
               {statusCopy(order.status, order.rejectReason)}
             </p>
+            {order.customerName ? (
+              <p className="mt-0.5 truncate text-[11px] text-[#8A7366]">
+                Ordered by <span className="font-semibold text-[#6B5A50]">{order.customerName}</span>
+              </p>
+            ) : null}
           </div>
           {payment ? (
             <span

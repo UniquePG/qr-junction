@@ -237,6 +237,8 @@ interface CustomerMenuViewProps {
   restaurant: Restaurant;
   menu: Menu;
   tableNumber: string | null;
+  /** Opaque encrypted table code, sent to ordering and waiter APIs. */
+  tableCode?: string | null;
   layoutPreview?: string | null;
   locales?: GuestLocaleOption[];
   offers?: GuestOfferView | null;
@@ -252,6 +254,7 @@ export default function CustomerMenuView(props: CustomerMenuViewProps) {
     >
       <CustomerMenuViewInner
         tableNumber={props.tableNumber}
+        tableCode={props.tableCode ?? null}
         layoutPreview={props.layoutPreview}
         offers={props.offers}
       />
@@ -261,10 +264,12 @@ export default function CustomerMenuView(props: CustomerMenuViewProps) {
 
 function CustomerMenuViewInner({
   tableNumber,
+  tableCode,
   layoutPreview,
   offers,
 }: {
   tableNumber: string | null;
+  tableCode: string | null;
   layoutPreview?: string | null;
   offers?: GuestOfferView | null;
 }) {
@@ -915,6 +920,7 @@ function CustomerMenuViewInner({
       restaurantId={restaurant.id}
       menuId={menu.id}
       tableNumber={tableNumber}
+      tableCode={tableCode}
       currencySymbol={currencySymbol}
       onOpenItem={(item) => {
         setSelectedVariant(item.variants?.[0]?.label ?? null);
@@ -984,7 +990,7 @@ function CustomerMenuViewInner({
                 Dining at {formatTableLabel(tableNumber)}
               </div>
               {!layoutPreview && restaurant.callWaiterEnabled ? (
-                <CallWaiterButton restaurantId={restaurant.id} tableNumber={tableNumber} />
+                <CallWaiterButton restaurantId={restaurant.id} tableNumber={tableNumber} tableCode={tableCode} />
               ) : null}
             </div>
           )}

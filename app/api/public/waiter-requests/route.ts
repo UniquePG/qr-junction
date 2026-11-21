@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}));
     const result = await createWaiterRequest({
       restaurantId: Number(body.restaurantId),
-      tableNumber: body.tableNumber,
+      tableCode: body.tableCode,
       reason: body.reason,
       guestKey: body.guestKey ?? null,
     });

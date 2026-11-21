@@ -44,10 +44,12 @@ function formatCountdown(seconds: number) {
 export function CallWaiterButton({
   restaurantId,
   tableNumber,
+  tableCode,
   themeClassName,
 }: {
   restaurantId: number;
   tableNumber: string;
+  tableCode?: string | null;
   themeClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -96,7 +98,7 @@ export function CallWaiterButton({
 
       const res = await publicService.createWaiterRequest({
         restaurantId,
-        tableNumber,
+        tableCode: tableCode ?? "",
         reason,
         guestKey,
       });

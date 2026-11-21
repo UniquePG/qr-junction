@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import { restaurantService, uploadService } from '@/lib/api';
 import { getQrUrl } from '@/utils/qrUrl';
+import { menuPath } from '@/lib/menu/slug';
 import { 
   Plus, 
   Edit, 
@@ -688,7 +689,7 @@ export default function MenuManagementPage() {
         </div>
         {currentMenu ? (
           <a
-            href={currentMenu.isDefault ? `/r/${restaurant?.id}` : `/r/${restaurant?.id}/${currentMenu.id}`}
+            href={menuPath({ name: restaurant?.name, menuId: currentMenu.id })}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border-none bg-[#1C1410] px-4 text-sm font-semibold text-white no-underline hover:bg-[#2A211C] sm:w-auto"

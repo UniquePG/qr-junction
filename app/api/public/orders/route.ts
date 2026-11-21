@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     const payload = {
       restaurantId,
       menuId,
-      tableNumber: body.tableNumber ?? null,
+      tableCode: typeof body.tableCode === "string" ? body.tableCode : null,
       customerName: String(body.customerName || ""),
       customerPhone: String(body.customerPhone || ""),
       note: body.note ?? null,

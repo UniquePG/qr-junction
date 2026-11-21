@@ -27,7 +27,7 @@ export const publicService = {
 
   createWaiterRequest(body: {
     restaurantId: number;
-    tableNumber: string;
+    tableCode: string;
     reason: string;
     guestKey?: string | null;
   }) {
